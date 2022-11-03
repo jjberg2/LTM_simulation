@@ -24,14 +24,14 @@ rule all:
 
 rule slim_simulate_withsegregating:
   input:
-    slim_script="LTM_prev_nucleotide.slim"
+    slim_script="../LTM_prev_nucleotide.slim"
   params:
     mu=mu,
     fitCost=fitCost,
     cyc=cyc, 
     sampleInt = sampleInt, 
     time="50:00:00",
-    partition="jnovembre",
+##    partition="jjberg",
     mem="5Gb"
   output:
     "PopSize{N}_LiaSize{liaSizes}_rho{rhos}_envSD{envSD}_rep{rep}.prev"
