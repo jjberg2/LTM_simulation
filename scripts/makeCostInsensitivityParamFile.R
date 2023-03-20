@@ -7,21 +7,29 @@ eqNormPrev <- function(deltaU,bigGamma,littleGamma,h2){
 mu <- 1e-6
 Ne <- 5000
 theta <- 4*Ne*mu
-cost <- c(0.01,0.1,0.3,0.5,0.7,0.9,0.99)
+cost <- seq(0.01,0.99,length.out=6)
 h2 <- 0.5
 my.L <- 1e5
-my.thrs <- exp(seq(log(2000),log(my.L*0.95),length.out=6))
-my.rho <- my.thrs/(2*my.L)
+my.thrs <- c(exp(seq(log(2000),log(36186.802),length.out=4)),2*my.L*0.35)
+
+
+my.table <- expand.grid(cost,my.thrs,my.L,theta,h2,Ne)
+
+colnames(my.table) <- c('cost','thr','target.size','theta','h2','Ne')
+my.rho <- my.table[,'thr']/(2*my.table[,'target.size'])
 my.b <- 1-2*my.rho
 my.gamma <- log((1+my.b)/(1-my.b))
-my.table <- expand.grid(cost,my.thrs1,my.L,my.rho,my.gamma,theta,h2)
-colnames(my.table) <- c('cost','thr','target.size','rho','gamma','theta','h2')
+env.sd <- sqrt(theta*my.L*my.b*(1-h2)/h2)
+tmp.table <- cbind(my.table,'rho'=my.rho,'b'=my.b,'gamma'=my.gamma,'env.sd'=env.sd)
+norm.prev <- eqNormPrev(2*tmp.table[,'target.size']*mu*my.b,2*Ne*tmp.table[,'cost'],tmp.table[,'gamma'],h2)
+new.table <- cbind(tmp.table,'norm.prev'=norm.prev)
+new.table
 
-norm.prev <- eqNormPrev(2*my.table[,'target.size']*mu*my.b,2*Ne*my.table[,'cost'],my.table[,'gamma'],h2)
-new.table <- cbind(my.table,'norm.prev'=norm.prev)
 
 
-write.table(new.table,file='costInsensitivityParamFile.txt')
+
+
+write.table(new.table,file='costInsensitivityParamTable.txt')
 
 
 

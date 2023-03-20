@@ -37,10 +37,10 @@ rule slim_simulate_withsegregating:
 ##    partition="jjberg",
     mem="5Gb"
   output:
-    "CostInsensitive/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_envSD{envSD}_cost{cost}__rep{rep}.prev",
-    "CostInsensitive/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_envSD{envSD}_cost{cost}__rep{rep}.h2"
+    "{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_envSD{envSD}_cost{cost}__rep{rep}.prev",
+    "{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_envSD{envSD}_cost{cost}__rep{rep}.h2"
   shell:
-    """set +u; slim  -d mu={params.mu} -d rho_input={wildcards.rhos} -d p={wildcards.N} -d liaSize={wildcards.liaSizes} -d f={wildcards.cost}  -d e={wildcards.envSD} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} {input.slim_script} > CostInsensitive/PopSize{wildcards.N}_LiaSize{wildcards.liaSizes}_rho{wildcards.rhos}_envSD{wildcards.envSD}_cost{wildcards.cost}__rep{wildcards.rep}.temp; set -u; 
+    """set +u; slim  -d mu={params.mu} -d rho_input={wildcards.rhos} -d p={wildcards.N} -d liaSize={wildcards.liaSizes} -d f={wildcards.cost}  -d e={wildcards.envSD} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d "myPath='{wildcards.path}'" {input.slim_script} > CostInsensitive/PopSize{wildcards.N}_LiaSize{wildcards.liaSizes}_rho{wildcards.rhos}_envSD{wildcards.envSD}_cost{wildcards.cost}__rep{wildcards.rep}.temp; set -u; 
     set +u; rm CostInsensitive/PopSize{wildcards.N}_LiaSize{wildcards.liaSizes}_rho{wildcards.rhos}_envSD{wildcards.envSD}_cost{wildcards.cost}__rep{wildcards.rep}.temp; set -u; """
 
 
