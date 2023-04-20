@@ -33,7 +33,7 @@ def find_index(wildcards, col):
 
 rule slim_simulate_withsegregating:
   input:
-    slim_script="twoEffectScript/LTM_prev_nucleotide_multieffect_diffstart.slim"
+    slim_script="scripts/twoEffectScript/LTM_prev_nucleotide_multieffect_diffstart.slim"
   output:
     "twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_rep{rep}.h2",
     "twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_rep{rep}.prev",
