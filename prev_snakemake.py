@@ -4,27 +4,27 @@ import pandas as pd
 params_table = pd.read_csv("costInsensitivityParamTable.txt", delim_whitespace=True)
 
 
-
 ## global parameter ( doesn't change) 
 mu=1e-6
 cyc = 100
-sampleInt = 100
+sampleInt = 50
+
+print(params_table)
 
 ## simulation variable 
-rep = list(np.arange(0,2))
+rep = list(np.arange(0,1))
+rhos = np.array(params_table["rho"])
 liaSizes = np.array((params_table["target.size"]).astype(int))
+cost = np.round((params_table["cost"]),3)
 rhos = np.round(np.array(params_table["rho"]),3)
 N = np.array(params_table["Ne"].astype(int))
-envSD = np.round(np.array(params_table["env.sd"]),3)
-cost = np.array(params_table["cost"])
 
-#envSD = np.repeat(0,len(N))
+print(cost)
 
 rule all:
   input: 
-    expand(expand("CostInsensitive/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_envSD{envSD}_cost{cost}__rep{{rep}}.prev",zip, N=N, liaSizes=liaSizes, rhos=rhos, envSD=envSD, cost=cost), rep=rep),
-    expand("CostInsensitive/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_envSD{envSD}_cost{cost}_all.h2", zip, N=N, liaSizes=liaSizes, rhos=rhos, envSD=envSD, cost=cost)
-    
+    expand(expand("CostInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_rep{{rep}}.prev",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost), rep=rep),
+    #expand("PopSize{N}_LiaSize{liaSizes}_rho{rhos}_all.h2", zip, N=N, liaSizes=liaSizes, rhos=rhos)
 
 rule slim_simulate_withsegregating:
   input:
@@ -37,20 +37,20 @@ rule slim_simulate_withsegregating:
 ##    partition="jjberg",
     mem="5Gb"
   output:
-    "{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_envSD{envSD}_cost{cost}__rep{rep}.prev",
-    "{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_envSD{envSD}_cost{cost}__rep{rep}.h2"
+    "CostInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_rep{rep}.prev"
   shell:
-    """set +u; slim  -d mu={params.mu} -d rho_input={wildcards.rhos} -d p={wildcards.N} -d liaSize={wildcards.liaSizes} -d f={wildcards.cost}  -d e={wildcards.envSD} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d "myPath='{wildcards.path}'" {input.slim_script} > CostInsensitive/PopSize{wildcards.N}_LiaSize{wildcards.liaSizes}_rho{wildcards.rhos}_envSD{wildcards.envSD}_cost{wildcards.cost}__rep{wildcards.rep}.temp; set -u; 
-    set +u; rm CostInsensitive/PopSize{wildcards.N}_LiaSize{wildcards.liaSizes}_rho{wildcards.rhos}_envSD{wildcards.envSD}_cost{wildcards.cost}__rep{wildcards.rep}.temp; set -u; """
-
+    """thr=`awk 'BEGIN {{print 1e5*2*{wildcards.rhos}}}'`;
+    env=`Rscript --vanilla solveSingleEffect.R 1e-6 ${{thr}} 0.9 5000 1e5 0.5 | awk '{{print $2}}'`;
+    set +u; slim  -d mu={params.mu} -d rho_input={wildcards.rhos} -d p={wildcards.N} -d liaSize={wildcards.liaSizes} -d f={wildcards.cost}  -d e=${{env}} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} {input.slim_script} > PopSize{wildcards.N}_LiaSize{wildcards.liaSizes}_rho{wildcards.rhos}_rep{wildcards.rep}.temp; set -u;""" 
+    #set +u; rm PopSize{wildcards.N}_LiaSize{wildcards.liaSizes}_rho{wildcards.rhos}_rep{wildcards.rep}.temp; set -u"""
 
 rule result_combined: 
    input: 
-     h2=expand("CostInsensitive/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_envSD{{envSD}}_cost{{cost}}__rep{rep}.h2", rep=rep),
-     prev=expand("CostInsensitive/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_envSD{{envSD}}_cost{{cost}}__rep{rep}.prev", rep=rep)
+     h2=expand("CostInsensitivity/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_rep{rep}.h2", rep=rep),
+     prev=expand("CostInsensitivity/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_rep{rep}.prev", rep=rep)
    output:
-     h2="CostInsensitive/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_envSD{envSD}_cost{cost}_all.h2",
-     prev="CostInsensitive/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_envSD{envSD}_cost{cost}_all.prev"
+     h2="CostInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_all.h2",
+     prev="CostInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_all.prev"
    shell: 
      """cat {input.h2} >> {output.h2}; cat {input.prev} >> {output.prev}""" 
  
