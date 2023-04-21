@@ -10,22 +10,23 @@ params_table = pd.read_csv("twoEffectInsensitivity/twoEffectInsensitivityParamsT
 ## global parameter ( doesn't change) 
 cyc = 200
 sampleInt = 50
-reps = 2
+reps = 3
 
 ## simulation variable 
 rep = list(np.arange(0,reps))
 rhot = np.round(np.array(params_table["rhot"]),3)
+cost = np.round(np.array(params_table["C"]),3)
 alphaLarge = np.round(np.array(params_table["al"]),3)
 #alphaLarge = [trim_trailingzero(x) for x in alphaLarge]
-print(alphaLarge)
+print(cost)
 
 N = np.array(params_table["Ne"].astype(int))
 envSD = np.round(np.sqrt(params_table["Ve"]),3)
 
 rule all:
   input: 
-    expand(expand("twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_rep{{rep}}.prev",zip, N=N, alphaLarge = alphaLarge, rhot=rhot, envSD=envSD), rep=rep),
-    expand("twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_all.prev", zip, N=N, alphaLarge = alphaLarge, rhot=rhot, envSD=envSD)
+    expand(expand("twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{{rep}}.prev",zip, N=N, alphaLarge = alphaLarge, rhot=rhot, envSD=envSD, cost=cost), rep=rep),
+    expand("twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.prev", zip, N=N, alphaLarge = alphaLarge, rhot=rhot, envSD=envSD, cost=cost)
 
 def find_index(wildcards, col):                                                                                                                                          
     index = np.where( np.round(params_table["al"],3) == float(wildcards.alphaLarge))[0][0]             
@@ -33,11 +34,11 @@ def find_index(wildcards, col):
 
 rule slim_simulate_withsegregating:
   input:
-    slim_script="scripts/twoEffectScript/LTM_prev_nucleotide_multieffect_diffstart.slim"
+    slim_script="scripts/LTM_prev_nucleotide_multieffect_diffstart.slim"
   output:
-    "twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_rep{rep}.h2",
-    "twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_rep{rep}.prev",
-    "twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_rep{rep}.h2l"
+    "twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.h2",
+    "twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.prev",
+    "twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.h2l"
   params:
     mu = lambda wildcards: find_index(wildcards, col="u"),
     fitCost= lambda wildcards: find_index(wildcards, col="C"),
@@ -57,13 +58,13 @@ rule slim_simulate_withsegregating:
 
 rule result_combined: 
    input: 
-     h2=expand("twoEffectInsensitivity/PopSize{{N}}_aL{{alphaLarge}}_rhot{{rhot}}_envSD{{envSD}}_rep{rep}.h2", rep=rep),
-     prev=expand("twoEffectInsensitivity/PopSize{{N}}_aL{{alphaLarge}}_rhot{{rhot}}_envSD{{envSD}}_rep{rep}.prev", rep=rep),
-     h2l=expand("twoEffectInsensitivity/PopSize{{N}}_aL{{alphaLarge}}_rhot{{rhot}}_envSD{{envSD}}_rep{rep}.h2l", rep=rep)
+     h2=expand("twoEffectInsensitivity/PopSize{{N}}_aL{{alphaLarge}}_rhot{{rhot}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.h2", rep=rep),
+     prev=expand("twoEffectInsensitivity/PopSize{{N}}_aL{{alphaLarge}}_rhot{{rhot}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.prev", rep=rep),
+     h2l=expand("twoEffectInsensitivity/PopSize{{N}}_aL{{alphaLarge}}_rhot{{rhot}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.h2l", rep=rep)
    output:
-     h2="twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_all.h2",
-     prev="twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_all.prev",
-     h2l="twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_all.h2l"
+     h2="twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.h2",
+     prev="twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.prev",
+     h2l="twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.h2l"
    shell: 
      """cat {input.h2} >> {output.h2}; cat {input.prev} >> {output.prev}; cat {input.h2l} >> {output.h2l}""" 
  

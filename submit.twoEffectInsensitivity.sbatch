@@ -4,7 +4,7 @@
 #SBATCH --error=logs/twoEffectInsensitivity.err 
 #SBATCH --time=36:00:00 
 #SBATCH --partition=broadwl
-#SBATCH --nodes=4
+#SBATCH --nodes=2
 #SBATCH --ntasks-per-node=14 
 #SBATCH --mem-per-cpu=4000
 
@@ -14,4 +14,4 @@ echo "SLURM_JOBID="$SLURM_JOBID
 
 cat twoEffectInsensitivity_snakemake.py
 
-snakemake --snakefile twoEffectInsensitivity_snakemake.py --cores all -n
+snakemake --snakefile twoEffectInsensitivity_snakemake.py --cores all
