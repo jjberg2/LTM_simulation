@@ -40,7 +40,7 @@ rule slim_simulate_withsegregating:
     "CostInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_rep{rep}.prev"
   shell:
     """thr=`awk 'BEGIN {{print 1e5*2*{wildcards.rhos}}}'`;
-    env=`Rscript --vanilla solveSingleEffect.R 1e-6 ${{thr}} 0.9 5000 1e5 0.5 | awk '{{print $2}}'`;
+    env=`Rscript --vanilla scripts/getEnvSD.R 1e-6 ${{thr}} 0.9 5000 1e5 0.5 | awk '{{print $2}}'`;
     set +u; slim  -d mu={params.mu} -d rho_input={wildcards.rhos} -d p={wildcards.N} -d liaSize={wildcards.liaSizes} -d f={wildcards.cost}  -d e=${{env}} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} {input.slim_script} > PopSize{wildcards.N}_LiaSize{wildcards.liaSizes}_rho{wildcards.rhos}_rep{wildcards.rep}.temp; set -u;""" 
     #set +u; rm PopSize{wildcards.N}_LiaSize{wildcards.liaSizes}_rho{wildcards.rhos}_rep{wildcards.rep}.temp; set -u"""
 

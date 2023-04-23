@@ -14,7 +14,6 @@ my.thrs <- c(exp(seq(log(4000),log(2*my.L*0.4),length.out=6)))
 
 
 my.table <- expand.grid(cost,my.thrs,my.L,theta,h2,Ne)
-
 colnames(my.table) <- c('cost','thr','target.size','theta','h2','Ne')
 my.rho <- my.table[,'thr']/(2*my.table[,'target.size'])
 my.b <- 1-2*my.rho
