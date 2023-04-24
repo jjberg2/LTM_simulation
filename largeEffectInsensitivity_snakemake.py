@@ -1,7 +1,8 @@
 import numpy as np 
 import pandas as pd
 
-params_table = pd.read_csv("largeEffectInsensitivityInsensitivityParamTable.txt", delim_whitespace=True)
+
+params_table = pd.read_csv("largeEffectInsensitivityParamTable.txt", delim_whitespace=True)
 
 
 ## global parameter ( doesn't change) 
@@ -23,7 +24,7 @@ print(cost)
 
 rule all:
   input: 
-    expand(expand("CostInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_rep{{rep}}.prev",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost), rep=rep),
+    expand(expand("largeEffectInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_rep{{rep}}.prev",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost), rep=rep),
     #expand("PopSize{N}_LiaSize{liaSizes}_rho{rhos}_all.h2", zip, N=N, liaSizes=liaSizes, rhos=rhos)
 
 rule slim_simulate_withsegregating:
@@ -37,7 +38,7 @@ rule slim_simulate_withsegregating:
 ##    partition="jjberg",
     mem="5Gb"
   output:
-    "CostInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_rep{rep}.prev"
+    "largeEffectInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_rep{rep}.prev"
   shell:
     """thr=`awk 'BEGIN {{print 1e5*2*{wildcards.rhos}}}'`;
     env=`Rscript --vanilla scripts/getEnvSD.R 1e-6 ${{thr}} 0.9 5000 1e5 0.5 | awk '{{print $2}}'`;
@@ -46,11 +47,11 @@ rule slim_simulate_withsegregating:
 
 rule result_combined: 
    input: 
-     h2=expand("CostInsensitivity/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_rep{rep}.h2", rep=rep),
-     prev=expand("CostInsensitivity/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_rep{rep}.prev", rep=rep)
+     h2=expand("largeEffectInsensitivity/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_rep{rep}.h2", rep=rep),
+     prev=expand("largeEffectInsensitivity/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_rep{rep}.prev", rep=rep)
    output:
-     h2="CostInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_all.h2",
-     prev="CostInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_all.prev"
+     h2="largeEffectInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_all.h2",
+     prev="largeEffectInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_all.prev"
    shell: 
      """cat {input.h2} >> {output.h2}; cat {input.prev} >> {output.prev}""" 
  
