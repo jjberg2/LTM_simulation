@@ -1,4 +1,5 @@
  #source('scripts/tiltedCDF.R')
+dnorminv<-function(y) sqrt(-2*log(sqrt(2*pi)*y))
 NormalRiskDiff <- function(t,this.mean,this.sd,this.pi){
     risk <- pnorm(t-1,mean=this.mean,sd=this.sd,lower.tail=FALSE)
     prot <- pnorm(t,mean=this.mean,sd=this.sd,lower.tail=FALSE)
@@ -69,7 +70,7 @@ SolveNormal <- function(myTheta,myGamma,fitCost,Ne,L,h2,verbose.output=FALSE) {
         lower=lower,
         upper=upper
     )$root
-    
+
 
     my.dens <- dnorm(this.t,mean=my.mean,sd=sqrt(my.var))
     my.prev <- pnorm(this.t,mean=my.mean,sd=sqrt(my.var),lower.tail=FALSE)
@@ -109,7 +110,7 @@ SolvePoisson <- function(myTheta,myGamma,fitCost,Ne,L,h2,allow.small.effect=FALS
         lower=my.mean,
         upper=2*upper-my.mean
     )$root
-    my.dens <- dPoisConv(this.t,my.mean,env.sd,my.range)    
+    my.dens <- dPoisConv(this.t,my.mean,env.sd,my.range)
     my.prev <- pPoisConv(this.t,my.mean,env.sd,my.range)
     if(verbose.output){
         list(
@@ -129,14 +130,14 @@ SolvePoisson <- function(myTheta,myGamma,fitCost,Ne,L,h2,allow.small.effect=FALS
 }
 
 SolvePoissonGivenThr <- function(myTheta,thr,fitCost,Ne,L,h2,allow.small.effect=FALSE,verbose.output=FALSE){
-    
-    
+
+
     bigGamma <- 2*Ne*fitCost
     max.pi <- 1
     min.pi <- 1e-8
     thetaU <- myTheta*L
 
-    
+
     getPoisRiskDiff <- function(THISPI) {
         my.mean = thetaU/(THISPI*bigGamma)
         env.sd = sqrt(my.mean*(1-h2)/h2)
@@ -149,7 +150,7 @@ SolvePoissonGivenThr <- function(myTheta,thr,fitCost,Ne,L,h2,allow.small.effect=
     idx <- max(which(diff(sign(my.diffs))!=0))
     lower <- my.seq[idx]
     upper <- my.seq[idx+1]
-    
+
     soln <- uniroot(
         f=function(THISPI) {
             my.mean = thetaU/(THISPI*bigGamma)
@@ -171,8 +172,8 @@ SolvePoissonGivenThr <- function(myTheta,thr,fitCost,Ne,L,h2,allow.small.effect=
     my.sel <- this.pi*fitCost
     my.gamma <- my.sel*4*Ne
 
-    
-    my.dens <- dPoisConv(thr,my.mean,env.sd,my.range)    
+
+    my.dens <- dPoisConv(thr,my.mean,env.sd,my.range)
     my.prev <- pPoisConv(thr,my.mean,env.sd,my.range)
     if(verbose.output){
         list(
@@ -194,7 +195,7 @@ SolvePoissonGivenThr <- function(myTheta,thr,fitCost,Ne,L,h2,allow.small.effect=
 
 }
 
-
+if(FALSE){
 args = commandArgs(trailingOnly=TRUE)
 liaMutRate = as.numeric(args[1])
 THR = as.numeric(args[2])
@@ -217,3 +218,4 @@ if (THR <1000){
    envSD = sqrt(2.0 * liabilitySize * liaMutRate/(gamma/(4*popSize)) * (exp(gamma)-1)/(exp(gamma)+1) * (1-target_h2)/target_h2)
 }
 print(envSD)
+}
