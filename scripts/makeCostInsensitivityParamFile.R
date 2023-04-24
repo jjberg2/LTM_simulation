@@ -21,7 +21,12 @@ my.b <- 1-2*my.rho
 my.gamma <- log((1+my.b)/(1-my.b))
 env.sd <- sqrt(theta*my.L*my.b/my.gamma*(1-h2)/h2)
 tmp.table <- cbind(my.table,'rho'=my.rho,'b'=my.b,'gamma'=my.gamma,'env.sd'=env.sd)
-norm.prev <- eqNormPrev(2*tmp.table[,'target.size']*mu*my.b,2*Ne*tmp.table[,'cost'],tmp.table[,'gamma'],h2)
+
+
+U <- 2*tmp.table[,'target.size']*mu
+BigGamma <- 2*Ne*tmp.table[,'cost']
+
+norm.prev <- eqNormPrev(U*my.b,BigGamma,my.gamma,h2)
 new.table <- cbind(tmp.table,'norm.prev'=norm.prev)
 new.table
 
