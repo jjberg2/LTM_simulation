@@ -12,6 +12,6 @@ module load python
 
 echo "SLURM_JOBID="$SLURM_JOBID
 
-cat largeEffectInsensitivity_snakefile.py
+cat largeEffectInsensitivity_snakemake.py
 
 snakemake --snakefile largeEffectInsensitivity_snakemake.py --cores all
