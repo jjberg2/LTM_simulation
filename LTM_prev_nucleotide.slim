@@ -11,16 +11,16 @@ initialize() {
    threshold = RHO * maxG;
 	defineConstant('THR',threshold);
 
-	defineConstant('THR_START', 2000); // you can change this, when THR smaller than this number, starting point is 0; otherwise, it is THR - THR_MINUS
-	defineConstant('THR_MINUS', 500); // 
-	// if large effect, start at point 0, set all ancestral alleles to be protective 
+	// you can change this, when THR smaller than this number, starting point is 0; otherwise, it is THR - THR_MINUS
+	defineConstant('THR_START', 2000); 
+	defineConstant('THR_MINUS', 500); 
 	if (THR <= THR_START) {
+		// if large effect, start at point 0, set all ancestral alleles to be protective 
 	   startingPoint = 0;
 	   initializeAncestralNucleotides(paste0(rep("A", L))); // Ancestral allele start with protective 
-	}
-
-	// if not, start at threshold point - 2000, set corresponding number of alleles to be protective and liability increasing 
+	} 
 	else {
+		// if not, start at threshold point - 2000, set corresponding number of alleles to be protective and liability increasing 
 	   startingPoint = 0;  
 	   initial_sequence = randomNucleotides(L, c(L-asInteger(L*RHO)+ asInteger(THR_MINUS), 0, asInteger(L*RHO)- asInteger(THR_MINUS), 0));
 	   defineConstant('ANC', initial_sequence);
