@@ -1,7 +1,6 @@
 import numpy as np 
 import pandas as pd
 
-
 params_table = pd.read_csv("largeEffectInsensitivityParamTable.txt", delim_whitespace=True)
 
 
