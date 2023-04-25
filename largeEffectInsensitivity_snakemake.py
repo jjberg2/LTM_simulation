@@ -12,7 +12,7 @@ sampleInt = 50
 print(params_table)
 
 ## simulation variable 
-rep = list(np.arange(0,1))
+rep = list(np.arange(0,2))
 rhos = np.array(params_table["rho"])
 liaSizes = np.array((params_table["target.size"]).astype(int))
 cost = np.round((params_table["cost"]),3)
