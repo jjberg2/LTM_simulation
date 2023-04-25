@@ -1,7 +1,7 @@
 import numpy as np 
 import pandas as pd
 
-params_table = pd.read_csv("CostInsensitivity/costInsensitivityParamTable2.txt", delim_whitespace=True)
+params_table = pd.read_csv("CostInsensitivity/costInsensitivityParamTable.txt", delim_whitespace=True)
 
 
 ## global parameter ( doesn't change) 

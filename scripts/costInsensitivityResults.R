@@ -35,7 +35,7 @@ rho <- unique(new.table$rho)
 
 results = merge_into_paramtable(new.table, rho)
 
-save(results,file='costInsensitivity/costInsensitivityResultsTable.Rdata')
+save(results,file='CostInsensitivity/costInsensitivityResultsTable.Rdata')
 
 
 
