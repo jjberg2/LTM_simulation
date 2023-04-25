@@ -50,7 +50,7 @@ rule slim_simulate_withsegregating:
     sampleInt = sampleInt, 
     time="36:00:00",
     partition="broadwl",
-    mem="4Gb"
+    mem="2Gb"
   output:
     "CostInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.prev",
     "CostInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.h2"
