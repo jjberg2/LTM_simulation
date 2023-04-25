@@ -25,7 +25,7 @@ print(envsd)
 
 rule all:
   input: 
-    expand(expand("largeEffectInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{{rep}}.prev",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd), rep=rep),
+    expand("largeEffectInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.prev",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd)
     #expand("PopSize{N}_LiaSize{liaSizes}_rho{rhos}_all.h2", zip, N=N, liaSizes=liaSizes, rhos=rhos)
 
 rule slim_simulate_withsegregating:
@@ -43,7 +43,7 @@ rule slim_simulate_withsegregating:
   shell:
     """thr=`awk 'BEGIN {{print 1e5*2*{wildcards.rhos}}}'`;
     set +u; slim  -d mu={params.mu} -d rho_input={wildcards.rhos} -d p={wildcards.N} -d liaSize={wildcards.liaSizes} -d f={wildcards.cost}  -d e={wildcards.envsd} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} {input.slim_script} > largeEffectInsensitivity/PopSize{wildcards.N}_LiaSize{wildcards.liaSizes}_rho{wildcards.rhos}_cost{wildcards.cost}_envsd{wildcards.envsd}_rep{wildcards.rep}.temp; set -u;
-    set +u; rm largeEffectInsensitivity/PopSize{wildcards.N}_LiaSize{wildcards.liaSizes}_rho{wildcards.rhos}_rep{wildcards.rep}.temp; set -u"""
+    set +u; rm largeEffectInsensitivity/PopSize{wildcards.N}_LiaSize{wildcards.liaSizes}_rho{wildcards.rhos}_cost{wildcards.cost}_envsd{wildcards.envsd}_rep{wildcards.rep}.temp; set -u"""
 
 rule result_combined: 
    input: 

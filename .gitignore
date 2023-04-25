@@ -1,0 +1,5 @@
+*PopSize*
+*.R~
+*.py~
+*.sh~
+*slurm*.out
