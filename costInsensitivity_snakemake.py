@@ -1,7 +1,7 @@
 import numpy as np 
 import pandas as pd
 
-params_table = pd.read_csv("CostInsensitivity/costInsensitivityParamTable.txt", delim_whitespace=True)
+params_table = pd.read_csv("CostInsensitivity/costInsensitivityParamTable2.txt", delim_whitespace=True)
 
 
 ## global parameter ( doesn't change) 
@@ -33,7 +33,7 @@ rule all:
   input: 
     expand("CostInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.prev",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd),
     expand("CostInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.h2",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd),
-    "CostInsensitivity/costInsensitivityParamTable.txt"
+    "CostInsensitivity/costInsensitivityParamTable2.txt"
   output:
     "CostInsensitivity/costInsensitivityResultsTable.Rdata"
   shell:
