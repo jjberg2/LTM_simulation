@@ -49,11 +49,11 @@ rule result_combined:
    input: 
      h2=expand("largeEffectInsensitivity/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.h2", rep=rep),
      prev=expand("largeEffectInsensitivity/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.prev", rep=rep)
-  params:
+   params:
      time="36:00:00",
      partition="broadwl",
      mem="4Gb"
-  output:
+   output:
      h2="largeEffectInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{{envsd}}_all.h2",
      prev="largeEffectInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{{envsd}}_all.prev"
    shell: 
