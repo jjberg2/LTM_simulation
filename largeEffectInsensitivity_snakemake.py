@@ -35,9 +35,9 @@ rule slim_simulate_withsegregating:
     mu=mu,
     cyc=cyc, 
     sampleInt = sampleInt, 
-    time="50:00:00",
-##    partition="jjberg",
-    mem="5Gb"
+    time="36:00:00",
+    partition="broadwl",
+    mem="4Gb"
   output:
     "largeEffectInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.prev"
   shell:
