@@ -22,7 +22,7 @@ h2 = np.round(params_table["h2"],1)
 envsd = np.round(np.array(params_table["env.sd"]),3)
 ## heritability
 
-print(cost)
+print(params_table)
 
 #rule all:
 #  input: 
