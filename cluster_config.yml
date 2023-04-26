@@ -1,0 +1,10 @@
+# cluster_config.yml - cluster configuration
+__default__:
+    account: jjberg
+    partition: broadwl
+    time: 36:00:00 # time limit for each job
+    nodes: 1
+    ntasks-per-node: 14 #Request n cores be allocated per node.
+    chdir: myJobs/ #
+    output: job-%j.out
+    error: job-%j.err
