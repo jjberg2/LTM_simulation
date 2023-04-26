@@ -34,6 +34,10 @@ rule all:
     expand("CostInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.prev",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd),
     expand("CostInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.h2",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd),
     "CostInsensitivity/costInsensitivityParamTable.txt"
+  params:
+     time="36:00:00",
+     partition="broadwl",
+     mem="2Gb"
   output:
     "CostInsensitivity/costInsensitivityResultsTable.Rdata"
   shell:
