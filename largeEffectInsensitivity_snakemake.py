@@ -6,8 +6,8 @@ params_table = pd.read_csv("largeEffectInsensitivityParamTable.txt", delim_white
 
 ## global parameter ( doesn't change)
 mu=1e-6
-cyc = 10
-sampleInt = 1
+cyc = 200
+sampleInt = 50
 
 # print(params_table)
 
