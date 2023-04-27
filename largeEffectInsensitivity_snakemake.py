@@ -38,6 +38,8 @@ rule slim_simulate_withsegregating:
     time="36:00:00",
     partition="broadwl",
     mem="4Gb"
+  log:
+    "logs/{prefix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.log"
   output:
     "{prefix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.prev",
     "{prefix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.h2"
@@ -54,6 +56,8 @@ rule result_combined:
      time="36:00:00",
      partition="broadwl",
      mem="4Gb"
+   log:
+     "{prefix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.log"
    output:
      h2="{prefix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.h2",
      prev="{prefix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.prev"
