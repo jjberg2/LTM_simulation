@@ -140,7 +140,7 @@ fitness(NULL){
 	h2=genVar/phenVar;
 	prev=sum(inds.tagF>THR)/length(inds.tagF);
 
-	if (sim.generation > 10*N & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE)
+	if (sim.generation > 0 & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE)
 	{  
 	        //output files 
 	        writeFile(paste0(PREFIX, "/PopSize", N, "_LiaSize", L, "_rho", RHO, "_cost", FITCOST, "_envsd", ENV_SIGMA, "_rep", REP, ".prev"), paste(prev, sep=","), append=T);

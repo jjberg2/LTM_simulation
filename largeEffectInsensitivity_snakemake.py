@@ -9,7 +9,7 @@ mu=1e-6
 cyc = 100
 sampleInt = 50
 
-print(params_table)
+# print(params_table)
 
 ## simulation variable 
 rep = list(np.arange(0,2))
@@ -21,7 +21,7 @@ N = np.array(params_table["Ne"].astype(int))
 thr = np.array(params_table["thr"].astype(int))
 envsd = np.round(np.array(params_table["env.sd"]),3)
 
-print(envsd)
+# print(envsd)
 
 rule all:
   input: 
