@@ -43,8 +43,8 @@ rule slim_simulate_withsegregating:
     "{prefix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.h2"
   shell:
     """thr=`awk 'BEGIN {{print 1e5*2*{wildcards.rhos}}}'`;
-    set +u; slim  -d mu={params.mu} -d rho_input={wildcards.rhos} -d p={wildcards.N} -d liaSize={wildcards.liaSizes} -d f={wildcards.cost}  -d e={wildcards.envsd} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d pre={wildcards.prefix} {input.slim_script} > {prefix}/PopSize{wildcards.N}_LiaSize{wildcards.liaSizes}_rho{wildcards.rhos}_cost{wildcards.cost}_envsd{wildcards.envsd}_rep{wildcards.rep}.temp; set -u;
-    set +u; rm {prefix}/PopSize{wildcards.N}_LiaSize{wildcards.liaSizes}_rho{wildcards.rhos}_cost{wildcards.cost}_envsd{wildcards.envsd}_rep{wildcards.rep}.temp; set -u"""
+    set +u; slim  -d mu={params.mu} -d rho_input={wildcards.rhos} -d p={wildcards.N} -d liaSize={wildcards.liaSizes} -d f={wildcards.cost}  -d e={wildcards.envsd} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d pre={wildcards.prefix} {input.slim_script} > {wildcards.prefix}/PopSize{wildcards.N}_LiaSize{wildcards.liaSizes}_rho{wildcards.rhos}_cost{wildcards.cost}_envsd{wildcards.envsd}_rep{wildcards.rep}.temp; set -u;
+    set +u; rm {wildcards.prefix}/PopSize{wildcards.N}_LiaSize{wildcards.liaSizes}_rho{wildcards.rhos}_cost{wildcards.cost}_envsd{wildcards.envsd}_rep{wildcards.rep}.temp; set -u"""
 
 rule result_combined: 
    input: 
