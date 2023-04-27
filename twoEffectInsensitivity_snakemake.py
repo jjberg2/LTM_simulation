@@ -52,7 +52,7 @@ rule slim_simulate_withsegregating:
     ##partition="jnovembre",
     ##mem="5Gb"
   shell:
-    """set +u; slim  -d mu={params.mu} -d rhot={wildcards.rhot} -d rhos={params.rhos} -d p={wildcards.N}  -d f={params.fitCost}  -d e={wildcards.envSD} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d aS={params.alphaSmall} -d aL={wildcards.alphaLarge} -d liaSmall={params.liaSmall} -d liaLarge={params.liaLarge} {input.slim_script} > {wildcards.prefix}/PopSize{wildcards.N}_aL{wildcards.alphaLarge}_rhot{wildcards.rhot}_envSD{wildcards.envSD}_rep{wildcards.rep}.temp; set -u; 
+    """set +u; slim  -d mu={params.mu} -d rhot={wildcards.rhot} -d rhos={params.rhos} -d p={wildcards.N}  -d f={params.fitCost}  -d e={wildcards.envSD} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d aS={params.alphaSmall} -d aL={wildcards.alphaLarge} -d liaSmall={params.liaSmall} -d liaLarge={params.liaLarge} -d "pre='{wildcards.prefix}'" {input.slim_script} > {wildcards.prefix}/PopSize{wildcards.N}_aL{wildcards.alphaLarge}_rhot{wildcards.rhot}_envSD{wildcards.envSD}_rep{wildcards.rep}.temp; set -u; 
     set +u; rm {wildcards.prefix}/PopSize{wildcards.N}_aL{wildcards.alphaLarge}_rhot{wildcards.rhot}_envSD{wildcards.envSD}_rep{wildcards.rep}.temp; set -u; """
 
 
