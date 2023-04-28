@@ -42,7 +42,7 @@ rule slim_simulate_withsegregating:
     h2="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.h2",
     prev="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.prev",
     h2l="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.h2l",
-    h2s="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.h2s"
+    h2s="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.h2s",
     genVar="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.genVar"
   params:
     mu = lambda wildcards: find_index(wildcards, col="u"),
@@ -74,8 +74,8 @@ rule result_combined:
      mean="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.mean",
      h2="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.h2",
      prev="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.prev",
-     h2l="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.h2l"
-     h2s="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.h2s"
+     h2l="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.h2l",
+     h2s="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.h2s",
      genVar="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.genVar"
    shell: 
      """cat {input.h2} >> {output.h2}; cat {input.prev} >> {output.prev}; cat {input.h2l} >> {output.h2l}""" 
