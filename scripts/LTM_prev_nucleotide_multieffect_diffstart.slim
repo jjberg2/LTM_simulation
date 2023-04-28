@@ -50,6 +50,8 @@ initialize() {
 	defineConstant('H2LOUT',h2lOut);
 	defineConstant('PREVOUT',prevOut);
 	defineConstant('GENVAROUT',genVarOut);
+	defineConstant('NSEGSMALLOUT',nSegSmallOut);
+	defineConstant('NSEGLARGEOUT',nSegLargeOut);
 
 
 	// liability mutations
@@ -139,46 +141,46 @@ fitness(NULL){
 	genLi=START+fixedGenLi+segGenLi;
 	inds.tagF = genLi + rnorm(N, 0.0, ENV_SIGMA);
 	
+	// things to output
 	mean=mean(genLi);
 	genVar=var(genLi);
 	phenVar=var(inds.tagF);
-	h2=genVar/phenVar;
+
+	
 	genVarSmall = var(fixedSmallGenLi + smallsegGenLi);
-	h2s = genVarSmall/phenVar; 
 	genVarLarge = var(fixedLargeGenLi + largesegGenLi);
+
+	h2=genVar/phenVar;
+	h2s = genVarSmall/phenVar; 
 	h2l = genVarLarge/ phenVar; 
+
 	prev=sum(inds.tagF>THR)/length(inds.tagF);
-	
-	
+
+	nSegSmall = sum(sim.mutations.nucleotide==“A”) + sum(sim.mutations.nucleotide==“G”)
+	nSegLarge = sum(sim.mutations.nucleotide==“C”) + sum(sim.mutations.nucleotide==“T”)
 	
 	if (sim.generation % 5000 ==0){print(sim.generation);}
-	if (sim.generation < 10 & TOYRUN == 1)
-	{
-			   writeFile(MEANOUT, paste(mean, sep=","), append=T);
-	        writeFile(PREVOUT, paste(prev, sep=","), append=T);
-	        writeFile(H2OUT, paste(h2, sep=","), append=T);
-			  writeFile(H2SOUT, paste(h2s, sep=","), append=T);
-			  writeFile(H2LOUT, paste(h2l, sep=","), append=T);
-	        writeFile(GENVAROUT, paste(genVar, sep=","), append=T);
-	}
-	else if (sim.generation >= 10 & TOYRUN == 1)
-	{
-	sim.simulationFinished();
-	}
 	
-	if (sim.generation > 10*N & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE & TOYRUN == 0)
+	if (
+		(sim.generation > 10*N & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE & TOYRUN == 0) |
+		(sim.generation < 10 & TOYRUN == 1)
+	)
 	{
-	        writeFile(MEANOUT, paste(mean, sep=","), append=T);
-	        writeFile(PREVOUT, paste(prev, sep=","), append=T);
-	        writeFile(H2OUT, paste(h2, sep=","), append=T);
-			  writeFile(H2SOUT, paste(h2s, sep=","), append=T);
-			  writeFile(H2LOUT, paste(h2l, sep=","), append=T);
-	        writeFile(GENVAROUT, paste(genVar, sep=","), append=T);
-	        sim.setValue("cycles", sim.getValue("cycles") +1);
+		writeFile(MEANOUT, paste(mean, sep=","), append=T);
+		writeFile(PREVOUT, paste(prev, sep=","), append=T);
+		writeFile(H2OUT, paste(h2, sep=","), append=T);
+		writeFile(H2SOUT, paste(h2s, sep=","), append=T);
+		writeFile(H2LOUT, paste(h2l, sep=","), append=T);
+		writeFile(GENVAROUT, paste(genVar, sep=","), append=T);
+		writeFile(NSEGSMALLOUT, paste(nSegSmall, sep=","), append=T);
+		writeFile(NSEGLARGEOUT, paste(nSegLarge, sep=","), append=T);
+		sim.setValue("cycles", sim.getValue("cycles") +1);
 	}
-	else if (sim.getValue("cycles") >= CYCLE)
+	else if (
+		(sim.getValue("cycles") >= CYCLE)) |
+		(sim.generation >= 10 & TOYRUN == 1)
 	{
-	sim.simulationFinished();
+		sim.simulationFinished();
 	}
 }
 
