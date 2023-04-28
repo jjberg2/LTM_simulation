@@ -21,7 +21,7 @@ N = np.array(params_table["Ne"].astype(int))
 thr = np.array(params_table["thr"].astype(int))
 envsd = np.round(np.array(params_table["env.sd"]),3).astype(str)
 
-# print(envsd)
+print(envsd)
 
 rule all:
   input:
