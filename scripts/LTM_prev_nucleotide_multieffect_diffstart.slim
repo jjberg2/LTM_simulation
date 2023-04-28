@@ -168,12 +168,12 @@ fitness(NULL){
 	
 	if (sim.generation > 10*N & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE & TOYRUN == 0)
 	{
-	        writeFile(MEANOUT, append=T);
-	        writeFile(PREVOUT, append=T);
-	        writeFile(H2OUT, append=T);
-			  writeFile(H2SOUT, append=T);
-			  writeFile(H2LOUT, append=T);
-	        writeFile(GENVAROUT, append=T);
+	        writeFile(MEANOUT, mean, append=T);
+	        writeFile(PREVOUT, prev, append=T);
+	        writeFile(H2OUT, h2, append=T);
+			  writeFile(H2SOUT, h2s, append=T);
+			  writeFile(H2LOUT, h2l, append=T);
+	        writeFile(GENVAROUT, genVar, append=T);
 	        sim.setValue("cycles", sim.getValue("cycles") +1);
 	}
 	else if (sim.getValue("cycles") >= CYCLE)
