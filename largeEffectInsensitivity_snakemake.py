@@ -65,7 +65,7 @@ rule result_combined:
    log:
      "{prefix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.log"
    output:
-     h2="{prefix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.h2",
-     prev="{prefix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.prev"
+     h2="largeEffectInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.h2",
+     prev="largeEffectInsensitivity/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.prev"
    shell:
      """cat {input.h2} >> {output.h2}; cat {input.prev} >> {output.prev}"""
