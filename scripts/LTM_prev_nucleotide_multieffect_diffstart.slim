@@ -161,7 +161,7 @@ fitness(NULL){
 			  writeFile(H2LOUT, paste(h2l, sep=","), append=T);
 	        writeFile(GENVAROUT, paste(genVar, sep=","), append=T);
 	}
-	else if (sim.generation < 10 & TOYRUN == 1)
+	else if (sim.generation >= 10 & TOYRUN == 1)
 	{
 	sim.simulationFinished();
 	}
