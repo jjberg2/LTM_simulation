@@ -17,21 +17,17 @@ initialize() {
 	rho = rhot;   //input rho total 
 	envSD = e;   // input e 
 	fitnessCost = f;    // input f
+	prefix=pre;	// output file prefix
  	
 	L = Ls + Ll;
-        maxG = 2 * (Ls * betaS + Ll * betaL);
-        threshold = maxG * rhot;
-        offset = 4*envSD;
-        startingPoint = 2 * Ls * rhoS - offset ; 	
+   maxG = 2 * (Ls * betaS + Ll * betaL);
+   threshold = maxG * rhot;
+   offset = 4*envSD;
+   startingPoint = 2 * Ls * rhoS - offset ; 	
         
- 	
  	// A and C are protective states for small effect and large effect 	
 	initializeAncestralNucleotides(randomNucleotides(Ls+Ll, c(Ls * (1-rhoS) - offset/betaS, Ll, Ls * rhoS + offset/betaS, 0))); // Ancestral allele start with protective 
  	
-	
-
-
-
 
 	// define constants
 	defineConstant('MU',perSiteMutRate);
@@ -45,6 +41,17 @@ initialize() {
 	defineConstant('SAMPLE_INT', sampleInt);
 	defineConstant('CYCLE', cyc);
 	defineConstant('REP',rep);
+	defineConstant('TOYRUN',toyRun);
+
+
+	// output files
+	defineConstant('MEAN',mean);
+	defineConstant('H2OUT',h2Out);
+	defineConstant('H2SOUT',h2sOut);
+	defineConstant('H2LOUT',h2lOut);
+	defineConstant('PREVOUT',prevOut);
+	defineConstant('GENVAROUT',genVar);
+
 
 	// liability mutations
 	LiaMuts = initializeMutationTypeNuc("m1", 0.5, 'f', 0);
@@ -55,6 +62,7 @@ initialize() {
 	initializeGenomicElementType('g1', m1, 1.0, mutationMatrix);
 	
 	initializeGenomicElement(g1, 0, L-1);
+	
 	// set recombinationrate  
 	initializeRecombinationRate(REC);
 }
@@ -142,25 +150,36 @@ fitness(NULL){
 	h2l = genVarLarge/ phenVar; 
 	prev=sum(inds.tagF>THR)/length(inds.tagF);
 	
+	
+	
 	if (sim.generation % 5000 ==0){print(sim.generation);}
-	if (sim.generation < 10*N & sim.generation & F )
+	if (sim.generation < 10 & TOYRUN == 1)
 	{
-			  writeFile(paste0("PopSize", N, "_aL", betaL, "_rhot", RHO, "_envSD", ENV_SIGMA, "_burnin_rep", REP, ".mean"), paste(mean,THR, sep=","), append=T);	        
-	        writeFile(paste0("PopSize", N, "_aL", betaL, "_rhot", RHO, "_envSD", ENV_SIGMA, "_burnin_rep", REP, ".prev"), paste(prev, sep=","), append=T);
-	        writeFile(paste0("PopSize", N, "_aL", betaL, "_rhot", RHO, "_envSD", ENV_SIGMA, "_burnin_rep", REP, ".h2"), paste(h2, sep=","), append=T);
-			  writeFile(paste0("PopSize", N, "_aL", betaL, "_rhot", RHO, "_envSD", ENV_SIGMA, "_burnin_rep", REP, ".h2s"), paste(h2s, sep=","), append=T);
-			  writeFile(paste0("PopSize", N, "_aL", betaL, "_rhot", RHO, "_envSD", ENV_SIGMA, "_burnin_rep", REP, ".h2l"), paste(h2l, sep=","), append=T);
-	        writeFile(paste0("PopSize", N, "_aL", betaL, "_rhot", RHO, "_envSD", ENV_SIGMA, "_burnin_rep", REP, ".genVar"), paste(genVar, sep=","), append=T);
+			  writeFile(MEANOUT, append=T);
+	        writeFile(PREVOUT, append=T);
+	        writeFile(H2OUT, append=T);
+			  writeFile(H2SOUT, append=T);
+			  writeFile(H2LOUT, append=T);
+	        writeFile(GENVAROUT, append=T);
 	}
-	if (sim.generation > 10*N & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE)
+	else if (sim.generation < 10 & TOYRUN == 1)
 	{
-	        writeFile(paste0("PopSize", N, "_aL", betaL, "_rhot", RHO, "_envSD", ENV_SIGMA, "_rep", REP, ".prev"), paste(prev, sep=","), append=T);
-	        writeFile(paste0("PopSize", N, "_aL", betaL, "_rhot", RHO, "_envSD", ENV_SIGMA, "_rep", REP, ".h2"), paste(h2, sep=","), append=T);
-			  writeFile(paste0("PopSize", N, "_aL", betaL, "_rhot", RHO, "_envSD", ENV_SIGMA, "_rep", REP, ".h2s"), paste(h2s, sep=","), append=T);
-			  writeFile(paste0("PopSize", N, "_aL", betaL, "_rhot", RHO, "_envSD", ENV_SIGMA, "_rep", REP, ".h2l"), paste(h2l, sep=","), append=T);
-	        writeFile(paste0("PopSize", N, "_aL", betaL, "_rhot", RHO, "_envSD", ENV_SIGMA, "_rep", REP, ".genVar"), paste(genVar, sep=","), append=T);
+	sim.simulationFinished();
+	}
+	
+	if (sim.generation > 10*N & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE & TOYRUN == 0)
+	{
+	        writeFile(MEANOUT, append=T);
+	        writeFile(PREVOUT, append=T);
+	        writeFile(H2OUT, append=T);
+			  writeFile(H2SOUT, append=T);
+			  writeFile(H2LOUT, append=T);
+	        writeFile(GENVAROUT, append=T);
 	        sim.setValue("cycles", sim.getValue("cycles") +1);
 	}
-	else if (sim.getValue("cycles") >= CYCLE){sim.simulationFinished();}
+	else if (sim.getValue("cycles") >= CYCLE)
+	{
+	sim.simulationFinished();
+	}
 }
 
