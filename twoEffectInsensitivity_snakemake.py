@@ -13,6 +13,7 @@ sampleInt = 50
 reps = 3
 toyRun = 1
 
+if(toyRun==1) {print("Warning: the toyRun flag is on!")}
 
 ## simulation variable 
 rep = list(np.arange(0,reps))
