@@ -11,7 +11,7 @@ params_table = pd.read_csv("twoEffectInsensitivity/twoEffectInsensitivityParamsT
 cyc = 200
 sampleInt = 50
 reps = 3
-toyRun = 0
+toyRun = 1
 
 
 ## simulation variable 
