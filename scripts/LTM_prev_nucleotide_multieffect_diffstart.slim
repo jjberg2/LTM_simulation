@@ -156,8 +156,8 @@ fitness(NULL){
 
 	prev=sum(inds.tagF>THR)/length(inds.tagF);
 
-	nSegSmall = sum(sim.mutations.nucleotide==“A”) + sum(sim.mutations.nucleotide==“G”)
-	nSegLarge = sum(sim.mutations.nucleotide==“C”) + sum(sim.mutations.nucleotide==“T”)
+	nSegSmall = sum(sim.mutations.nucleotide=="A") + sum(sim.mutations.nucleotide=="G");
+	nSegLarge = sum(sim.mutations.nucleotide=="C") + sum(sim.mutations.nucleotide=="T");
 	
 	if (sim.generation % 5000 ==0){print(sim.generation);}
 	
@@ -177,8 +177,9 @@ fitness(NULL){
 		sim.setValue("cycles", sim.getValue("cycles") +1);
 	}
 	else if (
-		(sim.getValue("cycles") >= CYCLE)) |
+		(sim.getValue("cycles") >= CYCLE) |
 		(sim.generation >= 10 & TOYRUN == 1)
+	)
 	{
 		sim.simulationFinished();
 	}

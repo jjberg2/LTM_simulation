@@ -60,7 +60,7 @@ rule slim_simulate_withsegregating:
     partition="broadwl",
     mem="2Gb"
   shell:
-    """set +u; slim -d mu={params.mu} -d rhot={wildcards.rhot} -d rhos={params.rhos} -d p={wildcards.N}  -d f={params.fitCost}  -d e={wildcards.envSD} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d aS={params.alphaSmall} -d aL={wildcards.alphaLarge} -d liaSmall={params.liaSmall} -d liaLarge={params.liaLarge} -d "meanOut='{output.mean}'" -d "h2Out='{output.h2}'" -d "prevOut='{output.prev}'" -d "h2lOut='{output.h2l}'" -d "h2sOut='{output.h2s}'" -d "nSegSmallOut='{output.nSegSmall}'"  -d "nSegLargeOut='{output.nSegLarge}'"-d toyRun={params.toyRun} {input.slim_script} > {wildcards.prefix}/PopSize{wildcards.N}_aL{wildcards.alphaLarge}_rhot{wildcards.rhot}_envSD{wildcards.envSD}_rep{wildcards.rep}.temp; set -u; 
+    """set +u; slim -d mu={params.mu} -d rhot={wildcards.rhot} -d rhos={params.rhos} -d p={wildcards.N}  -d f={params.fitCost}  -d e={wildcards.envSD} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d aS={params.alphaSmall} -d aL={wildcards.alphaLarge} -d liaSmall={params.liaSmall} -d liaLarge={params.liaLarge} -d "meanOut='{output.mean}'" -d "h2Out='{output.h2}'" -d "prevOut='{output.prev}'" -d "h2lOut='{output.h2l}'" -d "h2sOut='{output.h2s}'" -d "genVarOut='{output.genVar}'" -d "nSegSmallOut='{output.nSegSmall}'"  -d "nSegLargeOut='{output.nSegLarge}'" -d toyRun={params.toyRun} {input.slim_script} > {wildcards.prefix}/PopSize{wildcards.N}_aL{wildcards.alphaLarge}_rhot{wildcards.rhot}_envSD{wildcards.envSD}_rep{wildcards.rep}.temp; set -u; 
     set +u; rm {wildcards.prefix}/PopSize{wildcards.N}_aL{wildcards.alphaLarge}_rhot{wildcards.rhot}_envSD{wildcards.envSD}_rep{wildcards.rep}.temp; set -u; """
 
 
@@ -71,14 +71,18 @@ rule result_combined:
      prev=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_rhot{{rhot}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.prev", rep=rep),
      h2l=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_rhot{{rhot}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.h2l", rep=rep),
      h2s=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_rhot{{rhot}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.h2s", rep=rep),
-     genVar=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_rhot{{rhot}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.genVar", rep=rep)
+     genVar=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_rhot{{rhot}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.genVar", rep=rep),
+     nSegSmall=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_rhot{{rhot}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.nSegSmall", rep=rep),
+     nSegLarge=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_rhot{{rhot}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.nSegLarge", rep=rep)
    output:
      mean="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.mean",
      h2="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.h2",
      prev="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.prev",
      h2l="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.h2l",
      h2s="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.h2s",
-     genVar="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.genVar"
+     genVar="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.genVar",
+     nSegSmall="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.nSegSmall",
+     nSegLarge="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_all.nSegLarge"
    shell: 
      """cat {input.h2} >> {output.h2}; cat {input.prev} >> {output.prev}; cat {input.h2l} >> {output.h2l}""" 
  
