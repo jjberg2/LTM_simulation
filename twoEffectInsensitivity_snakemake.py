@@ -58,7 +58,7 @@ rule slim_simulate_withsegregating:
     partition="broadwl",
     mem="2Gb"
   shell:
-    """set +u; slim  -d mu={params.mu} -d rhot={wildcards.rhot} -d rhos={params.rhos} -d p={wildcards.N}  -d f={params.fitCost}  -d e={wildcards.envSD} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d aS={params.alphaSmall} -d aL={wildcards.alphaLarge} -d liaSmall={params.liaSmall} -d liaLarge={params.liaLarge} -d "mean='{output.mean}'" -d "h2Out='{output.h2}'" -d "prevOut='{output.prev}'" -d "h2lOut='{output.h2l}'" -d "h2sOut='{output.h2s}'" -d "genVar='{output.genVar}'" -d toyRun={params.toyRun} {input.slim_script} > {wildcards.prefix}/PopSize{wildcards.N}_aL{wildcards.alphaLarge}_rhot{wildcards.rhot}_envSD{wildcards.envSD}_rep{wildcards.rep}.temp; set -u; 
+    """set +u; slim  -d mu={params.mu} -d rhot={wildcards.rhot} -d rhos={params.rhos} -d p={wildcards.N}  -d f={params.fitCost}  -d e={wildcards.envSD} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d aS={params.alphaSmall} -d aL={wildcards.alphaLarge} -d liaSmall={params.liaSmall} -d liaLarge={params.liaLarge} -d "meanOut='{output.mean}'" -d "h2Out='{output.h2}'" -d "prevOut='{output.prev}'" -d "h2lOut='{output.h2l}'" -d "h2sOut='{output.h2s}'" -d "genVarOut='{output.genVar}'" -d toyRun={params.toyRun} {input.slim_script} > {wildcards.prefix}/PopSize{wildcards.N}_aL{wildcards.alphaLarge}_rhot{wildcards.rhot}_envSD{wildcards.envSD}_rep{wildcards.rep}.temp; set -u; 
     set +u; rm {wildcards.prefix}/PopSize{wildcards.N}_aL{wildcards.alphaLarge}_rhot{wildcards.rhot}_envSD{wildcards.envSD}_rep{wildcards.rep}.temp; set -u; """
 
 
