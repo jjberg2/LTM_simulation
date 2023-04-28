@@ -154,12 +154,12 @@ fitness(NULL){
 	if (sim.generation % 5000 ==0){print(sim.generation);}
 	if (sim.generation < 10 & TOYRUN == 1)
 	{
-			   writeFile(MEANOUT, mean, append=T);
-	        writeFile(PREVOUT, prev, append=T);
-	        writeFile(H2OUT, h2, append=T);
-			  writeFile(H2SOUT, h2s, append=T);
-			  writeFile(H2LOUT, h2l, append=T);
-	        writeFile(GENVAROUT, genVar, append=T);
+			   writeFile(MEANOUT, paste(mean, sep=","), append=T);
+	        writeFile(PREVOUT, paste(prev, sep=","), append=T);
+	        writeFile(H2OUT, paste(h2, sep=","), append=T);
+			  writeFile(H2SOUT, paste(h2s, sep=","), append=T);
+			  writeFile(H2LOUT, paste(h2l, sep=","), append=T);
+	        writeFile(GENVAROUT, paste(genVar, sep=","), append=T);
 	}
 	else if (sim.generation < 10 & TOYRUN == 1)
 	{
@@ -168,12 +168,12 @@ fitness(NULL){
 	
 	if (sim.generation > 10*N & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE & TOYRUN == 0)
 	{
-	        writeFile(MEANOUT, mean, append=T);
-	        writeFile(PREVOUT, prev, append=T);
-	        writeFile(H2OUT, h2, append=T);
-			  writeFile(H2SOUT, h2s, append=T);
-			  writeFile(H2LOUT, h2l, append=T);
-	        writeFile(GENVAROUT, genVar, append=T);
+	        writeFile(MEANOUT, paste(mean, sep","), append=T);
+	        writeFile(PREVOUT, paste(prev, ","), append=T);
+	        writeFile(H2OUT, paste(h2, ","), append=T);
+			  writeFile(H2SOUT, paste(h2s, ","), append=T);
+			  writeFile(H2LOUT, paste(h2l, ","), append=T);
+	        writeFile(GENVAROUT, paste(genVar, ","), append=T);
 	        sim.setValue("cycles", sim.getValue("cycles") +1);
 	}
 	else if (sim.getValue("cycles") >= CYCLE)
