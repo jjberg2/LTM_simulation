@@ -1,52 +1,53 @@
-import numpy as np
+import numpy as np 
 import pandas as pd
 
-input_table_filename = "largeEffectInsensitivityParamTable.txt"
-output_table_filename = "largeEffectInsensitivityResultsTable.Rdata"
+input_table_filename = "smallEffectInsensitivityParamTable.txt"
+results_table_filename = "smallEffectInsensitivityResultsTable.Rdata"
 
 params_table = pd.read_csv(input_table_filename, delim_whitespace=True)
 
 
-## global parameter ( doesn't change)
+## global parameter ( doesn't change) 
 mu=1e-6
-cyc = 200
+cyc = 20
 sampleInt = 50
 toyRun=1
 
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
 
-## simulation variable
+## simulation variable 
 rep = list(np.arange(0,2))
+rhos = np.array(params_table["rho"])
 liaSizes = np.array((params_table["target.size"]).astype(int))
-cost = np.round((params_table["cost"]),3).astype(str)
+cost = np.round((params_table["cost"]),3)
 N = np.array(params_table["Ne"].astype(int))
-thr = np.array(params_table["thr"].astype(int))
-envsd = np.round(np.array(params_table["env.sd"]),3).astype(str)
+h2 = np.round(params_table["h2"],1)
+envsd = np.round(np.array(params_table["env.sd"]),3)
 tmpRhos = np.array(params_table["rho"])
 rhos = np.array(['{:.5f}'.format(r) for r in tmpRhos], dtype=np.str)
 
 
-print(rhos)
-
+print(params_table)
+    
 rule all:
   input:
     input_table_filename,
-    expand("largeEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.mean",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd),
-    expand("largeEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.h2",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd),    
-    expand("largeEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.prev",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd),
-    expand("largeEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.genVar",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd),
-    expand("largeEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.nSeg",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd)
+    expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.mean",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd),
+    expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.h2",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd),    
+    expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.prev",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd),
+    expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.genVar",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd),
+    expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.nSeg",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd)
   params:
      time="36:00:00",
      partition="broadwl",
      mem="2Gb",
-     path="largeEffectInsensitivity/all"
+     path="smallEffectInsensitivity/all"
   output:
-    output_table_filename
+    results_table_filename
   shell:
     """Rscript scripts/collateSingleEffectResults.R {input} {params.path} {output}"""
-   
+
 
 rule slim_simulate_withsegregating:
   input:
@@ -73,7 +74,7 @@ rule slim_simulate_withsegregating:
     set +u; slim  -d mu={params.mu} -d  rho_input={wildcards.rhos} -d p={wildcards.N} -d liaSize={wildcards.liaSizes} -d f={wildcards.cost}  -d e={wildcards.envsd} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d "meanOut='{output.mean}'" -d "h2Out='{output.h2}'" -d "prevOut='{output.prev}'" -d "genVarOut='{output.genVar}'" -d "nSegOut='{output.nSeg}'" -d toyRun={params.toyRun} {input.slim_script} > {output.tmp}; set -u"""
 
 
-    
+
 rule result_combined:
    input:
      mean=expand("{{path}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.mean", rep=rep),
@@ -95,3 +96,4 @@ rule result_combined:
      nSeg="{path}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.nSeg"          
    shell:
      """cat {input.mean} >> {output.mean}; cat {input.h2} >> {output.h2}; cat {input.prev} >> {output.prev}; cat {input.genVar} >> {output.genVar}; cat {input.nSeg} >> {output.nSeg}"""
+
