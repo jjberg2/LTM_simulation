@@ -11,7 +11,7 @@ params_table = pd.read_csv(input_table_filename, delim_whitespace=True)
 mu=1e-6
 cyc = 200
 sampleInt = 50
-toyRun=1
+toyRun=0
 
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
@@ -25,9 +25,6 @@ thr = np.array(params_table["thr"].astype(int))
 envsd = np.round(np.array(params_table["env.sd"]),3).astype(str)
 tmpRhos = np.array(params_table["rho"])
 rhos = np.array(['{:.5f}'.format(r) for r in tmpRhos], dtype=np.str)
-
-
-print(rhos)
 
 rule all:
   input:
