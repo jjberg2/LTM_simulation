@@ -8,7 +8,7 @@ params_table = pd.read_csv("largeEffectInsensitivityParamTable.txt", delim_white
 mu=1e-6
 cyc = 200
 sampleInt = 50
-toyRun=1
+toyRun=0
 
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
