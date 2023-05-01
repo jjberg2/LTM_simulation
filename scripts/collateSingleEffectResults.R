@@ -1,8 +1,6 @@
 ## functions
-merge_into_paramtable <- function(params.table,file.roots,file.exts ){
+merge_into_paramtable <- function(params.table,file.roots,file.exts,my.path){
     ## recover()
-
-    
     param.rows <- nrow(params.table)
     n.sims <- length(file.roots)
     if(param.rows!=n.sims)
@@ -24,14 +22,13 @@ merge_into_paramtable <- function(params.table,file.roots,file.exts ){
     return(results)
 }
 
-
 options(scipen=400)
-my.path <- "largeEffectInsensitivity/all"
 if(interactive()){
     my.args <- c(
-        "largeEffectInsensitivityParamTable.txt",
+        "smallEffectInsensitivityParamTable.txt",
         sapply(dir(my.path),function(X) paste(my.path,X,sep="/")),
-        "largeEffectInsensitivityResultsTable.Rdata"
+        "smallEffectInsensitivity/all",
+        "smallEffectInsensitivityResultsTable.Rdata"
     )
 } else {
     ## read in command line arguments
@@ -41,18 +38,18 @@ if(interactive()){
 
 input.table.filename <- head(my.args,1)
 output.table.filename <- tail(my.args,1)
-sim.filenames <- tail(head(my.args,-1),-1)
+my.path <- head(tail(my.args,2),1)
+sim.filenames <- tail(head(my.args,-2),-1)
 
 ## load the parameter table
 param.table <- read.table(input.table.filename)
 
-
+## get unique sims and all the file extensions
 files <- unique(sapply(sim.filenames,function(X) strsplit(X,'_all.')[[1]][1]))
 exts <-  unique(sapply(sim.filenames,function(X) strsplit(X,'_all.')[[1]][2]))
 
 
-
-results.table = merge_into_paramtable(param.table,files,exts)
+results.table = merge_into_paramtable(param.table,files,exts,my.path)
 save(results.table,file=output.table.filename)
 
 
