@@ -1,38 +1,47 @@
 import numpy as np
 import pandas as pd
 
-params_table = pd.read_csv("largeEffectInsensitivityParamTable.txt", delim_whitespace=True)
+input_table_filename = "largeEffectInsensitivityParamTable.txt"
+output_table_filename = "largeEffectInsensitivityResultsTable.Rdata"
+
+params_table = pd.read_csv(input_table_filename, delim_whitespace=True)
 
 
 ## global parameter ( doesn't change)
 mu=1e-6
 cyc = 200
 sampleInt = 50
-toyRun=1
+toyRun=0
 
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
 
 ## simulation variable
-rep = list(np.arange(0,2))
-#rhos = np.array(params_table["rho"])
+rep = list(np.arange(0,4))
 liaSizes = np.array((params_table["target.size"]).astype(int))
 cost = np.round((params_table["cost"]),3).astype(str)
-rhos = np.round(np.array(params_table["rho"]),3).astype(str)
 N = np.array(params_table["Ne"].astype(int))
 thr = np.array(params_table["thr"].astype(int))
 envsd = np.round(np.array(params_table["env.sd"]),3).astype(str)
+tmpRhos = np.array(params_table["rho"])
+rhos = np.array(['{:.5f}'.format(r) for r in tmpRhos], dtype=np.str)
 
-print(envsd)
+
+print(rhos)
 
 rule all:
   input:
+    input_table_filename,
     expand("largeEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.mean",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd),
     expand("largeEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.h2",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd),    
     expand("largeEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.prev",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd),
     expand("largeEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.genVar",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd),
     expand("largeEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.nSeg",zip, N=N, liaSizes=liaSizes, rhos=rhos, cost=cost, envsd=envsd)
-    #expand("PopSize{N}_LiaSize{liaSizes}_rho{rhos}_all.h2", zip, N=N, liaSizes=liaSizes, rhos=rhos)
+  output:
+    output_table_filename
+  shell:
+    """Rscript scripts/collateLargeEffectResults.R {input} {output}"""
+   
 
 rule slim_simulate_withsegregating:
   input:
