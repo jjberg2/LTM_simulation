@@ -22,7 +22,7 @@ rhot = np.round(np.array(params_table["rhot"]),3)
 cost = np.round(np.array(params_table["C"]),3)
 alphaLarge = np.round(np.array(params_table["al"]),3)
 #alphaLarge = [trim_trailingzero(x) for x in alphaLarge]
-print(cost)
+# print(cost)
 
 N = np.array(params_table["Ne"].astype(int))
 envSD = np.round(np.sqrt(params_table["Ve"]),3)
