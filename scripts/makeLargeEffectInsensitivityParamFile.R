@@ -44,6 +44,8 @@ for(j in seq_along(sim.out)){
         }
     }
 }
-new.table <- cbind(my.table,'rho'=my.rho,'b'=my.b,'gamma'=my.gamma,'env.sd'=env.sd,'pois.prev'=pois.prev)
+new.table <- cbind(my.table,'mean'=my.mean,'rho'=my.rho,'b'=my.b,'gamma'=my.gamma,'env.sd'=env.sd,'pois.prev'=pois.prev)
+
+
 
 write.table(new.table,file='largeEffectInsensitivityParamTable.txt')
