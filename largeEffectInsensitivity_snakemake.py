@@ -40,7 +40,7 @@ rule all:
      mem="2Gb",
      path="largeEffectInsensitivity/all"
   output:
-    output_table_filename
+    protected(output_table_filename)
   shell:
     """Rscript scripts/collateSingleEffectResults.R {input} {params.path} {output}"""
    

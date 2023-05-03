@@ -41,7 +41,7 @@ rule all:
      mem="2Gb",
      path="smallEffectInsensitivity/all"
   output:
-    results_table_filename
+    protected(results_table_filename)
   shell:
     """Rscript scripts/collateSingleEffectResults.R {input} {params.path} {output}"""
 
@@ -56,7 +56,7 @@ rule slim_simulate_withsegregating:
     toyRun = toyRun,
     time="36:00:00",
     partition="broadwl",
-    mem="2Gb"
+    mem="4Gb"
   log:
     "logs/{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.log"
   output:
