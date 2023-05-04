@@ -4,15 +4,15 @@ source('scripts/solveSingleEffect.R')
 
 my.thr <- c(1,2,5,10,15,20,50)
 my.Ne <- 5000
-L <- 10000
+L <- 3000
 h2=0.5
 mu <- 1e-6
 my.theta <- 4*my.Ne*mu
 
 
 
-## sim.costs <- seq(0.01,1,by=0.01)
-sim.costs <- c(0.05,0.25,0.5,0.75,0.95)
+sim.costs <- seq(0.02,1,by=0.08)
+##sim.costs <- c(0.05,0.25,0.5,0.75,0.95)
 sim.out <- list()
 for(j in seq_along(my.thr)){
     sim.out[[j]] <- list()
@@ -45,7 +45,5 @@ for(j in seq_along(sim.out)){
     }
 }
 new.table <- cbind(my.table,'mean'=my.mean,'rho'=my.rho,'b'=my.b,'gamma'=my.gamma,'env.sd'=env.sd,'pois.prev'=pois.prev)
-
-
-
+new.table <- new.table[!is.na(new.table$mean),]
 write.table(new.table,file='largeEffectInsensitivityParamTable.txt')
