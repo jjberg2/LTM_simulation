@@ -53,6 +53,7 @@ initialize() {
 	defineConstant('PREVOUT',prevOut);
 	defineConstant('GENVAROUT',genVarOut);
 	defineConstant('NSEGOUT',nSegOut);
+	defineConstant('DELTAR',deltaR);
 
 	// liability mutations
 	LiaMuts = initializeMutationTypeNuc("m1", 0.5, 'f', 0);
@@ -87,6 +88,31 @@ fitness(NULL){
       	    // print(length(sim.getValue("fixedPos")));
         }
         sim.setValue("Nfixed", 0);   // record total number of fixed allele
+
+
+	if (
+		(sim.generation > 10*N & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE & TOYRUN == 0) |
+		(sim.generation < 10 & TOYRUN == 1)	
+	){
+  		risk = (1.0 - asFloat(sim.subpopulations.individuals.tagF > THR));
+   	risk = risk/mean(risk);
+   	mutTypes = sim.mutationTypes;
+   	all_lia = sim.mutationsOfType(mutTypes[0]);
+		deltaR = rep(0.0, length(all_lia));
+		for (i in c(0: (length(all_lia)-1))){
+      	x = asInteger(p1.individuals.genome1.containsMutations(all_lia[i])) + asInteger(p1.individuals.genome2.containsMutations(all_lia[i]));
+      	if (all_lia[i].nucleotide == "A") {
+      		x = 2-x;
+      	}
+    		num = sum((x-mean(x))*(risk - mean(risk)));
+   		denom = sum( (x-mean(x))^2 );
+			deltaR[i] = num/denom ;
+		}
+		sim.setValue("deltaR", mean(deltaR));	
+		writeFile(DELTAR, paste(deltaR, sep=","), append=T);
+	}
+
+
 
 }
 
