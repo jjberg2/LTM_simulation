@@ -1,6 +1,6 @@
 ## functions
 merge_into_paramtable <- function(params.table,file.roots,file.exts,my.path){
-    ## recover()
+    recover()
     param.rows <- nrow(params.table)
     n.sims <- length(file.roots)
     if(param.rows!=n.sims)
@@ -25,10 +25,10 @@ merge_into_paramtable <- function(params.table,file.roots,file.exts,my.path){
 options(scipen=400)
 if(interactive()){
     my.args <- c(
-        "smallEffectInsensitivityParamTable.txt",
+        "largeEffectInsensitivityParamTable.txt",
         sapply(dir(my.path),function(X) paste(my.path,X,sep="/")),
-        "smallEffectInsensitivity/all",
-        "smallEffectInsensitivityResultsTable.Rdata"
+        "largeEffectInsensitivity/all",
+        "largeEffectInsensitivityResultsTable.Rdata"
     )
 } else {
     ## read in command line arguments
@@ -49,7 +49,7 @@ files <- unique(sapply(sim.filenames,function(X) strsplit(X,'_all.')[[1]][1]))
 exts <-  unique(sapply(sim.filenames,function(X) strsplit(X,'_all.')[[1]][2]))
 
 
-results.table = merge_into_paramtable(param.table,files,exts,my.path)
+results.table <- merge_into_paramtable(param.table,files,exts,my.path)
 save(results.table,file=output.table.filename)
 
 

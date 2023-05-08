@@ -76,30 +76,40 @@ fitness(NULL){
 1 {
 	sim.addSubpop('p1', N);
 	sim.setValue("cycles", 0);
-	if (THR <= THR_START) sim.setValue("fixedPos", NULL);  // record position fixed for risk allele
+	if (THR <= THR_START) {
+		sim.setValue("fixedPos", NULL);  // record position fixed for risk allele
+	}
         
 	// small effect size, count how many are fixed at risk allele   
 	else {
-             temp=c();
-             for (i in c(0: (nchar(ANC)-1))){
-                 if (substr(ANC, i,i)=="G") temp = c(temp, i);
-                 sim.setValue("fixedPos", temp);
-             }
-      	    // print(length(sim.getValue("fixedPos")));
-        }
-        sim.setValue("Nfixed", 0);   // record total number of fixed allele
+   	temp=c();
+     	for (i in c(0: (nchar(ANC)-1))){
+      	if (substr(ANC, i,i)=="G") temp = c(temp, i);
+        		sim.setValue("fixedPos", temp);
+       	}
+     		// print(length(sim.getValue("fixedPos")));
+ 	}
+   sim.setValue("Nfixed", 0);   // record total number of fixed allele
+   
+}
 
-
+2: early() {
 	if (
 		(sim.generation > 10*N & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE & TOYRUN == 0) |
 		(sim.generation < 10 & TOYRUN == 1)	
 	){
-		risk = 1 - pnorm(THR, sim.subpopulations.individuals.tagF, ENV_SIGMA)
+		genLi = sim.subpopulations.individuals.tagF;
+		risk = rep(0.0, length(genLi));	
+			
+		for(i in c(0: (length(genLi)-1))){
+			risk[i] = 1 - pnorm(THR, genLi[i], ENV_SIGMA);
+		}
+
   		// disease = asFloat(sim.subpopulations.individuals.tagF > THR);
    	// disease = disease/mean(disease);
    	mutTypes = sim.mutationTypes;
    	all_lia = sim.mutationsOfType(mutTypes[0]);
-		deltaR = rep(0.0, length(all_lia));
+		riskEffect = rep(0.0, length(all_lia));
 		for (i in c(0: (length(all_lia)-1))){
       	x = asInteger(p1.individuals.genome1.containsMutations(all_lia[i])) + asInteger(p1.individuals.genome2.containsMutations(all_lia[i]));
       	if (all_lia[i].nucleotide == "A") {
@@ -107,16 +117,12 @@ fitness(NULL){
       	}
     		num = sum((x-mean(x))*(risk - mean(risk)));
    		denom = sum( (x-mean(x))^2 );
-			deltaR[i] = num/denom ;
+			riskEffect[i] = num/denom ;
 		}
-		sim.setValue("deltaR", mean(deltaR));	
-		writeFile(DELTAR, paste(deltaR, sep=","), append=T);
+		//sim.setValue("meanRiskEffect", );	
+		writeFile(DELTAR, paste(mean(riskEffect), sep=","), append=T);
 	}
-
-
-
-}
-
+}	
 
 1:5000000 late() {
 	thisGen=sim.generation;
@@ -166,17 +172,20 @@ fitness(NULL){
 
 	// calculate components of genetic liability 
 	genLi=START+fixedGenLi+segGenLi;
-	inds.tagF = genLi + rnorm(N, 0.0, ENV_SIGMA);
+
+	liabilities = genLi + rnorm(N, 0.0, ENV_SIGMA);	
 	
 	// things to output
 	mean=mean(genLi);
 	genVar=var(genLi);
-	phenVar=var(inds.tagF);
+	phenVar=var(liabilities);
 	
 	h2=genVar/phenVar;
-	prev=sum(inds.tagF>THR)/length(inds.tagF);
-
+	prev=sum(liabilities >THR)/length(liabilities );
 	nSeg = sum(sim.mutations.nucleotide=="A") + sum(sim.mutations.nucleotide=="G");
+
+	// pass genetic liabilities to next code block
+	inds.tagF = genLi;
 
 	if (
 		(sim.generation > 10*N & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE & TOYRUN == 0) |
