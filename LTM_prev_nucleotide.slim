@@ -20,7 +20,7 @@ initialize() {
 	   initializeAncestralNucleotides(paste0(rep("A", L))); // Ancestral allele start with protective 
 	} 
 	else {
-		// if not, start at threshold point - 2000, set corresponding number of alleles to be protective and liability increasing 
+		// if not, start at threshold point - THR_MINUS, set corresponding number of alleles to be protective and liability increasing 
 	   startingPoint = 0;  
 	   initial_sequence = randomNucleotides(L, c(L-asInteger(L*RHO)+ asInteger(THR_MINUS), 0, asInteger(L*RHO)- asInteger(THR_MINUS), 0));
 	   defineConstant('ANC', initial_sequence);
@@ -48,6 +48,7 @@ initialize() {
 	defineConstant('TOYRUN',toyRun);
 
 	// output files
+	defineConstant('FIXEDOUT',fixedOut);	
 	defineConstant('MEANOUT',meanOut);
 	defineConstant('H2OUT',h2Out);
 	defineConstant('PREVOUT',prevOut);
@@ -171,7 +172,8 @@ fitness(NULL){
 	}
 
 	// calculate components of genetic liability 
-	genLi=START+fixedGenLi+segGenLi;
+	fixedState=START+fixedGenLi;
+	genLi=fixedState+segGenLi;
 
 	liabilities = genLi + rnorm(N, 0.0, ENV_SIGMA);	
 	
@@ -192,6 +194,7 @@ fitness(NULL){
 		(sim.generation < 10 & TOYRUN == 1)
 	)
 	{
+		writeFile(FIXEDOUT, paste(fixedState, sep=","), append=T);
 		writeFile(MEANOUT, paste(mean, sep=","), append=T);
 		writeFile(PREVOUT, paste(prev, sep=","), append=T);
 		writeFile(H2OUT, paste(h2, sep=","), append=T);
