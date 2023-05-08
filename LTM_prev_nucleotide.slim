@@ -94,8 +94,9 @@ fitness(NULL){
 		(sim.generation > 10*N & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE & TOYRUN == 0) |
 		(sim.generation < 10 & TOYRUN == 1)	
 	){
-  		risk = (1.0 - asFloat(sim.subpopulations.individuals.tagF > THR));
-   	risk = risk/mean(risk);
+		risk = 1 - pnorm(THR, sim.subpopulations.individuals.tagF, ENV_SIGMA)
+  		// disease = asFloat(sim.subpopulations.individuals.tagF > THR);
+   	// disease = disease/mean(disease);
    	mutTypes = sim.mutationTypes;
    	all_lia = sim.mutationsOfType(mutTypes[0]);
 		deltaR = rep(0.0, length(all_lia));

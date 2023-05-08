@@ -11,7 +11,7 @@ params_table = pd.read_csv(input_table_filename, delim_whitespace=True)
 mu=1e-6
 cyc = 200
 sampleInt = 50
-toyRun=0
+toyRun=1
 
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
