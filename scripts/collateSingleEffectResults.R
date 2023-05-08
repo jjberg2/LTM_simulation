@@ -1,6 +1,6 @@
 ## functions
 merge_into_paramtable <- function(params.table,file.roots,file.exts,my.path){
-    recover()
+    ## recover()
     param.rows <- nrow(params.table)
     n.sims <- length(file.roots)
     if(param.rows!=n.sims)

@@ -9,20 +9,19 @@ params_table = pd.read_csv(input_table_filename, delim_whitespace=True)
 
 ## global parameter ( doesn't change) 
 mu=1e-6
-cyc = 20
+cyc = 200
 sampleInt = 50
-toyRun=0
+toyRun=1
 
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
 
 ## simulation variable 
 rep = list(np.arange(0,2))
-rhos = np.array(params_table["rho"])
 liaSizes = np.array((params_table["target.size"]).astype(int))
 cost = np.round((params_table["cost"]),3)
 N = np.array(params_table["Ne"].astype(int))
-h2 = np.round(params_table["h2"],1)
+## thr = np.array(params_table["thr"].astype(int))
 envsd = np.round(np.array(params_table["env.sd"]),3)
 tmpRhos = np.array(params_table["rho"])
 rhos = np.array(['{:.5f}'.format(r) for r in tmpRhos], dtype=np.str)
@@ -65,10 +64,11 @@ rule slim_simulate_withsegregating:
     prev=temp("{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.prev"),
     genVar=temp("{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.genVar"),
     nSeg=temp("{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.nSeg"),
+    deltaR=temp("{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.deltaR"),
     tmp=temp("{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.tmp")
   shell:
-    """thr=`awk 'BEGIN {{print 1e5*2*{wildcards.rhos}}}'`;
-    set +u; slim  -d mu={params.mu} -d  rho_input={wildcards.rhos} -d p={wildcards.N} -d liaSize={wildcards.liaSizes} -d f={wildcards.cost}  -d e={wildcards.envsd} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d "meanOut='{output.mean}'" -d "h2Out='{output.h2}'" -d "prevOut='{output.prev}'" -d "genVarOut='{output.genVar}'" -d "nSegOut='{output.nSeg}'" -d toyRun={params.toyRun} {input.slim_script} > {output.tmp}; set -u"""
+    """thr=`awk 'BEGIN {{print {wildcards.liaSizes}*2*{wildcards.rhos}}}'`;
+    set +u; slim  -d mu={params.mu} -d  rho_input={wildcards.rhos} -d p={wildcards.N} -d liaSize={wildcards.liaSizes} -d f={wildcards.cost}  -d e={wildcards.envsd} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d "meanOut='{output.mean}'" -d "h2Out='{output.h2}'" -d "prevOut='{output.prev}'" -d "genVarOut='{output.genVar}'" -d "nSegOut='{output.nSeg}'" -d "deltaR='{output.deltaR}'" -d toyRun={params.toyRun} {input.slim_script} > {output.tmp}; set -u"""
 
 
 
@@ -78,7 +78,8 @@ rule result_combined:
      h2=expand("{{path}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.h2", rep=rep),
      prev=expand("{{path}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.prev", rep=rep),
      genVar=expand("{{path}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.genVar", rep=rep),
-     nSeg=expand("{{path}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.nSeg", rep=rep)
+     nSeg=expand("{{path}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.nSeg", rep=rep),
+     deltaR=expand("{{path}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.deltaR", rep=rep)
    params:
      time="36:00:00",
      partition="broadwl",
@@ -90,7 +91,8 @@ rule result_combined:
      h2="{path}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.h2",
      prev="{path}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.prev",
      genVar="{path}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.genVar",
-     nSeg="{path}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.nSeg"          
+     nSeg="{path}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.nSeg",
+     deltaR="{path}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.deltaR"          
    shell:
-     """cat {input.mean} >> {output.mean}; cat {input.h2} >> {output.h2}; cat {input.prev} >> {output.prev}; cat {input.genVar} >> {output.genVar}; cat {input.nSeg} >> {output.nSeg}"""
+     """cat {input.mean} >> {output.mean}; cat {input.h2} >> {output.h2}; cat {input.prev} >> {output.prev}; cat {input.genVar} >> {output.genVar}; cat {input.nSeg} >> {output.nSeg}; cat {input.deltaR} >> {output.deltaR}"""
 
