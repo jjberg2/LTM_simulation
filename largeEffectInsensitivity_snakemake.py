@@ -9,7 +9,7 @@ params_table = pd.read_csv(input_table_filename, delim_whitespace=True)
 
 ## global parameter ( doesn't change)
 mu=1e-6
-cyc = 200
+cyc = 600
 sampleInt = 50
 toyRun=0
 
@@ -17,7 +17,7 @@ if(toyRun==1):
     print("Warning: the toyRun flag is on!")
 
 ## simulation variable
-rep = list(np.arange(0,2))
+rep = list(np.arange(0,4))
 liaSizes = np.array((params_table["target.size"]).astype(int))
 cost = np.round((params_table["cost"]),3).astype(str)
 N = np.array(params_table["Ne"].astype(int))
@@ -61,14 +61,14 @@ rule slim_simulate_withsegregating:
   log:
     "logs/{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.log"
   output:
-    fixed=temp("{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.fixed"),
-    mean=temp("{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.mean"),
-    h2=temp("{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.h2"),
-    prev=temp("{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.prev"),
-    genVar=temp("{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.genVar"),
-    nSeg=temp("{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.nSeg"),
-    deltaR=temp("{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.deltaR"),
-    tmp=temp("{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.tmp")
+    fixed="{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.fixed",
+    mean="{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.mean",
+    h2="{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.h2",
+    prev="{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.prev",
+    genVar="{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.genVar",
+    nSeg="{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.nSeg",
+    deltaR="{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.deltaR",
+    tmp="{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.tmp"
   shell:
     """thr=`awk 'BEGIN {{print {wildcards.liaSizes}*2*{wildcards.rhos}}}'`;
     set +u; slim  -d mu={params.mu} -d  rho_input={wildcards.rhos} -d p={wildcards.N} -d liaSize={wildcards.liaSizes} -d f={wildcards.cost}  -d e={wildcards.envsd} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d "fixedOut='{output.fixed}'" -d "meanOut='{output.mean}'" -d "h2Out='{output.h2}'" -d "prevOut='{output.prev}'" -d "genVarOut='{output.genVar}'" -d "nSegOut='{output.nSeg}'" -d "deltaR='{output.deltaR}'" -d toyRun={params.toyRun} {input.slim_script} > {output.tmp}; set -u"""
