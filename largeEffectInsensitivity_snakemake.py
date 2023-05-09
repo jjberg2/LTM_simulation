@@ -17,7 +17,7 @@ if(toyRun==1):
     print("Warning: the toyRun flag is on!")
 
 ## simulation variable
-rep = list(np.arange(0,4))
+rep = list(np.arange(0,3))
 liaSizes = np.array((params_table["target.size"]).astype(int))
 cost = np.round((params_table["cost"]),3).astype(str)
 N = np.array(params_table["Ne"].astype(int))
