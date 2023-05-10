@@ -33,7 +33,7 @@ new.table
 
 
 
-write.table(new.table,file='costInsensitivityParamTable.txt')
+write.table(new.table,file='smallEffectInsensitivityParamTable.txt')
 
 
 
