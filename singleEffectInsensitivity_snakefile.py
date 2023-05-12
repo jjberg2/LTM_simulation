@@ -66,7 +66,10 @@ rule allLargeEffect:
     expand("largeEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.prev",zip, N=NLarge, liaSizes=liaSizesLarge, rhos=rhosLarge, cost=costLarge, envsd=envsdLarge),
     expand("largeEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.genVar",zip, N=NLarge, liaSizes=liaSizesLarge, rhos=rhosLarge, cost=costLarge, envsd=envsdLarge),
     expand("largeEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.nSeg",zip, N=NLarge, liaSizes=liaSizesLarge, rhos=rhosLarge, cost=costLarge, envsd=envsdLarge),
-    expand("largeEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.deltaR",zip, N=NLarge, liaSizes=liaSizesLarge, rhos=rhosLarge, cost=costLarge, envsd=envsdLarge)
+    expand("largeEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.deltaR",zip, N=NLarge, liaSizes=liaSizesLarge, rhos=rhosLarge, cost=costLarge, envsd=envsdLarge),
+    expand("largeEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.riskFreq",zip, N=NLarge, liaSizes=liaSizesLarge, rhos=rhosLarge, cost=costLarge, envsd=envsdLarge),
+    expand("largeEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.derFreq",zip, N=NLarge, liaSizes=liaSizesLarge, rhos=rhosLarge, cost=costLarge, envsd=envsdLarge),
+    expand("largeEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.siteVar",zip, N=NLarge, liaSizes=liaSizesLarge, rhos=rhosLarge, cost=costLarge, envsd=envsdLarge)
   params:
      time="36:00:00",
      partition="broadwl",
@@ -106,7 +109,10 @@ rule allSmallEffect:
     expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.prev",zip, N=NSmall, liaSizes=liaSizesSmall, rhos=rhosSmall, cost=costSmall, envsd=envsdSmall),
     expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.genVar",zip, N=NSmall, liaSizes=liaSizesSmall, rhos=rhosSmall, cost=costSmall, envsd=envsdSmall),
     expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.nSeg",zip, N=NSmall, liaSizes=liaSizesSmall, rhos=rhosSmall, cost=costSmall, envsd=envsdSmall),
-    expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.deltaR",zip, N=NSmall, liaSizes=liaSizesSmall, rhos=rhosSmall, cost=costSmall, envsd=envsdSmall)
+    expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.deltaR",zip, N=NSmall, liaSizes=liaSizesSmall, rhos=rhosSmall, cost=costSmall, envsd=envsdSmall),
+    expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.riskFreq",zip, N=NSmall, liaSizes=liaSizesSmall, rhos=rhosSmall, cost=costSmall, envsd=envsdSmall),
+    expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.derFreq",zip, N=NSmall, liaSizes=liaSizesSmall, rhos=rhosSmall, cost=costSmall, envsd=envsdSmall),
+    expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.siteVar",zip, N=NSmall, liaSizes=liaSizesSmall, rhos=rhosSmall, cost=costSmall, envsd=envsdSmall)
   params:
      time="36:00:00",
      partition="broadwl",
