@@ -1,4 +1,4 @@
-source('scripts/tiltedCDF.R')
+##source('scripts/tiltedCDF.R')
 dnorminv<-function(y) sqrt(-2*log(sqrt(2*pi)*y))
 NormalRiskDiff <- function(t,this.mean,this.sd,this.pi){
     risk <- pnorm(t-1,mean=this.mean,sd=this.sd,lower.tail=FALSE)
@@ -153,7 +153,7 @@ SolvePoissonGivenThr <- function(myTheta,thr,fitCost,Ne,L,h2,alphal=1,allow.smal
 
     if(min.pi>max.pi)
         return(NA)
-    
+
     getPoisRiskDiff <- function(THISPI) {
         ##recover()
         my.mean = thetaU/(THISPI*bigGamma)
@@ -228,11 +228,11 @@ SolvePoissonGivenThrAndPrev <- function(myTheta,thr,fitCost,Ne,h2,prev,alphal=1,
     init.thetaU <- myTheta*init.L
     max.pi <- 1
     min.pi <- init.thetaU/(thr*bigGamma)
-    
+
 
     if(min.pi>max.pi)
         return(NA)
-    
+
     getPoisRiskDiff <- function(THISPI) {
         ##recover()
         my.mean = init.thetaU/(THISPI*bigGamma)
@@ -269,8 +269,8 @@ SolvePoissonGivenThrAndPrev <- function(myTheta,thr,fitCost,Ne,h2,prev,alphal=1,
     tmp.sel <- tmp.pi*fitCost
     tmp.gamma <- tmp.sel*bigGamma
     tmp.prev <- pPoisConv(thr,tmp.mean,tmp.env.sd,alphal)
-    
-    
+
+
     out <- nleqslv(
         x=c(tmp.pi,init.L),
         fn=function(x){
