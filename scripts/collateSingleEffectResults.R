@@ -1,13 +1,18 @@
 ## functions
-merge_into_paramtable <- function(params.table,file.roots,file.exts,my.path){
+merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.path){
     ## recover()
     param.rows <- nrow(params.table)
     n.sims <- length(file.roots)
     if(param.rows!=n.sims)
         stop("number of parameter combinations in parameter table must match files in directory")
-    n.exts <- length(file.exts)
-    sim.results <- matrix(NA,nrow=n.sims,ncol=n.exts)
-    colnames(sim.results) <- sapply(file.exts,function(X) paste("sim",X,sep="."))
+    ## things where there's one number per generation
+    n.sim.exts <- length(sim.exts)
+    sim.results <- matrix(NA,nrow=n.sims,ncol=n.sim.exts)
+    colnames(sim.results) <- sapply(sim.exts,function(X) paste("sim",X,sep="."))
+    ## things where there's one number per site per generation
+    n.site.exts <- length(site.exts)
+    site.results <- matrix(NA,nrow=n.sims,ncol=n.site.exts)
+    colnames(site.results) <- sapply(site.exts,function(X) paste("sim",X,sep="."))
     for (i in 1:nrow(params.table) ) {
         myNe <- format(round(params.table[i,'Ne'],3),3)
         myL <- floor(params.table[i,'target.size'])
@@ -15,11 +20,14 @@ merge_into_paramtable <- function(params.table,file.roots,file.exts,my.path){
         mycost  <- format(round(params.table[i,'cost'],2),nsmall=2)
         myenvSD  <- format(round(params.table[i,'env.sd'],5),nsmall=5)
         temp_prefix = paste(my.path,"/PopSize", myNe, "_LiaSize", myL, "_rho", myrho, "_cost", mycost, "_envsd", myenvSD, "_all", sep="")
-        all.files <- sapply(file.exts,function(X) paste(temp_prefix,X,sep="."))
-        files.to.read <- all.files[!grepl('Freq',all.files) & !grepl('siteVar',all.files) ]
-        sim.results[i,] <- sapply(files.to.read,function(X) colMeans(read.table(X)))
+        sim.files <- sapply(sim.exts,function(X) paste(temp_prefix,X,sep="."))
+        sim.results[i,] <- sapply(sim.files,function(X) colMeans(read.table(X)))
+        site.files <- sapply(site.exts,function(X) paste(temp_prefix,X,sep="."))
+        for(j in 1:length(site.files)){
+            site.results[i,j] <- mean(unlist(sapply(readLines(site.files[j]),function(X) as.numeric(strsplit(X,',')[[1]]))))
+        }
     }
-    results <- cbind(params.table,sim.results)
+    results <- cbind(params.table,sim.results,site.results)
     return(results)
 }
 
@@ -53,7 +61,7 @@ exts <-  unique(sapply(sim.filenames,function(X) strsplit(X,'_all.')[[1]][2]))
 site.exts <- exts[grepl('Freq',exts) | grepl('siteVar',exts) ]
 sim.exts  <- exts[!(exts %in% site.exts)]
 
-results.table <- merge_into_paramtable(param.table,files,sim.exts,my.path)
+results.table <- merge_into_paramtable(param.table,files,sim.exts,site.exts,my.path)
 save(results.table,file=output.table.filename)
 
 
