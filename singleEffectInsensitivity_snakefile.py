@@ -4,14 +4,14 @@ import pandas as pd
 
 ## global parameter ( doesn't change)
 mu=1e-6
-cyc = 1600
+cyc = 200
 sampleInt = 25
 toyRun=0
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
 
 
-rep = list(np.arange(0,3))
+rep = list(np.arange(0,1))
 
 
 ## make parameter tables
