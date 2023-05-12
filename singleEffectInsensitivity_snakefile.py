@@ -19,6 +19,10 @@ rule makeLargeEffectParamTable:
   input:
     params="scripts/largeEffectInsensitivityParams.R",
     script="scripts/makeLargeEffectInsensitivityParamFile.R"
+  params:
+    time="36:00:00",
+    partition="broadwl",
+    mem="2Gb"
   output:
     paramTable= "largeEffectInsensitivityParamTable.txt"
   shell:
@@ -28,6 +32,10 @@ rule makeLargeEffectParamTable:
 rule makeSmallEffectParamTable:
   input:
     script="scripts/makeSmallEffectInsensitivityParamFile.R"
+  params:
+    time="36:00:00",
+    partition="broadwl",
+    mem="2Gb"
   output:
     paramTable= "smallEffectInsensitivityParamTable.txt"
   shell:
