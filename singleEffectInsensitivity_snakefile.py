@@ -6,12 +6,12 @@ import pandas as pd
 mu=1e-6
 cyc = 1600
 sampleInt = 25
-toyRun=1
+toyRun=0
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
 
 
-rep = list(np.arange(0,1))
+rep = list(np.arange(0,3))
 
 
 ## make parameter tables
@@ -49,9 +49,13 @@ liaSizesLarge = np.array((params_table_large["target.size"]).astype(int))
 costLarge = np.round((params_table_large["cost"]),3).astype(str)
 NLarge = np.array(params_table_large["Ne"].astype(int))
 ## thr = np.array(params_table_large["thr"].astype(int))
-envsdLarge = np.round(np.array(params_table_large["env.sd"]),3).astype(str)
+tmpEnvSDsLarge = np.array(params_table_large["env.sd"])
+envsdLarge = np.array(['{:.5f}'.format(r) for r in tmpEnvSDsLarge], dtype=np.str)
 tmpRhosLarge = np.array(params_table_large["rho"])
 rhosLarge = np.array(['{:.5f}'.format(r) for r in tmpRhosLarge], dtype=np.str)
+
+
+
 
 rule allLargeEffect:
   input:
@@ -122,7 +126,8 @@ rule allSmallEffect:
     
 rule slim_simulate_withsegregating:
   input:
-    slim_script="LTM_prev_nucleotide.slim"
+    slim_script="LTM_prev_nucleotide.slim",
+    paramTable="{path}ParamTable.txt"
   params:
     mu=mu,
     cyc=cyc,

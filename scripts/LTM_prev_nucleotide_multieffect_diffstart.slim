@@ -23,9 +23,15 @@ initialize() {
    threshold = maxG * rhot;
    offset = 4*envSD;
    startingPoint = 2 * Ls * rhoS - offset ; 	
-        
- 	// A and C are protective states for small effect and large effect 	
-	initializeAncestralNucleotides(randomNucleotides(Ls+Ll, c(Ls * (1-rhoS) - offset/betaS, Ll, Ls * rhoS + offset/betaS, 0))); // Ancestral allele start with protective 
+
+ 	// A and C are protective states for small effect and large effect 	   
+   defineConstant('A_INIT',Ls * (1-rhoS) - offset/betaS);
+   defineConstant('C_INIT',Ll);
+   defineConstant('G_INIT',Ls * rhoS + offset/betaS);        
+   defineConstant('T_INIT',0);        
+
+ 	// A, C, G, T
+	initializeAncestralNucleotides(randomNucleotides(Ls+Ll, c(A_INIT, C_INIT, G_INIT, T_INIT))); // Ancestral allele start with protective 
  	
 
 	// define constants
@@ -44,6 +50,10 @@ initialize() {
 
 
 	// output files
+	defineConstant('FIXEDSMALLOUT',fixedSmallOut);
+	defineConstant('FIXEDLARGEOUT',fixedLargeOut);
+	defineConstant('MEANSMALLOUT',meanSmallOut);
+	defineConstant('MEANLARGEOUT',meanLargeOut);
 	defineConstant('MEANOUT',meanOut);
 	defineConstant('H2OUT',h2Out);
 	defineConstant('H2SOUT',h2sOut);
@@ -128,27 +138,32 @@ fitness(NULL){
 
 	// calculate the liability for the segregating sites 
 	segGenLi = rep(0.0, Ninds);
-	largesegGenLi = rep(0.0, Ninds);
-	smallsegGenLi = rep(0.0, Ninds);
+	segGenLiLarge = rep(0.0, Ninds);
+	segGenLiSmall = rep(0.0, Ninds);
 	for (i in c(0:(Ninds-1))){
 		ind_mut = sim.subpopulations.individuals[i].genomes.mutations.nucleotide;
-		smallsegGenLi[i] = sum(ind_mut =="G") * betaS - sum(ind_mut =="A") * betaS;
-		largesegGenLi[i] = sum(ind_mut =="T") *betaL - sum(ind_mut =="C") * betaL;
-		segGenLi[i] = smallsegGenLi[i] + largesegGenLi[i]; 
+		segGenLiSmall[i] = sum(ind_mut =="G") * betaS - sum(ind_mut =="A") * betaS;
+		segGenLiLarge[i] = sum(ind_mut =="T") * betaL - sum(ind_mut =="C") * betaL;
+		segGenLi[i] = segGenLiSmall[i] + segGenLiLarge[i]; 
 	}
 
 	// calculate components of genetic liability 
-	genLi=START+fixedGenLi+segGenLi;
+	fixedStateSmall = START + fixedSmallGenLi;
+	fixedStateLarge = fixedLargeGenLi;	
+	fixedState = fixedStateSmall + fixedStateLarge;
+	genLi = fixedState + segGenLi;
 	inds.tagF = genLi + rnorm(N, 0.0, ENV_SIGMA);
 	
 	// things to output
 	mean=mean(genLi);
+	meanSmall=mean(START + fixedSmallGenLi + segGenLiSmall);
+	meanLarge=mean(fixedLargeGenLi + segGenLiLarge);	
 	genVar=var(genLi);
 	phenVar=var(inds.tagF);
 
 	
-	genVarSmall = var(fixedSmallGenLi + smallsegGenLi);
-	genVarLarge = var(fixedLargeGenLi + largesegGenLi);
+	genVarSmall = var(fixedSmallGenLi + segGenLiSmall);
+	genVarLarge = var(fixedLargeGenLi + segGenLiLarge);
 
 	h2=genVar/phenVar;
 	h2s = genVarSmall/phenVar; 
@@ -166,6 +181,10 @@ fitness(NULL){
 		(sim.generation < 10 & TOYRUN == 1)
 	)
 	{
+	   writeFile(FIXEDSMALLOUT, paste(fixedStateSmall, sep=","), append=T);
+	   writeFile(FIXEDLARGEOUT, paste(fixedStateLarge, sep=","), append=T);
+		writeFile(MEANSMALLOUT, paste(meanSmall, sep=","), append=T);		
+		writeFile(MEANLARGEOUT, paste(meanLarge, sep=","), append=T);				
 		writeFile(MEANOUT, paste(mean, sep=","), append=T);
 		writeFile(PREVOUT, paste(prev, sep=","), append=T);
 		writeFile(H2OUT, paste(h2, sep=","), append=T);

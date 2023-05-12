@@ -10,12 +10,13 @@ merge_into_paramtable <- function(params.table,file.roots,file.exts,my.path){
     colnames(sim.results) <- sapply(file.exts,function(X) paste("sim",X,sep="."))
     for (i in 1:nrow(params.table) ) {
         myNe <- format(round(params.table[i,'Ne'],3),3)
-        myL <- format(round(params.table[i,'target.size'],3),3)
+        myL <- floor(params.table[i,'target.size'])
         myrho <- format(round(params.table[i,'rho'],5),nsmall=5)
-        mycost  <- format(round(params.table[i,'cost'],2),2)
-        myenvSD  <- format(round(params.table[i,'env.sd'],3),3)
+        mycost  <- format(round(params.table[i,'cost'],2),nsmall=2)
+        myenvSD  <- format(round(params.table[i,'env.sd'],5),nsmall=5)
         temp_prefix = paste(my.path,"/PopSize", myNe, "_LiaSize", myL, "_rho", myrho, "_cost", mycost, "_envsd", myenvSD, "_all", sep="")
-        files.to.read <- sapply(file.exts,function(X) paste(temp_prefix,X,sep="."))
+        all.files <- sapply(file.exts,function(X) paste(temp_prefix,X,sep="."))
+        files.to.read <- all.files[!grepl('Freq',all.files) & !grepl('siteVar',all.files) ]
         sim.results[i,] <- sapply(files.to.read,function(X) colMeans(read.table(X)))
     }
     results <- cbind(params.table,sim.results)
@@ -24,10 +25,11 @@ merge_into_paramtable <- function(params.table,file.roots,file.exts,my.path){
 
 options(scipen=400)
 if(interactive()){
+    my.path <- "largeEffectInsensitivity/all"
     my.args <- c(
         "largeEffectInsensitivityParamTable.txt",
         sapply(dir(my.path),function(X) paste(my.path,X,sep="/")),
-        "largeEffectInsensitivity/all",
+        my.path,
         "largeEffectInsensitivityResultsTable.Rdata"
     )
 } else {
@@ -48,8 +50,10 @@ param.table <- read.table(input.table.filename)
 files <- unique(sapply(sim.filenames,function(X) strsplit(X,'_all.')[[1]][1]))
 exts <-  unique(sapply(sim.filenames,function(X) strsplit(X,'_all.')[[1]][2]))
 
+site.exts <- exts[grepl('Freq',exts) | grepl('siteVar',exts) ]
+sim.exts  <- exts[!(exts %in% site.exts)]
 
-results.table <- merge_into_paramtable(param.table,files,exts,my.path)
+results.table <- merge_into_paramtable(param.table,files,sim.exts,my.path)
 save(results.table,file=output.table.filename)
 
 

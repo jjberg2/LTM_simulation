@@ -86,9 +86,9 @@ dPoisConv <- function(t,lambda,norm.sd,alphal=1,risk.allele=FALSE){
     dens <- dnorm(t,alphal*(my.range+risk.allele),norm.sd)
     gen.dist%*%dens
 }
-PoissonRiskDiff <- function(t,mean,env.sd,gen.range,this.pi){
-    prot <- pPoisConv(t,mean,env.sd,gen.range,risk.allele=FALSE)
-    risk <- pPoisConv(t,mean,env.sd,gen.range,risk.allele=TRUE)
+PoissonRiskDiff <- function(t,mean,env.sd,alphal=1,this.pi){
+    prot <- pPoisConv(t,mean,env.sd,alphal,risk.allele=FALSE)
+    risk <- pPoisConv(t,mean,env.sd,alphal,risk.allele=TRUE)
     risk - prot - this.pi
 
 }
@@ -217,6 +217,112 @@ SolvePoissonGivenThr <- function(myTheta,thr,fitCost,Ne,L,h2,alphal=1,allow.smal
 
 
 }
+
+SolvePoissonGivenThrAndPrev <- function(myTheta,thr,fitCost,Ne,h2,prev,alphal=1,init.pi=1,init.L=500,allow.small.effect=FALSE,verbose.output=FALSE){
+
+    ## recover()
+
+    mu <- myTheta/(4*Ne)
+    bigGamma <- 2*Ne*fitCost
+    init.L <- log(1-prev)/log(1-mu/fitCost)
+    init.thetaU <- myTheta*init.L
+    max.pi <- 1
+    min.pi <- init.thetaU/(thr*bigGamma)
+    
+
+    if(min.pi>max.pi)
+        return(NA)
+    
+    getPoisRiskDiff <- function(THISPI) {
+        ##recover()
+        my.mean = init.thetaU/(THISPI*bigGamma)
+        env.sd = sqrt(my.mean*(1-h2)/h2)
+        my.range <- seq(qpois(1e-8,my.mean),qpois(1-1e-8,my.mean),by=1)
+        PoissonRiskDiffThr(thr,my.mean,env.sd,alphal,THISPI,bigGamma,rcv=FALSE)
+    }
+
+    my.seq <- exp(seq(log(min.pi),log(max.pi),length.out=50))
+    my.diffs <- sapply(my.seq,getPoisRiskDiff)
+    if(all(my.diffs<0)){
+        return(NA)
+    }
+    idx <- max(which(diff(sign(my.diffs))!=0))
+    lower <- my.seq[idx]
+    upper <- my.seq[idx+1]
+
+    soln <- uniroot(
+        f=function(THISPI) {
+            my.mean = init.thetaU/(THISPI*bigGamma)
+            env.sd = sqrt(my.mean*(1-h2)/h2)
+            ## my.range <- seq(qpois(1e-8,my.mean),qpois(1-1e-8,my.mean),by=1)
+            PoissonRiskDiffThr(thr,my.mean,env.sd,alphal,THISPI,bigGamma)
+        },
+        lower=lower,
+        upper=upper,
+        tol=.Machine$double.eps^0.5
+    )
+
+    tmp.pi <- soln$root
+    tmp.mean <- init.thetaU/(tmp.pi*bigGamma)
+    tmp.env.sd <- sqrt(tmp.mean*(1-h2)/h2)
+    my.range <- seq(qpois(1e-8,tmp.mean),qpois(1-1e-8,tmp.mean),by=1)
+    tmp.sel <- tmp.pi*fitCost
+    tmp.gamma <- tmp.sel*bigGamma
+    tmp.prev <- pPoisConv(thr,tmp.mean,tmp.env.sd,alphal)
+    
+    
+    out <- nleqslv(
+        x=c(tmp.pi,init.L),
+        fn=function(x){
+            THISPI <- x[1]
+            THISL <- x[2]
+            my.mean = myTheta*THISL/(THISPI*bigGamma)
+            env.sd = sqrt(my.mean*(1-h2)/h2)
+            diff.one <- PoissonRiskDiffThr(thr,my.mean,env.sd,alphal,THISPI,bigGamma)-THISPI
+            diff.two <- pPoisConv(thr,my.mean,env.sd,alphal,risk.allele=FALSE)-target.prev
+            return(c(diff.one,diff.two))
+        },
+        control=list(maxit=300)
+    )
+
+    this.pi <- out$x[1]
+    this.L <- out$x[2]
+    this.thetaU <- myTheta*this.L
+    my.mean <- this.thetaU/(this.pi*bigGamma)
+    env.sd = sqrt(my.mean*(1-h2)/h2)
+    my.sel <- this.pi*fitCost
+    my.gamma <- my.sel*bigGamma
+    my.dens <- dPoisConv(thr,my.mean,env.sd,alphal)
+    my.prev <- pPoisConv(thr,my.mean,env.sd,alphal)
+    ## blah <- pPoisConv(thr,my.mean,env.sd,alphal,risk.allele=TRUE)
+    if(verbose.output){
+        list(
+            prev=as.numeric(my.prev),
+            thr=thr,
+            mean=my.mean,
+            env.sd=env.sd,
+            dens=my.dens,
+            my.sel=my.sel,
+            my.gamma=my.gamma,
+            this.pi=this.pi,
+            cost=fitCost,
+            target=this.L,
+            theta=myTheta,
+            h2=h2
+        )
+    } else {
+        as.numeric(my.prev)
+    }
+
+
+}
+
+
+
+
+
+
+
 
 
 
