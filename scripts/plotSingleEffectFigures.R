@@ -3,6 +3,32 @@ library(viridis)
 
 
 small <- get(load('smallEffectInsensitivityResultsTable.Rdata'))
+
+small.thr <- unique(small$thr)
+small$thetaL <- small$theta*small$target.size
+small$sim.genVarPerSite <- small$sim.genVar/small$thetaL
+
+small$sim.stdGenVarPerSite  <- NA
+small$sim.scaledDeltaR  <- NA
+small$sim.stdAddRiskVar <- NA
+for(i in 1:length(small.thr)){
+    these <- small$thr == small.thr[i]
+    small$sim.stdGenVarPerSite[these]  <- small$sim.genVarPerSite[these]/tail(small$sim.genVarPerSite[these],1)
+    small$sim.scaledDeltaR[these]  <- small$sim.deltaR[these]/tail(small$sim.deltaR[these],1)
+    ## sort of wrong
+    ## small$sim.stdAddRiskVar[these]  <- small$sim.addRiskVar[these]/tail(small$sim.addRiskVar[these],1)
+}
+
+
+
+
+
+
+
+
+
+
+
 large <- get(load('largeEffectInsensitivityResultsTable.Rdata'))
 
 large.cost <- sort(unique(large$cost))
@@ -16,8 +42,6 @@ large.cols <- viridis(length(large.thr))
 
 ## this is sort of wrong but close
 large$sim.addRiskVar <- large$sim.genVarPerSite*large$sim.deltaR^2
-
-
 
 large$pois.Var  <- large$mean
 large$sim.stdGenVarPerSite  <- NA
