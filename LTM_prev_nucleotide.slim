@@ -54,7 +54,10 @@ initialize() {
 	defineConstant('PREVOUT',prevOut);
 	defineConstant('GENVAROUT',genVarOut);
 	defineConstant('NSEGOUT',nSegOut);
-	defineConstant('DELTAR',deltaR);
+	defineConstant('DELTAROUT',deltaROut);
+	defineConstant('RISKFREQOUT',riskFreqOut);
+	defineConstant('DERFREQOUT',derFreqOut);
+	defineConstant('SITEVAROUT',siteVarOut);
 
 	// liability mutations
 	LiaMuts = initializeMutationTypeNuc("m1", 0.5, 'f', 0);
@@ -110,18 +113,37 @@ fitness(NULL){
    	// disease = disease/mean(disease);
    	mutTypes = sim.mutationTypes;
    	all_lia = sim.mutationsOfType(mutTypes[0]);
+		siteVar = rep(0.0, length(all_lia));		
+		riskFreq = rep(0.0, length(all_lia));		
+		derFreq = rep(0.0, length(all_lia));		
 		riskEffect = rep(0.0, length(all_lia));
 		for (i in c(0: (length(all_lia)-1))){
+
       	x = asInteger(p1.individuals.genome1.containsMutations(all_lia[i])) + asInteger(p1.individuals.genome2.containsMutations(all_lia[i]));
-      	if (all_lia[i].nucleotide == "A") {
+      	if (all_lia[i].nucleotide == "A") {	
       		x = 2-x;
       	}
-    		num = sum((x-mean(x))*(risk - mean(risk)));
-   		denom = sum( (x-mean(x))^2 );
-			riskEffect[i] = num/denom ;
+      	meanx = mean(x);
+    		num = sum((x-meanx)*(risk - mean(risk)));
+   		denom = sum( (x-meanx)^2 );
+			
+
+			riskEffect[i] = num/denom;
+			siteVar[i] = denom/(N-1);
+			
+			riskFreq[i]=meanx/2;						
+			if (all_lia[i].nucleotide == "A") {	
+      		derFreq[i] = 1 - riskFreq[i];
+      	} else {
+      		derFreq[i] = riskFreq[i];
+      	}
+			
 		}
 		//sim.setValue("meanRiskEffect", );	
-		writeFile(DELTAR, paste(mean(riskEffect), sep=","), append=T);
+		writeFile(DELTAROUT, paste(mean(riskEffect), sep=","), append=T);
+		writeFile(RISKFREQOUT, paste(riskFreq, sep=","), append=T);
+		writeFile(DERFREQOUT, paste(derFreq, sep=","), append=T);
+		writeFile(SITEVAROUT, paste(siteVar, sep=","), append=T);
 	}
 }	
 

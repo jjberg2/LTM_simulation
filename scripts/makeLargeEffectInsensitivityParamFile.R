@@ -1,18 +1,20 @@
-# setwd('~/Documents/academics/liability-model/LTM_simulation/')
+## length of average gene in bp: 67kpb
+
+## total mutation rate to LOFs: 0.0256
+## per base mutation rate: 1.3e-8
+## approx number of LOF mut opportunities: 0.0256/1e-6 ~ 25000
+
+
+
+
+
+
+## setwd('~/Documents/academics/liability-model/LTM_simulation/')
 library('viridis')
 source('scripts/solveSingleEffect.R')
-
-my.thr <- c(1,2,5,10,15,20,50)
-my.Ne <- 5000
-L <- 3000
-h2=0.5
-mu <- 1e-6
-my.theta <- 4*my.Ne*mu
+source('scripts/largeEffectInsensitivityParams.R')
 
 
-
-sim.costs <- seq(0.02,1,by=0.08)
-##sim.costs <- c(0.05,0.25,0.5,0.75,0.95)
 sim.out <- list()
 for(j in seq_along(my.thr)){
     sim.out[[j]] <- list()
@@ -30,6 +32,7 @@ my.gamma <- log((1+my.b)/(1-my.b))
 env.sd <- numeric()
 my.mean <- numeric()
 pois.prev <- numeric()
+deltaR <- numeric()
 for(j in seq_along(sim.out)){
     for(i in seq_along(sim.out[[j]])){
         my.out <- sim.out[[j]][[i]]
@@ -37,13 +40,17 @@ for(j in seq_along(sim.out)){
             my.mean <- append(my.mean,NA)
             env.sd <- append(env.sd,NA)
             pois.prev <- append(pois.prev,NA)
+            deltaR <- append(deltaR,NA)
         } else{
             my.mean <- append(my.mean,my.out$mean)
             env.sd <- append(env.sd,my.out$env.sd)
             pois.prev <- append(pois.prev,my.out$prev)
+            deltaR <- append(deltaR,my.out$this.pi)
         }
     }
 }
-new.table <- cbind(my.table,'mean'=my.mean,'rho'=my.rho,'b'=my.b,'gamma'=my.gamma,'env.sd'=env.sd,'pois.prev'=pois.prev)
+
+new.table <- cbind(my.table,'mean'=my.mean,'rho'=my.rho,'b'=my.b,'gamma'=my.gamma,'env.sd'=env.sd,'pois.prev'=pois.prev,'deltaR'=deltaR)
 new.table <- new.table[!is.na(new.table$mean),]
+
 write.table(new.table,file='largeEffectInsensitivityParamTable.txt')
