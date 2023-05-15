@@ -1,3 +1,7 @@
+import sys
+print (sys.version)
+print (sys.path)
+
 import numpy as np
 import pandas as pd
 
@@ -6,12 +10,14 @@ import pandas as pd
 mu=1e-6
 cyc = 1600
 sampleInt = 25
-toyRun=0
+toyRun=1
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
 
 
 rep = list(np.arange(0,3))
+
+
 
 
 ## make parameter tables
@@ -29,22 +35,50 @@ rule makeLargeEffectParamTable:
     """Rscript {input.script}"""
 
 
+# rule makeSmallEffectParamTable:
+#   input:
+#     script="scripts/makeSmallEffectInsensitivityParamFile.R"
+#   params:
+#     time="36:00:00",
+#     partition="broadwl",
+#     mem="2Gb"
+#   output:
+#     paramTable= "smallEffectInsensitivityParamTable.txt"
+#   shell:
+#     """Rscript {input.script}"""
+
 rule makeSmallEffectParamTable:
   input:
-    script="scripts/makeSmallEffectInsensitivityParamFile.R"
+    script="scripts/{name}ParamFile.R"
   params:
     time="36:00:00",
     partition="broadwl",
     mem="2Gb"
   output:
-    paramTable= "smallEffectInsensitivityParamTable.txt"
+    paramTable= "{name}ParamTable.txt"
   shell:
     """Rscript {input.script}"""
 
 
+paramTables = [
+    "largeEffectInsensitivityParamTable.txt",
+    "smallEffectInsensitivityParamTable.txt",
+    "smallEffectVarianceInsensParamTable.txt"
+]
+
+    
+rule makeAllParamTables:
+  input:
+     paramTables
 
 
 
+
+
+
+##################################################
+###### large effect cost insensitivity sims ######
+##################################################     
 
 ## read large parameter tables
 input_table_filename_large = "largeEffectInsensitivityParamTable.txt"
@@ -90,8 +124,10 @@ rule allLargeEffect:
    
 
 
-
-
+    
+##################################################
+###### small effect cost insensitivity sims ######
+##################################################
 
 ## read small parameter tables
 input_table_filename_small = "smallEffectInsensitivityParamTable.txt"
@@ -109,7 +145,7 @@ envsdSmall = np.array(['{:.5f}'.format(r) for r in tmpEnvSDsSmall], dtype=np.str
 tmpRhosSmall = np.array(params_table_small["rho"])
 rhosSmall = np.array(['{:.5f}'.format(r) for r in tmpRhosSmall], dtype=np.str)
     
-rule allSmallEffect:
+rule allSmallEffectCost:
   input:
     input_table_filename_small,
     expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.fixed",zip, N=NSmall, liaSizes=liaSizesSmall, rhos=rhosSmall, cost=costSmall, envsd=envsdSmall),
@@ -128,12 +164,65 @@ rule allSmallEffect:
      mem="2Gb",
      path="smallEffectInsensitivity/all"
   output:
-    protected(output_table_filename_small)
+     "smallEffectInsensitivityResultsTable.Rdata"
   shell:
     """Rscript scripts/collateSingleEffectResults.R {input} {params.path} {output}"""
    
 
 
+    
+##################################################
+#### small effect variance insensitivity sims ####
+##################################################
+
+## read small parameter tables
+input_table_filename_smallVe = "smallEffectVarianceInsensParamTable.txt"
+output_table_filename_smallVe = "smallEffectVarianceInsensResultsTable.Rdata"
+params_table_smallVe = pd.read_csv(input_table_filename_smallVe, delim_whitespace=True)
+
+
+## simulation variable
+liaSizesSmallVe = np.array((params_table_smallVe["target.size"]).astype(int))
+costSmallVe = np.round((params_table_smallVe["cost"]),3).astype(str)
+NSmallVe = np.array(params_table_smallVe["Ne"].astype(int))
+## thr = np.array(params_table_smallVe["thr"].astype(int))
+envsdSmallVe = np.round(np.array(params_table_smallVe["env.sd"]),3).astype(str)
+tmpRhosSmallVe = np.array(params_table_smallVe["rho"])
+rhosSmallVe = np.array(['{:.5f}'.format(r) for r in tmpRhosSmallVe], dtype=np.str)
+    
+rule allSmallEffectVariance:
+  input:
+    input_table_filename_smallVe,
+    expand("smallEffectVarianceInsens/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.fixed",zip, N=NSmallVe, liaSizes=liaSizesSmallVe, rhos=rhosSmallVe, cost=costSmallVe, envsd=envsdSmallVe),
+    expand("smallEffectVarianceInsens/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.mean",zip, N=NSmallVe, liaSizes=liaSizesSmallVe, rhos=rhosSmallVe, cost=costSmallVe, envsd=envsdSmallVe),
+    expand("smallEffectVarianceInsens/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.h2",zip, N=NSmallVe, liaSizes=liaSizesSmallVe, rhos=rhosSmallVe, cost=costSmallVe, envsd=envsdSmallVe),    
+    expand("smallEffectVarianceInsens/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.prev",zip, N=NSmallVe, liaSizes=liaSizesSmallVe, rhos=rhosSmallVe, cost=costSmallVe, envsd=envsdSmallVe),
+    expand("smallEffectVarianceInsens/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.genVar",zip, N=NSmallVe, liaSizes=liaSizesSmallVe, rhos=rhosSmallVe, cost=costSmallVe, envsd=envsdSmallVe),
+    expand("smallEffectVarianceInsens/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.nSeg",zip, N=NSmallVe, liaSizes=liaSizesSmallVe, rhos=rhosSmallVe, cost=costSmallVe, envsd=envsdSmallVe),
+    expand("smallEffectVarianceInsens/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.deltaR",zip, N=NSmallVe, liaSizes=liaSizesSmallVe, rhos=rhosSmallVe, cost=costSmallVe, envsd=envsdSmallVe),
+    expand("smallEffectVarianceInsens/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.riskFreq",zip, N=NSmallVe, liaSizes=liaSizesSmallVe, rhos=rhosSmallVe, cost=costSmallVe, envsd=envsdSmallVe),
+    expand("smallEffectVarianceInsens/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.derFreq",zip, N=NSmallVe, liaSizes=liaSizesSmallVe, rhos=rhosSmallVe, cost=costSmallVe, envsd=envsdSmallVe),
+    expand("smallEffectVarianceInsens/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.siteVar",zip, N=NSmallVe, liaSizes=liaSizesSmallVe, rhos=rhosSmallVe, cost=costSmallVe, envsd=envsdSmallVe)
+  params:
+     time="36:00:00",
+     partition="broadwl",
+     mem="2Gb",
+     path="smallEffectVarianceInsens/all"
+  output:
+     "smallEffectVarianceInsensResultsTable.Rdata"
+  shell:
+    """Rscript scripts/collateSingleEffectResults.R {input} {params.path} {output}"""
+   
+
+
+
+
+
+
+rule allSmallEffect:
+  input:
+    "smallEffectInsensitivityResultsTable.Rdata",
+    "smallEffectVarianceInsensResultsTable.Rdata"
     
 
     
