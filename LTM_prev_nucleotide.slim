@@ -78,6 +78,7 @@ fitness(NULL){
 
 
 1 {
+	print(sim.generation);	
 	sim.addSubpop('p1', N);
 	sim.setValue("cycles", 0);
 	if (THR <= THR_START) {
@@ -98,63 +99,17 @@ fitness(NULL){
 }
 
 2: early() {
-	if (
-		(sim.generation > 10*N & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE & TOYRUN == 0) |
-		(sim.generation < 10 & TOYRUN == 1)	
-	){
-		genLi = sim.subpopulations.individuals.tagF;
-		risk = rep(0.0, length(genLi));	
-			
-		for(i in c(0: (length(genLi)-1))){
-			risk[i] = 1 - pnorm(THR, genLi[i], ENV_SIGMA);
-		}
-
-  		// disease = asFloat(sim.subpopulations.individuals.tagF > THR);
-   	// disease = disease/mean(disease);
-   	mutTypes = sim.mutationTypes;
-   	all_lia = sim.mutationsOfType(mutTypes[0]);
-		siteVar = rep(0.0, length(all_lia));		
-		riskFreq = rep(0.0, length(all_lia));		
-		derFreq = rep(0.0, length(all_lia));		
-		riskEffect = rep(0.0, length(all_lia));
-		for (i in c(0: (length(all_lia)-1))){
-
-      	x = asInteger(p1.individuals.genome1.containsMutations(all_lia[i])) + asInteger(p1.individuals.genome2.containsMutations(all_lia[i]));
-      	if (all_lia[i].nucleotide == "A") {	
-      		x = 2-x;
-      	}
-      	meanx = mean(x);
-    		num = sum((x-meanx)*(risk - mean(risk)));
-   		denom = sum( (x-meanx)^2 );
-			
-
-			riskEffect[i] = num/denom;
-			siteVar[i] = denom/(N-1);
-			
-			riskFreq[i]=meanx/2;						
-			if (all_lia[i].nucleotide == "A") {	
-      		derFreq[i] = 1 - riskFreq[i];
-      	} else {
-      		derFreq[i] = riskFreq[i];
-      	}
-			
-		}
-		//sim.setValue("meanRiskEffect", );	
-		writeFile(DELTAROUT, paste(mean(riskEffect), sep=","), append=T);
-		writeFile(RISKFREQOUT, paste(riskFreq, sep=","), append=T);
-		writeFile(DERFREQOUT, paste(derFreq, sep=","), append=T);
-		writeFile(SITEVAROUT, paste(siteVar, sep=","), append=T);
-	}
+	
 }	
 
 1:5000000 late() {
-	thisGen=sim.generation;
+	thisGen = sim.generation;
 	inds = sim.subpopulations.individuals;
-	muts=sim.mutations;
-	mutTypes=sim.mutationTypes;
+	muts = sim.mutations;
+	mutTypes = sim.mutationTypes;
 	
 	// count up substitutions
-	subs=sim.substitutions.nucleotide;
+	subs = sim.substitutions.nucleotide;
 	fixedGenLi = 2 * length(sim.getValue("fixedPos"));
 	if (length(subs)!= sim.getValue("Nfixed")){
 	   for (newsubs in c((sim.getValue("Nfixed") +1): length(subs))){
@@ -196,7 +151,6 @@ fitness(NULL){
 	// calculate components of genetic liability 
 	fixedState=START+fixedGenLi;
 	genLi=fixedState+segGenLi;
-
 	liabilities = genLi + rnorm(N, 0.0, ENV_SIGMA);	
 	
 	// things to output
@@ -207,15 +161,62 @@ fitness(NULL){
 	h2=genVar/phenVar;
 	prev=sum(liabilities >THR)/length(liabilities );
 	nSeg = sum(sim.mutations.nucleotide=="A") + sum(sim.mutations.nucleotide=="G");
-
-	// pass genetic liabilities to next code block
-	inds.tagF = genLi;
+	inds.tagF = liabilities;
+	
 
 	if (
 		(sim.generation > 10*N & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE & TOYRUN == 0) |
 		(sim.generation < 10 & TOYRUN == 1)
 	)
 	{
+				
+
+
+		risk = rep(0.0, length(genLi));	
+			
+		// compute individuals' genetic risk
+		for(i in c(0: (length(genLi)-1))){
+			risk[i] = 1 - pnorm(THR, genLi[i], ENV_SIGMA);
+		}
+
+
+
+   	mutTypes = sim.mutationTypes;
+   	all_lia = sim.mutationsOfType(mutTypes[0]);
+		siteVar = rep(0.0, length(all_lia));		
+		riskFreq = rep(0.0, length(all_lia));		
+		derFreq = rep(0.0, length(all_lia));		
+		riskEffect = rep(0.0, length(all_lia));
+		for (i in c(0: (length(all_lia)-1))){
+			print(sim.generation);	
+      	x = asInteger(p1.individuals.genome1.containsMutations(all_lia[i])) + asInteger(p1.individuals.genome2.containsMutations(all_lia[i]));
+      	if (all_lia[i].nucleotide == "A") {	
+      		x = 2-x;
+      	}
+      	meanx = mean(x);
+    		num = sum((x-meanx)*(risk - mean(risk)));
+   		denom = sum( (x-meanx)^2 );
+			
+
+			riskEffect[i] = num/denom;
+			siteVar[i] = denom/(N-1);
+			
+			riskFreq[i]=meanx/2;						
+			if (all_lia[i].nucleotide == "A") {	
+      		derFreq[i] = 1 - riskFreq[i];
+      	} else {
+      		derFreq[i] = riskFreq[i];
+      	}
+			
+		}
+		//sim.setValue("meanRiskEffect", );	
+		writeFile(DELTAROUT, paste(mean(riskEffect), sep=","), append=T);
+		writeFile(RISKFREQOUT, paste(riskFreq, sep=","), append=T);
+		writeFile(DERFREQOUT, paste(derFreq, sep=","), append=T);
+		writeFile(SITEVAROUT, paste(siteVar, sep=","), append=T);
+		
+		
+		
 		writeFile(FIXEDOUT, paste(fixedState, sep=","), append=T);
 		writeFile(MEANOUT, paste(mean, sep=","), append=T);
 		writeFile(PREVOUT, paste(prev, sep=","), append=T);
