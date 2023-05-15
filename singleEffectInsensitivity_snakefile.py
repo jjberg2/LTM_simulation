@@ -140,7 +140,8 @@ liaSizesSmall = np.array((params_table_small["target.size"]).astype(int))
 costSmall = np.round((params_table_small["cost"]),3).astype(str)
 NSmall = np.array(params_table_small["Ne"].astype(int))
 ## thr = np.array(params_table_small["thr"].astype(int))
-envsdSmall = np.round(np.array(params_table_small["env.sd"]),3).astype(str)
+tmpEnvSDsSmall = np.array(params_table_small["env.sd"])
+envsdSmall = np.array(['{:.5f}'.format(r) for r in tmpEnvSDsSmall], dtype=np.str)
 tmpRhosSmall = np.array(params_table_small["rho"])
 rhosSmall = np.array(['{:.5f}'.format(r) for r in tmpRhosSmall], dtype=np.str)
     
@@ -238,7 +239,7 @@ rule slim_simulate_withsegregating:
     toyRun = toyRun,
     time="36:00:00",
     partition="broadwl",
-    mem="2Gb"
+    mem="4Gb"
   log:
     "logs/{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.log"
   output:

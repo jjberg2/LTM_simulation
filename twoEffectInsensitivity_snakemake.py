@@ -59,7 +59,8 @@ rule slim_simulate_withsegregating:
     genVar="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.genVar",
     nSegSmall="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.nSegSmall",
     nSegLarge="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.nSegLarge",
-    tmp=temp("{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.tmp")
+    #deltaR="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.deltaR",
+    tmp="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.tmp"
   params:
     mu = lambda wildcards: find_index(wildcards, col="u"),
     fitCost= lambda wildcards: find_index(wildcards, col="C"),
@@ -72,7 +73,9 @@ rule slim_simulate_withsegregating:
     toyRun=toyRun,
     time="36:00:00",
     partition="broadwl",
-    mem="2Gb"
+    mem="4Gb"
+  log:
+    '"{prefix}/logs/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.log",'
   shell:
     """set +u; slim -d mu={params.mu} -d rhot={wildcards.rhot} -d rhos={params.rhos} -d p={wildcards.N}  -d f={params.fitCost}  -d e={wildcards.envSD} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d aS={params.alphaSmall} -d aL={wildcards.alphaLarge} -d liaSmall={params.liaSmall} -d liaLarge={params.liaLarge} -d "fixedSmallOut='{output.fixedSmall}'" -d "fixedLargeOut='{output.fixedLarge}'" -d "meanSmallOut='{output.meanSmall}'" -d "meanLargeOut='{output.meanLarge}'" -d "meanOut='{output.mean}'" -d "h2Out='{output.h2}'" -d "prevOut='{output.prev}'" -d "h2lOut='{output.h2l}'" -d "h2sOut='{output.h2s}'" -d "genVarOut='{output.genVar}'" -d "nSegSmallOut='{output.nSegSmall}'"  -d "nSegLargeOut='{output.nSegLarge}'" -d toyRun={params.toyRun} {input.slim_script} > {output.tmp}; set -u; """
 

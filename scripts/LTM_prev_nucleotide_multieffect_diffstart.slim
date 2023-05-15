@@ -91,6 +91,43 @@ fitness(NULL){
 	sim.setValue("Nfixed", 0);   // record total number of fixed allele 
 }
 
+2: early(){
+	if (
+		(sim.generation > 10*N & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE & TOYRUN == 0) |
+		(sim.generation < 10 & TOYRUN == 1)	
+	){
+   	mutTypes = sim.mutationTypes;
+   	all_lia = sim.mutationsOfType(mutTypes[0]);	
+		riskEffect = rep(0.0, length(all_lia));
+		genLi = sim.subpopulations.individuals.getValue("genLi");			
+		// compute individuals' genetic risk
+		risk = rep(0.0, length(genLi));		
+		for(i in c(0: (length(genLi)-1))){
+			risk[i] = 1 - pnorm(THR, genLi[i], ENV_SIGMA);
+		}	
+		meanRisk = mean(risk);
+				
+		nucleotides = c("A", "G", "C", "T");		
+		name_dict = c("A_sel", "G_sel", "C_sel", "T_sel");
+		for (n in c(0:(length(nucleotides)-1))){
+			single_mut = sim.mutations[sim.mutations.nucleotide == nucleotides[n]];
+			risk_eff = rep(0.0, length(single_mut));
+			if (length(single_mut) > 0){
+				for (i in c(0: (length(sel) -1))) {
+					x = asInteger(p1.individuals.genome1.containsMutations(single_mut[i])) + asInteger(p1.individuals.genome2.containsMutations(single_mut[i]));
+					meanx = mean(x);
+					num = sum( (x-meanx) * (risk - meanRisk) );
+					denom = sum( (x-meanx)^2 );
+					risk_eff[i] = num/denom ;
+				}
+				sim.setValue(name_dict[n], risk_eff);
+			} else {
+				sim.setValue(name_dict[n], NULL);
+			}
+		}
+	}
+
+}
 
 1:50000000 late() {
 	thisGen=sim.generation;
@@ -147,11 +184,12 @@ fitness(NULL){
 		segGenLi[i] = segGenLiSmall[i] + segGenLiLarge[i]; 
 	}
 
-	// calculate components of genetic liability 
+	// calculate components of genetic liability
 	fixedStateSmall = START + fixedSmallGenLi;
-	fixedStateLarge = fixedLargeGenLi;	
+	fixedStateLarge = fixedLargeGenLi;
 	fixedState = fixedStateSmall + fixedStateLarge;
 	genLi = fixedState + segGenLi;
+	inds.setValue("genLi", genLi);
 	inds.tagF = genLi + rnorm(N, 0.0, ENV_SIGMA);
 	
 	// things to output

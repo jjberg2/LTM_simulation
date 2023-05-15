@@ -1,6 +1,6 @@
 ## functions
 merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.path){
-    ## recover()
+    recover()
     param.rows <- nrow(params.table)
     n.sims <- length(file.roots)
     if(param.rows!=n.sims)
@@ -26,6 +26,7 @@ merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.
         for(j in 1:length(site.files)){
             site.results[i,j] <- mean(unlist(sapply(readLines(site.files[j]),function(X) as.numeric(strsplit(X,',')[[1]]))))
         }
+        if(i %% 10 ==0 ) print(i)
     }
     results <- cbind(params.table,sim.results,site.results)
     return(results)
