@@ -8,14 +8,14 @@ import pandas as pd
 
 ## global parameter ( doesn't change)
 mu=1e-6
-cyc = 200
+cyc = 1600
 sampleInt = 25
 toyRun=0
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
 
 
-rep = list(np.arange(0,1))
+rep = list(np.arange(0,3))
 
 
 
@@ -88,7 +88,8 @@ params_table_large = pd.read_csv(input_table_filename_large, delim_whitespace=Tr
 
 ## simulation variable
 liaSizesLarge = np.array((params_table_large["target.size"]).astype(int))
-costLarge = np.round((params_table_large["cost"]),3).astype(str)
+tmpCostLarge = np.round((params_table_large["cost"]),2).astype(str)
+costLarge = np.array(['{:.2f}'.format(r) for r in tmpCostLarge], dtype=np.str)
 NLarge = np.array(params_table_large["Ne"].astype(int))
 ## thr = np.array(params_table_large["thr"].astype(int))
 tmpEnvSDsLarge = np.array(params_table_large["env.sd"])
@@ -137,7 +138,8 @@ params_table_small = pd.read_csv(input_table_filename_small, delim_whitespace=Tr
 
 ## simulation variable
 liaSizesSmall = np.array((params_table_small["target.size"]).astype(int))
-costSmall = np.round((params_table_small["cost"]),3).astype(str)
+tmpCostSmall = np.round((params_table_small["cost"]),2).astype(str)
+costSmall = np.array(['{:.2f}'.format(r) for r in tmpCostSmall], dtype=np.str)
 NSmall = np.array(params_table_small["Ne"].astype(int))
 ## thr = np.array(params_table_small["thr"].astype(int))
 tmpEnvSDsSmall = np.array(params_table_small["env.sd"])
@@ -161,7 +163,7 @@ rule allSmallEffectCost:
   params:
      time="36:00:00",
      partition="broadwl",
-     mem="4Gb",
+     mem="6Gb",
      path="smallEffectInsensitivity/all"
   output:
      "smallEffectInsensitivityResultsTable.Rdata"
@@ -208,7 +210,7 @@ rule allSmallEffectVariance:
   params:
      time="36:00:00",
      partition="broadwl",
-     mem="4Gb",
+     mem="10Gb",
      path="smallEffectVarianceInsens/all"
   output:
      "smallEffectVarianceInsensResultsTable.Rdata"
@@ -241,7 +243,7 @@ rule slim_simulate_withsegregating:
     toyRun = toyRun,
     time="36:00:00",
     partition="broadwl",
-    mem="4Gb"
+    mem="10Gb"
   log:
     "logs/{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.log"
   output:
