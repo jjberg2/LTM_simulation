@@ -17,29 +17,30 @@ merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.
         myNe <- format(round(params.table[i,'Ne'],3),3)
         myL <- floor(params.table[i,'target.size'])
         myrho <- format(round(params.table[i,'rho'],5),nsmall=5)
-        mycost  <- format(round(params.table[i,'cost'],1),nsmall=1)
+        mycost  <- format(round(params.table[i,'cost'],2),nsmall=2)
         myenvSD  <- format(round(params.table[i,'env.sd'],5),nsmall=5)
         temp_prefix = paste(my.path,"/PopSize", myNe, "_LiaSize", myL, "_rho", myrho, "_cost", mycost, "_envsd", myenvSD, "_all", sep="")
         sim.files <- sapply(sim.exts,function(X) paste(temp_prefix,X,sep="."))
         sim.results[i,] <- sapply(sim.files,function(X) colMeans(read.table(X)))
-        site.files <- sapply(site.exts,function(X) paste(temp_prefix,X,sep="."))
-        for(j in 1:length(site.files)){
-            site.results[i,j] <- mean(unlist(sapply(readLines(site.files[j]),function(X) as.numeric(strsplit(X,',')[[1]]))))
-        }
+        ## was causing memory issues on cluster so temporarilily deleted
+        ##site.files <- sapply(site.exts,function(X) paste(temp_prefix,X,sep="."))
+        ##for(j in 1:length(site.files)){
+        ##    site.results[i,j] <- mean(unlist(sapply(readLines(site.files[j]),function(X) as.numeric(strsplit(X,',')[[1]]))))
+        ##}
         if(i %% 10 ==0 ) print(i)
     }
-    results <- cbind(params.table,sim.results,site.results)
+    results <- cbind(params.table,sim.results)
     return(results)
 }
 
 options(scipen=400)
 if(interactive()){
-    my.path <- "smallEffectInsensitivity/all"
+    my.path <- "largeEffectInsensitivity/all"
     my.args <- c(
-        "smallEffectInsensitivityParamTable.txt",
+        "largeEffectInsensitivityParamTable.txt",
         sapply(dir(my.path),function(X) paste(my.path,X,sep="/")),
         my.path,
-        "smallEffectInsensitivityResultsTable.Rdata"
+        "largeEffectInsensitivityResultsTable.Rdata"
     )
 } else {
     ## read in command line arguments
