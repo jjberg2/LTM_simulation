@@ -98,9 +98,6 @@ fitness(NULL){
    
 }
 
-2: early() {
-	
-}	
 
 1:5000000 late() {
 	thisGen = sim.generation;
@@ -151,7 +148,11 @@ fitness(NULL){
 	// calculate components of genetic liability 
 	fixedState=START+fixedGenLi;
 	genLi=fixedState+segGenLi;
-	liabilities = genLi + rnorm(N, 0.0, ENV_SIGMA);	
+	if(ENV_SIGMA != 0){
+		liabilities = genLi + rnorm(N, 0.0, ENV_SIGMA);	
+	} else {
+		liabilities = genLi
+	}
 	
 	// things to output
 	mean=mean(genLi);
@@ -176,7 +177,11 @@ fitness(NULL){
 			
 		// compute individuals' genetic risk
 		for(i in c(0: (length(genLi)-1))){
-			risk[i] = 1 - pnorm(THR, genLi[i], ENV_SIGMA);
+			if(ENV_SIGMA != 0){
+				risk[i] = 1 - pnorm(THR, genLi[i], ENV_SIGMA);
+			} else {
+				risk[i] = asFloat(individual.tagF >= THR)
+			}
 		}
 
 

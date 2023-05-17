@@ -183,10 +183,12 @@ params_table_smallVe = pd.read_csv(input_table_filename_smallVe, delim_whitespac
 
 ## simulation variable
 liaSizesSmallVe = np.array((params_table_smallVe["target.size"]).astype(int))
-costSmallVe = np.round((params_table_smallVe["cost"]),3).astype(str)
+tmpCostSmallVe = np.round((params_table_smallVe["cost"]),2).astype(str)
+costSmallVe = np.array(['{:.2f}'.format(r) for r in tmpCostSmallVe], dtype=np.str)
 NSmallVe = np.array(params_table_smallVe["Ne"].astype(int))
 ## thr = np.array(params_table_smallVe["thr"].astype(int))
-envsdSmallVe = np.round(np.array(params_table_smallVe["env.sd"]),3).astype(str)
+tmpEnvSDsSmallVe = np.array(params_table_smallVe["env.sd"])
+envsdSmallVe = np.array(['{:.5f}'.format(r) for r in tmpEnvSDsSmallVe], dtype=np.str)
 tmpRhosSmallVe = np.array(params_table_smallVe["rho"])
 rhosSmallVe = np.array(['{:.5f}'.format(r) for r in tmpRhosSmallVe], dtype=np.str)
     
