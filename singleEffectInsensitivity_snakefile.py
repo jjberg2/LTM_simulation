@@ -88,8 +88,8 @@ params_table_large = pd.read_csv(input_table_filename_large, delim_whitespace=Tr
 
 ## simulation variable
 liaSizesLarge = np.array((params_table_large["target.size"]).astype(int))
-costLarge = np.round((params_table_large["cost"]),2).astype(str)
-## costLarge = np.array(['{:.2f}'.format(r) for r in tmpCostLarge], dtype=np.str)
+costLarge = np.round((params_table_large["cost"]),2)
+costLarge = np.array(['{:.2f}'.format(r) for r in tmpCostLarge], dtype=np.str)
 NLarge = np.array(params_table_large["Ne"].astype(int))
 ## thr = np.array(params_table_large["thr"].astype(int))
 tmpEnvSDsLarge = np.array(params_table_large["env.sd"])
@@ -138,7 +138,7 @@ params_table_small = pd.read_csv(input_table_filename_small, delim_whitespace=Tr
 
 ## simulation variable
 liaSizesSmall = np.array((params_table_small["target.size"]).astype(int))
-tmpCostSmall = np.round((params_table_small["cost"]),2).astype(str)
+tmpCostSmall = np.round((params_table_small["cost"]),2)
 costSmall = np.array(['{:.2f}'.format(r) for r in tmpCostSmall], dtype=np.str)
 NSmall = np.array(params_table_small["Ne"].astype(int))
 ## thr = np.array(params_table_small["thr"].astype(int))
@@ -185,7 +185,7 @@ params_table_smallVe = pd.read_csv(input_table_filename_smallVe, delim_whitespac
 
 ## simulation variable
 liaSizesSmallVe = np.array((params_table_smallVe["target.size"]).astype(int))
-tmpCostSmallVe = np.round((params_table_smallVe["cost"]),2).astype(str)
+tmpCostSmallVe = np.round((params_table_smallVe["cost"]),2)
 costSmallVe = np.array(['{:.2f}'.format(r) for r in tmpCostSmallVe], dtype=np.str)
 NSmallVe = np.array(params_table_smallVe["Ne"].astype(int))
 ## thr = np.array(params_table_smallVe["thr"].astype(int))
