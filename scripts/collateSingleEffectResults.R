@@ -17,7 +17,7 @@ merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.
         myNe <- format(round(params.table[i,'Ne'],3),3)
         myL <- floor(params.table[i,'target.size'])
         myrho <- format(round(params.table[i,'rho'],5),nsmall=5)
-        mycost  <- format(round(params.table[i,'cost'],2),nsmall=2)
+        mycost  <- format(round(params.table[i,'cost'],2),nsmall=1)
         myenvSD  <- format(round(params.table[i,'env.sd'],5),nsmall=5)
         temp_prefix = paste(my.path,"/PopSize", myNe, "_LiaSize", myL, "_rho", myrho, "_cost", mycost, "_envsd", myenvSD, "_all", sep="")
         sim.files <- sapply(sim.exts,function(X) paste(temp_prefix,X,sep="."))
