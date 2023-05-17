@@ -88,7 +88,7 @@ params_table_large = pd.read_csv(input_table_filename_large, delim_whitespace=Tr
 
 ## simulation variable
 liaSizesLarge = np.array((params_table_large["target.size"]).astype(int))
-costLarge = np.round((params_table_large["cost"]),2)
+tmpCostLarge = np.round((params_table_large["cost"]),2)
 costLarge = np.array(['{:.2f}'.format(r) for r in tmpCostLarge], dtype=np.str)
 NLarge = np.array(params_table_large["Ne"].astype(int))
 ## thr = np.array(params_table_large["thr"].astype(int))
