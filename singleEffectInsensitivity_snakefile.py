@@ -115,7 +115,7 @@ rule allLargeEffect:
   params:
      time="36:00:00",
      partition="broadwl",
-     mem="2Gb",
+     mem="4Gb",
      path="largeEffectInsensitivity/all"
   output:
     protected(output_table_filename_large)
@@ -161,7 +161,7 @@ rule allSmallEffectCost:
   params:
      time="36:00:00",
      partition="broadwl",
-     mem="2Gb",
+     mem="4Gb",
      path="smallEffectInsensitivity/all"
   output:
      "smallEffectInsensitivityResultsTable.Rdata"
@@ -206,7 +206,7 @@ rule allSmallEffectVariance:
   params:
      time="36:00:00",
      partition="broadwl",
-     mem="2Gb",
+     mem="4Gb",
      path="smallEffectVarianceInsens/all"
   output:
      "smallEffectVarianceInsensResultsTable.Rdata"
