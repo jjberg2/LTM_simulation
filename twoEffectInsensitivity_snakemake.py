@@ -11,7 +11,7 @@ params_table = pd.read_csv("twoEffectInsensitivity/twoEffectInsensitivityParamsT
 cyc = 200
 sampleInt = 50
 reps = 1
-toyRun = 1
+toyRun = 0
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
 
@@ -59,7 +59,8 @@ rule slim_simulate_withsegregating:
     genVar="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.genVar",
     nSegSmall="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.nSegSmall",
     nSegLarge="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.nSegLarge",
-    #deltaR="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.deltaR",
+    deltaRSmall="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.deltaRSmall",
+    deltaRLarge="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.deltaRLarge",
     tmp="{prefix}/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.tmp"
   params:
     mu = lambda wildcards: find_index(wildcards, col="u"),
@@ -77,7 +78,7 @@ rule slim_simulate_withsegregating:
   log:
     '"{prefix}/logs/PopSize{N}_aL{alphaLarge}_rhot{rhot}_envSD{envSD}_cost{cost}_rep{rep}.log",'
   shell:
-    """set +u; slim -d mu={params.mu} -d rhot={wildcards.rhot} -d rhos={params.rhos} -d p={wildcards.N}  -d f={params.fitCost}  -d e={wildcards.envSD} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d aS={params.alphaSmall} -d aL={wildcards.alphaLarge} -d liaSmall={params.liaSmall} -d liaLarge={params.liaLarge} -d "fixedSmallOut='{output.fixedSmall}'" -d "fixedLargeOut='{output.fixedLarge}'" -d "meanSmallOut='{output.meanSmall}'" -d "meanLargeOut='{output.meanLarge}'" -d "meanOut='{output.mean}'" -d "h2Out='{output.h2}'" -d "prevOut='{output.prev}'" -d "h2lOut='{output.h2l}'" -d "h2sOut='{output.h2s}'" -d "genVarOut='{output.genVar}'" -d "nSegSmallOut='{output.nSegSmall}'"  -d "nSegLargeOut='{output.nSegLarge}'" -d toyRun={params.toyRun} {input.slim_script} > {output.tmp}; set -u; """
+    """set +u; slim -d mu={params.mu} -d rhot={wildcards.rhot} -d rhos={params.rhos} -d p={wildcards.N}  -d f={params.fitCost}  -d e={wildcards.envSD} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d aS={params.alphaSmall} -d aL={wildcards.alphaLarge} -d liaSmall={params.liaSmall} -d liaLarge={params.liaLarge} -d "fixedSmallOut='{output.fixedSmall}'" -d "fixedLargeOut='{output.fixedLarge}'" -d "meanSmallOut='{output.meanSmall}'" -d "meanLargeOut='{output.meanLarge}'" -d "meanOut='{output.mean}'" -d "h2Out='{output.h2}'" -d "prevOut='{output.prev}'" -d "h2lOut='{output.h2l}'" -d "h2sOut='{output.h2s}'" -d "genVarOut='{output.genVar}'" -d "nSegSmallOut='{output.nSegSmall}'"  -d "nSegLargeOut='{output.nSegLarge}'" -d "deltaRSmallOut='{output.deltaRSmall}'" -d "deltaRLargeOut='{output.deltaRLarge}'" -d toyRun={params.toyRun} {input.slim_script} > {output.tmp}; set -u; """
 
 
 rule result_combined: 
