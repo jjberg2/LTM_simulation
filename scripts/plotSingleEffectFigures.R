@@ -8,18 +8,20 @@ small.thr <- unique(small$thr)
 small$thetaL <- small$theta*small$target.size
 small$sim.genVarPerSite <- small$sim.genVar/small$thetaL
 
+small$sim.addRiskHet <- small$sim.genVarPerSite*small$sim.deltaR
+
 small$sim.stdGenVarPerSite  <- NA
 small$sim.scaledDeltaR  <- NA
-small$sim.stdAddRiskVar <- NA
+small$sim.stdAddRiskHet <- NA
 for(i in 1:length(small.thr)){
     these <- small$thr == small.thr[i]
     small$sim.stdGenVarPerSite[these]  <- small$sim.genVarPerSite[these]/tail(small$sim.genVarPerSite[these],1)
     small$sim.scaledDeltaR[these]  <- small$sim.deltaR[these]/tail(small$sim.deltaR[these],1)
     ## sort of wrong
-    ## small$sim.stdAddRiskVar[these]  <- small$sim.addRiskVar[these]/tail(small$sim.addRiskVar[these],1)
+    small$sim.stdAddRiskHet[these]  <- small$sim.addRiskHet[these]/tail(small$sim.addRiskHet[these],1)
 }
 
-
+small.cols <- seq_along(small.thr)
 
 
 
@@ -41,18 +43,18 @@ large.cols <- viridis(length(large.thr))
 
 
 ## this is sort of wrong but close
-large$sim.addRiskVar <- large$sim.genVarPerSite*large$sim.deltaR^2
+large$sim.addRiskHet <- large$sim.genVarPerSite*large$sim.deltaR
 
 large$pois.Var  <- large$mean
 large$sim.stdGenVarPerSite  <- NA
 large$sim.scaledDeltaR  <- NA
-large$sim.stdAddRiskVar <- NA
+large$sim.stdAddRiskHet <- NA
 for(i in 1:length(large.thr)){
     these <- large$thr == large.thr[i]
     large$sim.stdGenVarPerSite[these]  <- large$sim.genVarPerSite[these]/tail(large$sim.genVarPerSite[these],1)
     large$sim.scaledDeltaR[these]  <- large$sim.deltaR[these]/tail(large$sim.deltaR[these],1)
     ## sort of wrong
-    large$sim.stdAddRiskVar[these]  <- large$sim.addRiskVar[these]/tail(large$sim.addRiskVar[these],1)
+    large$sim.stdAddRiskHet[these]  <- large$sim.addRiskHet[these]/tail(large$sim.addRiskHet[these],1)
 }
 large$sim.stdEffect <- 1/sqrt(large$sim.genVar)
 ## large$sim.mean/large$sim.nSeg
@@ -68,14 +70,14 @@ large$sim.logOR  <- log(large$sim.OR)
 
 
 
-
+pdf('figures/costInsensitivityFigure.pdf',width=20,height=12)
 op <- par(mfrow=c(1,3))
 
 ## plot 1
 plot(
     NA,
     xlim=c(0,1),
-    ylim=c(0,max(large$sim.stdGenVarPerSite)*1.05),
+    ylim=c(min(large$sim.stdGenVarPerSite)*0.95,max(large$sim.stdGenVarPerSite)*1.05),
     xlab='Fitness Cost',
     ylab='Relative Per Site Average Heterozygosity'
 )
@@ -97,6 +99,18 @@ for(i in 1:length(large.thr)){
         large$sim.stdGenVarPerSite[these],
         col=large.cols[i]
     )
+    these.small <- small$thr == small.thr[i]
+    points(
+        small$cost[these.small],
+        small$sim.stdGenVarPerSite[these.small],
+        col=small.cols[i],
+        pch=20
+    )
+    lines(
+        small$cost[these.small],
+        small$sim.stdGenVarPerSite[these.small],
+        col=small.cols[i]
+    )
 }
 lines(
     x=large.cost,
@@ -106,7 +120,7 @@ lines(
 )
 legend(
     'topright',
-    legend=large.thr,
+    legend=round(large.thr,0),
     col=large.cols,
     pch=20
 )
@@ -116,29 +130,35 @@ legend(
 plot(
     NA,
     xlim=c(0,1),
-    ylim=c(min(large$sim.scaledDeltaR^2)*0.95,max(large$sim.scaledDeltaR^2)*1.05),
+    ylim=c(min(large$sim.scaledDeltaR)*0.95,max(large$sim.scaledDeltaR)*1.05),
     xlab='Fitness Cost',
-    ylab='Additive Risk Var',
+    ylab='Scaled Risk Effect',
     log='y'
 )
 for(i in 1:length(large.thr)){
     these <- large$thr == large.thr[i]
     points(
         large$cost[these],
-        large$sim.scaledDeltaR[these]^2,
+        large$sim.scaledDeltaR[these],
         col=large.cols[i],
         pch=20
     )
     lines(
         large$cost[these],
-        large$sim.scaledDeltaR[these]^2,
+        large$sim.scaledDeltaR[these],
         col=large.cols[i]
     )
+    these.small <- small$thr == small.thr[i]
+    points(
+        small$cost[these.small],
+        small$sim.scaledDeltaR[these.small],
+        col=small.cols[i],
+        pch=20
+    )
     lines(
-        large$cost[these],
-        large$sim.scaledDeltaR[these]^2,
-        col=large.cols[i],
-        lty=2
+        small$cost[these.small],
+        small$sim.scaledDeltaR[these.small],
+        col=small.cols[i]
     )
 }
 abline(
@@ -159,23 +179,35 @@ lines(
 plot(
     NA,
     xlim=c(0,1),
-    ylim=c(min(large$sim.stdAddRiskVar)*0.95,max(large$sim.stdAddRiskVar)*1.05),
+    ylim=c(min(large$sim.stdAddRiskHet)*0.95,max(large$sim.stdAddRiskHet)*1.05),
     xlab='Fitness Cost',
-    ylab='Scaled Risk Effect',
+    ylab='Additive Risk Var',
     log='y'
 )
 for(i in 1:length(large.thr)){
     these <- large$thr == large.thr[i]
     points(
         large$cost[these],
-        large$sim.stdAddRiskVar[these],
+        large$sim.stdAddRiskHet[these],
         col=large.cols[i],
         pch=20
     )
     lines(
         large$cost[these],
-        large$sim.stdAddRiskVar[these],
+        large$sim.stdAddRiskHet[these],
         col=large.cols[i]
+    )
+    these.small <- small$thr == small.thr[i]
+    points(
+        small$cost[these.small],
+        small$sim.stdAddRiskHet[these.small],
+        col=small.cols[i],
+        pch=20
+    )
+    lines(
+        small$cost[these.small],
+        small$sim.stdAddRiskHet[these.small],
+        col=small.cols[i]
     )
 }
 abline(
@@ -189,7 +221,7 @@ lines(
     lty=2,
     lwd=2
 )
-
+dev.off()
 
 
 
@@ -240,10 +272,6 @@ for(i in 1:length(large.thr)){
 }
 
 
-
-
-
-
 ## plot 5
 plot(
     NA,
@@ -274,11 +302,20 @@ for(i in 1:length(large.thr)){
     )
 }
 
+legend(
+    'topright',
+    legend=large.thr,
+    col=large.cols,
+    pch=20
+)
+
+
+
 ## plot 6
 plot(
     NA,
     xlim=c(0,1),
-    ylim=c(0,5),
+    ylim=c(0,50),
     xlab='Fitness Cost',
     ylab='Odds Ratio'
 )

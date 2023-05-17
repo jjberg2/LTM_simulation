@@ -82,6 +82,7 @@ my.rho <- my.table[,'thr']/(2*target.size)
 my.b <- 1-2*my.rho
 my.gamma <- log((1+my.b)/(1-my.b))
 new.table <- cbind(my.table,'target.size'=target.size,'mean'=my.mean,'rho'=my.rho,'b'=my.b,'gamma'=my.gamma,'env.sd'=env.sd,'pois.prev'=pois.prev,'deltaR'=deltaR)
+
 new.table <- new.table[!is.na(new.table$mean),]
 
 write.table(new.table,file='largeEffectInsensitivityParamTable.txt')

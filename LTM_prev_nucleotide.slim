@@ -73,7 +73,7 @@ initialize() {
 
 
 fitness(NULL){
-	return (1.0 - FITCOST * asFloat(individual.tagF > THR)) * relFitness;
+	return (1.0 - FITCOST * asFloat(individual.tagF >= THR)) * relFitness;
 }
 
 
@@ -151,7 +151,7 @@ fitness(NULL){
 	if(ENV_SIGMA != 0){
 		liabilities = genLi + rnorm(N, 0.0, ENV_SIGMA);	
 	} else {
-		liabilities = genLi
+		liabilities = genLi;
 	}
 	
 	// things to output
@@ -180,7 +180,7 @@ fitness(NULL){
 			if(ENV_SIGMA != 0){
 				risk[i] = 1 - pnorm(THR, genLi[i], ENV_SIGMA);
 			} else {
-				risk[i] = asFloat(individual.tagF >= THR)
+				risk[i] = asFloat(individual.tagF >= THR);
 			}
 		}
 

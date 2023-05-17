@@ -7,15 +7,16 @@ import pandas as pd
 
 
 ## global parameter ( doesn't change)
+smallCyc = 200
+largeCyc = 1600
 mu=1e-6
-cyc = 200
 sampleInt = 25
 toyRun=0
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
 
 
-rep = list(np.arange(0,3))
+rep = list(np.arange(0,4))
 
 
 
@@ -139,7 +140,7 @@ params_table_small = pd.read_csv(input_table_filename_small, delim_whitespace=Tr
 ## simulation variable
 liaSizesSmall = np.array((params_table_small["target.size"]).astype(int))
 tmpCostSmall = np.round((params_table_small["cost"]),2)
-costSmall = np.array(['{:.1f}'.format(r) for r in tmpCostSmall], dtype=np.str)
+costSmall = np.array(['{:.2f}'.format(r) for r in tmpCostSmall], dtype=np.str)
 NSmall = np.array(params_table_small["Ne"].astype(int))
 ## thr = np.array(params_table_small["thr"].astype(int))
 tmpEnvSDsSmall = np.array(params_table_small["env.sd"])
@@ -163,7 +164,7 @@ rule allSmallEffectCost:
   params:
      time="36:00:00",
      partition="broadwl",
-     mem="6Gb",
+     mem="4Gb",
      path="smallEffectInsensitivity/all"
   output:
      "smallEffectInsensitivityResultsTable.Rdata"
@@ -186,7 +187,7 @@ params_table_smallVe = pd.read_csv(input_table_filename_smallVe, delim_whitespac
 ## simulation variable
 liaSizesSmallVe = np.array((params_table_smallVe["target.size"]).astype(int))
 tmpCostSmallVe = np.round((params_table_smallVe["cost"]),2)
-costSmallVe = np.array(['{:.1f}'.format(r) for r in tmpCostSmallVe], dtype=np.str)
+costSmallVe = np.array(['{:.2f}'.format(r) for r in tmpCostSmallVe], dtype=np.str)
 NSmallVe = np.array(params_table_smallVe["Ne"].astype(int))
 ## thr = np.array(params_table_smallVe["thr"].astype(int))
 tmpEnvSDsSmallVe = np.array(params_table_smallVe["env.sd"])
@@ -210,7 +211,7 @@ rule allSmallEffectVariance:
   params:
      time="36:00:00",
      partition="broadwl",
-     mem="10Gb",
+     mem="4Gb",
      path="smallEffectVarianceInsens/all"
   output:
      "smallEffectVarianceInsensResultsTable.Rdata"
@@ -232,66 +233,154 @@ rule allSmallEffect:
     
 
     
-rule slim_simulate_withsegregating:
+rule slim_simulate_small:
   input:
     slim_script="LTM_prev_nucleotide.slim",
-    paramTable="{path}ParamTable.txt"
+    paramTable="smallEffect{suffix}ParamTable.txt"
   params:
     mu=mu,
-    cyc=cyc,
+    cyc=smallCyc,
     sampleInt = sampleInt,
     toyRun = toyRun,
     time="36:00:00",
     partition="broadwl",
-    mem="10Gb"
+    mem="4Gb"
   log:
-    "logs/{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.log"
+    "logs/smallEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.log"
   output:
-    fixed="{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.fixed",
-    mean="{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.mean",
-    h2="{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.h2",
-    prev="{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.prev",
-    genVar="{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.genVar",
-    nSeg="{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.nSeg",
-    deltaR="{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.deltaR",
-    riskFreq="{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.riskFreq",
-    derFreq="{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.derFreq",
-    siteVar="{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.siteVar",
-    tmp="{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.tmp"
+    fixed="smallEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.fixed",
+    mean="smallEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.mean",
+    h2="smallEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.h2",
+    prev="smallEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.prev",
+    genVar="smallEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.genVar",
+    nSeg="smallEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.nSeg",
+    deltaR="smallEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.deltaR",
+    riskFreq="smallEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.riskFreq",
+    derFreq="smallEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.derFreq",
+    siteVar="smallEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.siteVar",
+    tmp="smallEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.tmp"
   shell:
     """thr=`awk 'BEGIN {{print {wildcards.liaSizes}*2*{wildcards.rhos}}}'`;
     set +u; slim  -d mu={params.mu} -d  rho_input={wildcards.rhos} -d p={wildcards.N} -d liaSize={wildcards.liaSizes} -d f={wildcards.cost}  -d e={wildcards.envsd} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d "fixedOut='{output.fixed}'" -d "meanOut='{output.mean}'" -d "h2Out='{output.h2}'" -d "prevOut='{output.prev}'" -d "genVarOut='{output.genVar}'" -d "nSegOut='{output.nSeg}'" -d "deltaROut='{output.deltaR}'" -d "riskFreqOut='{output.riskFreq}'" -d "derFreqOut='{output.derFreq}'" -d "siteVarOut='{output.siteVar}'" -d toyRun={params.toyRun} {input.slim_script} > {output.tmp}; set -u"""
 
 
+
+
     
-rule result_combined:
+rule slim_simulate_large:
+  input:
+    slim_script="LTM_prev_nucleotide.slim",
+    paramTable="largeEffect{suffix}ParamTable.txt"
+  params:
+    mu=mu,
+    cyc=largeCyc,
+    sampleInt = sampleInt,
+    toyRun = toyRun,
+    time="36:00:00",
+    partition="broadwl",
+    mem="4Gb"
+  log:
+    "logs/largeEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.log"
+  output:
+    fixed="largeEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.fixed",
+    mean="largeEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.mean",
+    h2="largeEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.h2",
+    prev="largeEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.prev",
+    genVar="largeEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.genVar",
+    nSeg="largeEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.nSeg",
+    deltaR="largeEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.deltaR",
+    riskFreq="largeEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.riskFreq",
+    derFreq="largeEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.derFreq",
+    siteVar="largeEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.siteVar",
+    tmp="largeEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_rep{rep}.tmp"
+  shell:
+    """thr=`awk 'BEGIN {{print {wildcards.liaSizes}*2*{wildcards.rhos}}}'`;
+    set +u; slim  -d mu={params.mu} -d  rho_input={wildcards.rhos} -d p={wildcards.N} -d liaSize={wildcards.liaSizes} -d f={wildcards.cost}  -d e={wildcards.envsd} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d "fixedOut='{output.fixed}'" -d "meanOut='{output.mean}'" -d "h2Out='{output.h2}'" -d "prevOut='{output.prev}'" -d "genVarOut='{output.genVar}'" -d "nSegOut='{output.nSeg}'" -d "deltaROut='{output.deltaR}'" -d "riskFreqOut='{output.riskFreq}'" -d "derFreqOut='{output.derFreq}'" -d "siteVarOut='{output.siteVar}'" -d toyRun={params.toyRun} {input.slim_script} > {output.tmp}; set -u"""
+
+
+
+
+
+
+
+
+    
+    
+rule result_combined_small:
    input:
-     fixed=expand("{{path}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.fixed", rep=rep),
-     mean=expand("{{path}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.mean", rep=rep),
-     h2=expand("{{path}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.h2", rep=rep),
-     prev=expand("{{path}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.prev", rep=rep),
-     genVar=expand("{{path}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.genVar", rep=rep),
-     nSeg=expand("{{path}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.nSeg", rep=rep),
-     deltaR=expand("{{path}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.deltaR", rep=rep),
-     riskFreq=expand("{{path}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.riskFreq", rep=rep),
-     derFreq=expand("{{path}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.derFreq", rep=rep),
-     siteVar=expand("{{path}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.siteVar", rep=rep),
+     fixed=expand("smallEffect{{suffix}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.fixed", rep=rep),
+     mean=expand("smallEffect{{suffix}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.mean", rep=rep),
+     h2=expand("smallEffect{{suffix}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.h2", rep=rep),
+     prev=expand("smallEffect{{suffix}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.prev", rep=rep),
+     genVar=expand("smallEffect{{suffix}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.genVar", rep=rep),
+     nSeg=expand("smallEffect{{suffix}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.nSeg", rep=rep),
+     deltaR=expand("smallEffect{{suffix}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.deltaR", rep=rep),
+     riskFreq=expand("smallEffect{{suffix}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.riskFreq", rep=rep),
+     derFreq=expand("smallEffect{{suffix}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.derFreq", rep=rep),
+     siteVar=expand("smallEffect{{suffix}}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.siteVar", rep=rep),
    params:
      time="36:00:00",
      partition="broadwl",
      mem="2Gb"
    log:
-     "{path}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.log"
+     "smallEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.log"
    output:
-     fixed="{path}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.fixed",
-     mean="{path}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.mean",
-     h2="{path}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.h2",
-     prev="{path}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.prev",
-     genVar="{path}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.genVar",
-     nSeg="{path}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.nSeg",
-     deltaR="{path}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.deltaR",
-     riskFreq="{path}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.riskFreq",
-     derFreq="{path}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.derFreq",
-     siteVar="{path}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.siteVar"          
+     fixed="smallEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.fixed",
+     mean="smallEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.mean",
+     h2="smallEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.h2",
+     prev="smallEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.prev",
+     genVar="smallEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.genVar",
+     nSeg="smallEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.nSeg",
+     deltaR="smallEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.deltaR",
+     riskFreq="smallEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.riskFreq",
+     derFreq="smallEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.derFreq",
+     siteVar="smallEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.siteVar"          
    shell:
      """cat {input.fixed} >> {output.fixed}; cat {input.mean} >> {output.mean}; cat {input.h2} >> {output.h2}; cat {input.prev} >> {output.prev}; cat {input.genVar} >> {output.genVar}; cat {input.nSeg} >> {output.nSeg}; cat {input.deltaR} >> {output.deltaR}; cat {input.riskFreq} >> {output.riskFreq}; cat {input.derFreq} >> {output.derFreq}; cat {input.siteVar} >> {output.siteVar}"""
+
+
+
+
+
+
+     
+
+    
+    
+rule result_combined_large:
+   input:
+     fixed=expand("largeEffect{suffix}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.fixed", rep=rep),
+     mean=expand("largeEffect{suffix}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.mean", rep=rep),
+     h2=expand("largeEffect{suffix}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.h2", rep=rep),
+     prev=expand("largeEffect{suffix}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.prev", rep=rep),
+     genVar=expand("largeEffect{suffix}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.genVar", rep=rep),
+     nSeg=expand("largeEffect{suffix}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.nSeg", rep=rep),
+     deltaR=expand("largeEffect{suffix}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.deltaR", rep=rep),
+     riskFreq=expand("largeEffect{suffix}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.riskFreq", rep=rep),
+     derFreq=expand("largeEffect{suffix}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.derFreq", rep=rep),
+     siteVar=expand("largeEffect{suffix}/PopSize{{N}}_LiaSize{{liaSizes}}_rho{{rhos}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.siteVar", rep=rep),
+   params:
+     time="36:00:00",
+     partition="broadwl",
+     mem="2Gb"
+   log:
+     "largeEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.log"
+   output:
+     fixed="largeEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.fixed",
+     mean="largeEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.mean",
+     h2="largeEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.h2",
+     prev="largeEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.prev",
+     genVar="largeEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.genVar",
+     nSeg="largeEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.nSeg",
+     deltaR="largeEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.deltaR",
+     riskFreq="largeEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.riskFreq",
+     derFreq="largeEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.derFreq",
+     siteVar="largeEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_rho{rhos}_cost{cost}_envsd{envsd}_all.siteVar"          
+   shell:
+     """cat {input.fixed} >> {output.fixed}; cat {input.mean} >> {output.mean}; cat {input.h2} >> {output.h2}; cat {input.prev} >> {output.prev}; cat {input.genVar} >> {output.genVar}; cat {input.nSeg} >> {output.nSeg}; cat {input.deltaR} >> {output.deltaR}; cat {input.riskFreq} >> {output.riskFreq}; cat {input.derFreq} >> {output.derFreq}; cat {input.siteVar} >> {output.siteVar}"""
+
+
+
+
+
+

@@ -7,7 +7,8 @@ eqNormPrev <- function(deltaU,bigGamma,littleGamma,h2){
 mu <- 1e-6
 Ne <- 5000
 theta <- 4*Ne*mu
-cost <- seq(0.1,0.9,length.out=5)
+costs <- seq(0.01,1,by=0.06)
+
 h2 <- 0.5
 my.L <- 1e5
 my.thrs <- c(exp(seq(log(4000),log(2*my.L*0.4),length.out=6)))
