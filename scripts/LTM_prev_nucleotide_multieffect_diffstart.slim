@@ -11,7 +11,7 @@ initialize() {
 	
 	// set parameters
 	perSiteMutRate = mu;  // input mu 
-	perSiteRecRate = 1000 * perSiteMutRate; // set the perSiteRecRate equal to 30 * perSiteMutRate 
+	perSiteRecRate = 100 * perSiteMutRate; // set the perSiteRecRate equal to 100 * perSiteMutRate 
 	popSize = p;   // input p 
 	
 	rho = rhot;   //input rho total 
@@ -25,14 +25,15 @@ initialize() {
    startingPoint = 2 * Ls * rhoS - offset ; 	
 
  	// A and C are protective states for small effect and large effect 	   
-   defineConstant('A_INIT',Ls * (1-rhoS) - offset/betaS);
-   defineConstant('C_INIT',Ll);
-   defineConstant('G_INIT',Ls * rhoS + offset/betaS);        
-   defineConstant('T_INIT',0);        
+   defineConstant('A_INIT',asInteger(Ls * (1-rhoS) - offset/betaS));
+   defineConstant('C_INIT',asInteger(Ll));
+   defineConstant('G_INIT',asInteger(Ls * rhoS + offset/betaS));        
+   defineConstant('T_INIT',asInteger(0));        
 
  	// A, C, G, T
-	initializeAncestralNucleotides(randomNucleotides(Ls+Ll, c(A_INIT, C_INIT, G_INIT, T_INIT))); // Ancestral allele start with protective 
- 	
+	//	initializeAncestralNucleotides(randomNucleotides(Ls+Ll, c(A_INIT, C_INIT, G_INIT, T_INIT))); // Ancestral allele start with protective 
+ 	anc_seq = sample(c(rep('A', A_INIT), rep('C', C_INIT), rep('G', G_INIT)), Ls + Ll, replace = F);
+	initializeAncestralNucleotides(anc_seq);
 
 	// define constants
 	defineConstant('MU',perSiteMutRate);
