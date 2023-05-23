@@ -145,6 +145,8 @@ input_table_filename_smallVe = "smallEffectVarianceInsensParamTable.txt"
 output_table_filename_smallVe = "smallEffectVarianceInsensResultsTable.Rdata"
 params_table_smallVe = pd.read_csv(input_table_filename_smallVe, delim_whitespace=True)
 
+print(input_table_filename_smallVe)
+
 
 ## simulation variable
 liaSizesSmallVe = np.array((params_table_smallVe["target.size"]).astype(int))
