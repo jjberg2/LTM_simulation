@@ -5,6 +5,7 @@ library(viridis)
 small <- get(load('smallEffectInsensitivityResultsTable.Rdata'))
 
 small.thr <- unique(small$thr)
+small.b <- round(unique(small$b),2)
 small$thetaL <- small$theta*small$target.size
 small$sim.genVarPerSite <- small$sim.genVar/small$thetaL
 
@@ -31,7 +32,7 @@ small.cols <- seq_along(small.thr)
 
 
 
-large <- get(load('largeEffectInsensitivityResultsTable.Rdata'))
+large <- get(load('largeEffectInsensitivityResultsTableBackup.Rdata'))
 
 large.cost <- sort(unique(large$cost))
 large.thr <- unique(large$thr)
@@ -44,7 +45,6 @@ large.cols <- viridis(length(large.thr))
 
 ## this is sort of wrong but close
 large$sim.addRiskHet <- large$sim.genVarPerSite*large$sim.deltaR
-
 large$pois.Var  <- large$mean
 large$sim.stdGenVarPerSite  <- NA
 large$sim.scaledDeltaR  <- NA
@@ -77,9 +77,14 @@ op <- par(mfrow=c(1,3))
 plot(
     NA,
     xlim=c(0,1),
-    ylim=c(min(large$sim.stdGenVarPerSite)*0.95,max(large$sim.stdGenVarPerSite)*1.05),
+    ylim=c(min(large$sim.stdGenVarPerSite)*0.95,11),
     xlab='Fitness Cost',
-    ylab='Relative Per Site Average Heterozygosity'
+    ylab='Relative Per Site Average Heterozygosity',
+    yaxt='n'
+)
+axis(
+    side=2,
+    at=seq(1,12)
 )
 abline(
     h = 1,
@@ -122,7 +127,16 @@ legend(
     'topright',
     legend=round(large.thr,0),
     col=large.cols,
-    pch=20
+    pch=20,
+    bty='n'
+)
+legend(
+    x=0.95,
+    y=10,
+    legend=small.b,
+    col=small.cols,
+    pch=20,
+    bty='n'
 )
 
 ## plot 2
@@ -166,9 +180,10 @@ abline(
     lty=3,
     lwd=2
 )
+fine.costs <- seq(0.001,1,length.out=1000)
 lines(
-    x=large.cost,
-    y=1/large.cost,
+    x=fine.costs,
+    y=1/fine.costs,
     lty=2,
     lwd=2
 )
@@ -216,8 +231,8 @@ abline(
     lwd=2
 )
 lines(
-    x=large.cost,
-    y=1/large.cost,
+    x=fine.costs,
+    y=1/fine.costs,
     lty=2,
     lwd=2
 )
