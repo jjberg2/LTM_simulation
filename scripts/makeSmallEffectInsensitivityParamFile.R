@@ -1,14 +1,9 @@
 source('scripts/solveSingleEffect.R')
-eqNormPrev <- function(deltaU,bigGamma,littleGamma,h2){
-    1 - pnorm(dnorminv(bigGamma^-1 * sqrt(deltaU/2 * littleGamma/h2)))
-}
-
 
 mu <- 1e-6
 Ne <- 5000
 theta <- 4*Ne*mu
 cost <- c(seq(0.01,0.97,by=0.06),1)
-##cost <- c(0.01,0.50,1)
 h2 <- 0.5
 my.L <- 1e5
 my.thrs <- c(exp(seq(log(4000),log(2*my.L*0.4),length.out=6)))

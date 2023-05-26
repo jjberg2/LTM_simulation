@@ -23,7 +23,7 @@ initialize() {
 	
 	// you can change this, when THR smaller than this number, starting point is 0; otherwise, it is THR - THR_MINUS
 	defineConstant('THR_START', 2000);
-	defineConstant('THR_MINUS', 8*ENV_SIGMA);
+	defineConstant('THR_MINUS', 2*ENV_SIGMA);
 	if (THR <= THR_START) {
 		// if large effect, start at point 0, set all ancestral alleles to be protective 
 		startingPoint = 0;
@@ -32,9 +32,16 @@ initialize() {
 	else {
 		// if not, start at threshold point - THR_MINUS, set corresponding number of alleles to be protective and liability increasing 
 		startingPoint = 0;
-		initial_sequence = randomNucleotides(L, c(L-asInteger(L*RHO)+ asInteger(THR_MINUS), 0, asInteger(L*RHO)- asInteger(THR_MINUS), 0));
-		defineConstant('ANC', initial_sequence);
+		defineConstant('A_INIT',asInteger(L - THR/2 + THR_MINUS));
+		defineConstant('G_INIT',L - A_INIT);		
+		sequence_tmp = sample(c(rep('A',A_INIT),rep('G',G_INIT)),L,replace=F);
+		initial_sequence='';
+		for(i in 0:(length(sequence_tmp)-1)){
+			initial_sequence = initial_sequence + sequence_tmp[i];
+		}
+//		initial_sequence = randomNucleotides(L, c(L-asInteger(L*RHO)+ asInteger(THR_MINUS), 0, asInteger(L*RHO)- asInteger(THR_MINUS), 0));
 		initializeAncestralNucleotides(initial_sequence);
+		defineConstant('ANC',initial_sequence);
 	}	
 	
 	
@@ -146,7 +153,9 @@ fitness(NULL){
 	}
 	Ninds = length(inds);
 	
-	// remove back mutations 
+	// remove back mutations from the mutations list, but leave the nucleotide change
+	// this is needed in order to maintain the right finite sites accounting given slim's 
+	// mutation model
 	seg_minus = sim.mutations[sim.mutations.nucleotide=="A"];
 	if (length(sim.getValue("fixedPos")) !=0){
 		seg_minus = seg_minus[match(seg_minus.position, sim.getValue("fixedPos"))==-1];

@@ -11,13 +11,13 @@ smallCyc = 200
 largeCyc = 1600
 mu=1e-6
 sampleInt = 25
-toyRun=0
+toyRun=1
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
 
 
 rep_large = list(np.arange(0,3))
-rep_small = list(np.arange(0,2))
+rep_small = list(np.arange(0,1))
 
 
 

@@ -1,4 +1,7 @@
-##source('scripts/tiltedCDF.R')
+source('scripts/tiltedCDF.R')
+eqNormPrev <- function(deltaU,bigGamma,littleGamma,h2){
+    1 - pnorm(dnorminv(bigGamma^-1 * sqrt(deltaU/2 * littleGamma/h2)))
+}
 dnorminv<-function(y) sqrt(-2*log(sqrt(2*pi)*y))
 NormalRiskDiff <- function(t,this.mean,this.sd,this.pi){
     risk <- pnorm(t-1,mean=this.mean,sd=this.sd,lower.tail=FALSE)
