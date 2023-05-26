@@ -17,7 +17,7 @@ if(toyRun==1):
 
 
 rep_large = list(np.arange(0,3))
-rep_small = list(np.arange(0,1))
+rep_small = list(np.arange(0,2))
 
 
 
@@ -251,9 +251,13 @@ rule allSmallEffect:
     
 
    
-rule allSmallEffectBackup:
+rule smallEffectBackup:
   input:
     "smallEffect{suffix}ResultsTable.Rdata"
+  params:
+    time="36:00:00",
+    partition="broadwl",
+    mem="2Gb"
   output:
     protected("smallEffect{suffix}ResultsTableBackup.Rdata")
   shell:
