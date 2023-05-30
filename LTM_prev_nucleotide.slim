@@ -158,9 +158,9 @@ fitness(NULL){
 	// mutation model
 	seg_minus = sim.mutations[sim.mutations.nucleotide=="A"];
 	if (length(sim.getValue("fixedPos")) !=0){
-		seg_minus = seg_minus[match(seg_minus.position, sim.getValue("fixedPos"))==-1];
+		seg_back = seg_minus[match(seg_minus.position, sim.getValue("fixedPos"))==-1];
 	}
-	for (i in seg_minus){
+	for (i in seg_back){
 		sim.subpopulations.genomes.removeMutations(i, F);
 	}
 	
@@ -169,8 +169,8 @@ fitness(NULL){
 	for (i in c(0:(Ninds-1))){
 		ind_mut = sim.subpopulations.individuals[i].genomes.mutations;
 		// the back mutations did not remove in the registry after the second generations, so need to filter again. 
-		if (length(seg_minus) !=0){
-			ind_mut = ind_mut[match(ind_mut, seg_minus) == -1];
+		if (length(seg_back) !=0){
+			ind_mut = ind_mut[match(ind_mut, seg_back) == -1];
 		}
 		ind_mut_nuc = ind_mut.nucleotide;
 		segGenLi[i] = sum(ind_mut_nuc =="G") - sum(ind_mut_nuc =="A");
@@ -199,7 +199,7 @@ fitness(NULL){
 	
 	if (
 		(sim.generation > 10*N & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE & TOYRUN == 0) |
-		(sim.generation < 10 & TOYRUN == 1)
+		(sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE & TOYRUN == 1)
 		)
 	{
 		
@@ -219,7 +219,8 @@ fitness(NULL){
 		
 		
 		mutTypes = sim.mutationTypes;
-		all_lia = sim.mutationsOfType(mutTypes[0]);
+		tmp_all_lia = sim.mutationsOfType(mutTypes[0]);
+		all_lia = tmp_all_lia[tmp_all_lia!=seg_back];
 		if(length(all_lia)!=0){
 			siteVar = rep(0.0, length(all_lia));
 			riskFreq = rep(0.0, length(all_lia));
@@ -247,8 +248,8 @@ fitness(NULL){
 				}
 			
 			}
-			//sim.setValue("meanRiskEffect", );	
-			writeFile(DELTAROUT, paste(mean(riskEffect), sep=","), append=T);
+			meanRiskEffect=mean(riskEffect);
+			writeFile(DELTAROUT, paste(meanRiskEffect, sep=","), append=T);
 			writeFile(RISKFREQOUT, paste(riskFreq, sep=","), append=T);
 			writeFile(DERFREQOUT, paste(derFreq, sep=","), append=T);
 			writeFile(SITEVAROUT, paste(siteVar, sep=","), append=T);
@@ -265,8 +266,7 @@ fitness(NULL){
 		}
 	}
 	else if (
-		(sim.getValue("cycles") >= CYCLE) |
-		(sim.generation >= 10 & TOYRUN == 1)
+		(sim.getValue("cycles") >= CYCLE)
 		)
 	{
 		sim.simulationFinished();
