@@ -156,9 +156,9 @@ fitness(NULL){
 	// remove back mutations from the mutations list, but leave the nucleotide change
 	// this is needed in order to maintain the right finite sites accounting given slim's 
 	// mutation model
-	seg_minus = sim.mutations[sim.mutations.nucleotide=="A"];
+	seg_back = sim.mutations[sim.mutations.nucleotide=="A"];
 	if (length(sim.getValue("fixedPos")) !=0){
-		seg_back = seg_minus[match(seg_minus.position, sim.getValue("fixedPos"))==-1];
+		seg_back = seg_back[match(seg_back.position, sim.getValue("fixedPos"))==-1];
 	}
 	for (i in seg_back){
 		sim.subpopulations.genomes.removeMutations(i, F);
