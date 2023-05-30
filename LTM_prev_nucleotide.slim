@@ -227,7 +227,7 @@ fitness(NULL){
 			derFreq = rep(0.0, length(all_lia));
 			riskEffect = rep(0.0, length(all_lia));
 			for (i in c(0: (length(all_lia)-1))){
-				print(sim.generation);
+				//print(sim.generation);
 				x = asInteger(p1.individuals.genome1.containsMutations(all_lia[i])) + asInteger(p1.individuals.genome2.containsMutations(all_lia[i]));
 				if (all_lia[i].nucleotide == "A") {
 					x = 2-x;

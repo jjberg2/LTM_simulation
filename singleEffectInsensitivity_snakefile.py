@@ -16,7 +16,7 @@ if(toyRun==1):
     print("Warning: the toyRun flag is on!")
 
 
-rep_large = list(np.arange(0,4))
+rep_large = list(np.arange(0,5))
 rep_small = list(np.arange(0,1))
 
 
