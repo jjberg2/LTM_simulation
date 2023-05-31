@@ -220,7 +220,7 @@ fitness(NULL){
 		
 		mutTypes = sim.mutationTypes;
 		tmp_all_lia = sim.mutationsOfType(mutTypes[0]);
-		all_lia = tmp_all_lia[tmp_all_lia!=seg_back];
+		all_lia = tmp_all_lia[match(seg_back,tmp_all_lia)==-1];
 		if(length(all_lia)!=0){
 			siteVar = rep(0.0, length(all_lia));
 			riskFreq = rep(0.0, length(all_lia));
