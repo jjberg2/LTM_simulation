@@ -199,7 +199,7 @@ fitness(NULL){
 	
 	if (
 		(sim.generation > 10*N & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE & TOYRUN == 0) |
-		(sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE & TOYRUN == 1)
+		(TOYRUN == 1 & sim.generation < 10)
 		)
 	{
 		
@@ -220,7 +220,7 @@ fitness(NULL){
 		
 		mutTypes = sim.mutationTypes;
 		tmp_all_lia = sim.mutationsOfType(mutTypes[0]);
-		all_lia = tmp_all_lia[match(seg_back,tmp_all_lia)==-1];
+		all_lia = tmp_all_lia[match(tmp_all_lia,seg_back)==-1];
 		if(length(all_lia)!=0){
 			siteVar = rep(0.0, length(all_lia));
 			riskFreq = rep(0.0, length(all_lia));
@@ -270,6 +270,12 @@ fitness(NULL){
 		)
 	{
 		sim.simulationFinished();
+	}
+	else if (
+		sim.generation > 10 & TOYRUN == 1
+		)
+	{
+		sim.simulationFinished();	
 	}
 }
 
