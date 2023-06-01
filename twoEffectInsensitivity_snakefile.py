@@ -32,6 +32,8 @@ alphaLarge = np.round(np.array(params_table["al"]),3)
 N = np.array(params_table["Ne"].astype(int))
 envSD = np.round(np.sqrt(params_table["Ve"]),3)
 
+print(params_table)
+
 rule all:
   input: 
     expand(expand("twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{{rep}}.prev",zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost), rep=rep),
