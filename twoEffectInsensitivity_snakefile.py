@@ -35,9 +35,22 @@ envSD = np.round(np.sqrt(params_table["Ve"]),3)
 print(params_table)
 
 rule all:
-  input: 
-    expand(expand("twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{{rep}}.prev",zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost), rep=rep),
-    expand("twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.prev", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost)
+  input:
+    expand("twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.fixedSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.fixedLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.meanSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.meanLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.mean", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.prev", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2l", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2s", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.genVar", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.nSegSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectInsensitivity/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.nSegLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost)
+
+
+    
+    
 
 
 
@@ -88,33 +101,54 @@ rule slim_simulate_withsegregating:
     """set +u; slim -d mu={params.mu} -d thr={params.thr} -d rhos={params.rhos} -d p={wildcards.N}  -d f={params.fitCost}  -d e={wildcards.envSD} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d aS={params.alphaSmall} -d aL={wildcards.alphaLarge} -d liaSmall={params.liaSmall} -d liaLarge={params.liaLarge} -d "fixedSmallOut='{output.fixedSmall}'" -d "fixedLargeOut='{output.fixedLarge}'" -d "meanSmallOut='{output.meanSmall}'" -d "meanLargeOut='{output.meanLarge}'" -d "meanOut='{output.mean}'" -d "h2Out='{output.h2}'" -d "prevOut='{output.prev}'" -d "h2lOut='{output.h2l}'" -d "h2sOut='{output.h2s}'" -d "genVarOut='{output.genVar}'" -d "nSegSmallOut='{output.nSegSmall}'"  -d "nSegLargeOut='{output.nSegLarge}'" -d "deltaRSmallOut='{output.deltaRSmall}'" -d "deltaRLargeOut='{output.deltaRLarge}'" -d toyRun={params.toyRun} {input.slim_script} > {output.tmp}; set -u; """
 
 
-rule result_combined: 
-   input:
-     fixedSmall=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.fixedSmall", rep=rep),
-     fixedLarge=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.fixedLarge", rep=rep),
-     meanSmall=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.meanSmall", rep=rep),
-     meanLarge=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.meanLarge", rep=rep),
-     mean=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.mean", rep=rep),
-     h2=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.h2", rep=rep),
-     prev=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.prev", rep=rep),
-     h2l=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.h2l", rep=rep),
-     h2s=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.h2s", rep=rep),
-     genVar=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.genVar", rep=rep),
-     nSegSmall=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.nSegSmall", rep=rep),
-     nSegLarge=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.nSegLarge", rep=rep)
-   output:
-     fixedSmall="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.fixedSmall",
-     fixedLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.fixedLarge",
-     meanSmall="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.meanSmall",
-     meanLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.meanLarge",
-     mean="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.mean",
-     h2="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2",
-     prev="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.prev",
-     h2l="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2l",
-     h2s="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2s",
-     genVar="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.genVar",
-     nSegSmall="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.nSegSmall",
-     nSegLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.nSegLarge"
-   shell: 
-     """cat {input.fixedSmall} >> {output.fixedSmall}; cat {input.fixedLarge} >> {output.fixedLarge}; cat {input.meanSmall} >> {output.meanSmall}; cat {input.meanLarge} >> {output.meanLarge}; cat {input.mean} >> {output.mean}; cat {input.h2} >> {output.h2}; cat {input.prev} >> {output.prev}; cat {input.h2l} >> {output.h2l}; cat {input.h2s} >> {output.h2s}; cat {input.genVar} >> {output.genVar}; cat {input.nSegSmall} >> {output.nSegSmall}; cat {input.nSegLarge} >> {output.nSegLarge}""" 
+
+rule result_combined_two_small:
+  input:
+    expand("twoEffect{{suffix}}/PopSize{{N}}_aL{{liaSizes}}_thr{{thr}}_envSD{{envsd}}_cost{{cost}}_rep{rep}.{{ext}}", rep=reps)
+  params:
+     time="36:00:00",
+     partition="broadwl",
+     mem="2Gb"
+  log:
+    "twoEffect{suffix}/PopSize{N}_aL{liaSizes}_thr{thr}_envSD{envsd}_cost{cost}_all_{ext}.log"
+  output:
+    "twoEffect{suffix}/PopSize{N}_aL{liaSizes}_thr{thr}_envSD{envsd}_cost{cost}_all.{ext}"
+  shell:
+     """cat {input} >> {output}"""
+
+
+
+
+    
+
+    
+# rule result_combined: 
+#    input:
+#      fixedSmall=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.fixedSmall", rep=rep),
+#      fixedLarge=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.fixedLarge", rep=rep),
+#      meanSmall=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.meanSmall", rep=rep),
+#      meanLarge=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.meanLarge", rep=rep),
+#      mean=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.mean", rep=rep),
+#      h2=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.h2", rep=rep),
+#      prev=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.prev", rep=rep),
+#      h2l=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.h2l", rep=rep),
+#      h2s=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.h2s", rep=rep),
+#      genVar=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.genVar", rep=rep),
+#      nSegSmall=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.nSegSmall", rep=rep),
+#      nSegLarge=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.nSegLarge", rep=rep)
+#    output:
+#      fixedSmall="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.fixedSmall",
+#      fixedLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.fixedLarge",
+#      meanSmall="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.meanSmall",
+#      meanLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.meanLarge",
+#      mean="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.mean",
+#      h2="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2",
+#      prev="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.prev",
+#      h2l="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2l",
+#      h2s="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2s",
+#      genVar="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.genVar",
+#      nSegSmall="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.nSegSmall",
+#      nSegLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.nSegLarge"
+#    shell: 
+#      """cat {input.fixedSmall} >> {output.fixedSmall}; cat {input.fixedLarge} >> {output.fixedLarge}; cat {input.meanSmall} >> {output.meanSmall}; cat {input.meanLarge} >> {output.meanLarge}; cat {input.mean} >> {output.mean}; cat {input.h2} >> {output.h2}; cat {input.prev} >> {output.prev}; cat {input.h2l} >> {output.h2l}; cat {input.h2s} >> {output.h2s}; cat {input.genVar} >> {output.genVar}; cat {input.nSegSmall} >> {output.nSegSmall}; cat {input.nSegLarge} >> {output.nSegLarge}""" 
  

@@ -26,6 +26,7 @@ initialize() {
 	startingPoint = 2 * Ls * rhoS - offset ;
 	
 	// A and C are protective states for small effect and large effect 	
+	// G and T are risk states for small effect and large effect 	
 	defineConstant('G_INIT',asInteger(startingPoint/2));
 	defineConstant('A_INIT',Ls - G_INIT);
 	defineConstant('C_INIT',Ll);
@@ -34,35 +35,35 @@ initialize() {
 	initializeAncestralNucleotides(anc_seq); // Ancestral allele start with protective 
 	defineConstant('ANC',anc_seq);
 	
-	
 	// define constants
 	defineConstant('MU',perSiteMutRate);
 	defineConstant('REC',perSiteRecRate);
 	defineConstant('N',popSize);
-//	defineConstant('RHO',rho);
+	//	defineConstant('RHO',rho);
 	defineConstant('THR',threshold);
 	defineConstant('START',startingPoint);
 	defineConstant('FITCOST',fitnessCost);
 	defineConstant('ENV_SIGMA',envSD);
-	defineConstant('SAMPLE_INT', sampleInt);
-	defineConstant('CYCLE', cyc);
-	defineConstant('REP',rep);
-	defineConstant('TOYRUN',toyRun);
+	defineConstant('SAMPLE_INT', 50);
+	defineConstant('CYCLE', 200);
+	defineConstant('REP',1);
+	defineConstant('TOYRUN',0);
 	
 	
-	// output files
-	defineConstant('MEAN',mean);
-	defineConstant('H2OUT',h2Out);
-	defineConstant('H2SOUT',h2sOut);
-	defineConstant('H2LOUT',h2lOut);
-	defineConstant('PREVOUT',prevOut);
-	defineConstant('GENVAROUT',genVar);
+	//	// output files
+	//	defineConstant('MEAN',mean);
+	//	defineConstant('H2OUT',h2Out);
+	//	defineConstant('H2SOUT',h2sOut);
+	//	defineConstant('H2LOUT',h2lOut);
+	//	defineConstant('PREVOUT',prevOut);
+	//	defineConstant('GENVAROUT',genVar);
 	
 	
 	// liability mutations
 	LiaMuts = initializeMutationTypeNuc("m1", 0.5, 'f', 0);
 	LiaMuts.convertToSubstitution=T;
 	
+	// A and C are protective states for small effect and large effect 		
 	// G and T are risk states for small effect and large effect 
 	mutationMatrix = matrix(c(0,0, MU,0, 0,0,0,MU, MU,0,0,0, 0,MU,0,0), nrow=4, ncol=4);
 	initializeGenomicElementType('g1', m1, 1.0, mutationMatrix);
@@ -79,10 +80,11 @@ fitness(NULL){
 }
 
 
-1 {
+1 early() {
 	sim.addSubpop('p1', N);
 	sim.setValue("cycles", 0);
-	sim.setValue("SfixedPos", which(ANC=="G"));
+	temp=which(ANC=="G");
+	sim.setValue("SfixedPos", temp);
 	// record position fixed for risk allele
 	sim.setValue("LfixedPos", NULL);  // record position fixed for risk allele
 	sim.setValue("Nfixed", 0);   // record total number of fixed allele 
@@ -97,16 +99,18 @@ fitness(NULL){
 	
 	// count up substitutions
 	subs = sim.substitutions.nucleotide;
+	//	print(c(sum(subs == 'G'), sum(subs == 'A'), sum(subs == 'C'), sum(subs == 'T')));
+	//	fixedSmallGenLi = 2 * betaS * (sum(subs == 'G') - sum(subs == 'A'));
 	fixedSmallGenLi = 2 * betaS * length(sim.getValue('SfixedPos'));
+	//	fixedLargeGenLi = 2 * betaS * (sum(subs == 'T') - sum(subs == 'C'));
 	fixedLargeGenLi = 2 * betaL * length(sim.getValue('LfixedPos'));
 	fixedGenLi = fixedSmallGenLi + fixedLargeGenLi;
 	
 	if (length(subs)!= sim.getValue('Nfixed')){
-		// slimgui.pauseExecution();
 		for (newsubs in c((sim.getValue('Nfixed') + 1): length(subs))){
 			sim.setValue('Nfixed', sim.getValue('Nfixed') + 1);
 			
-			// the new substitution was a plus fix 
+			// the new substitution was a large effect plus fix 
 			if ((subs[newsubs - 1] == 'T')){
 				plus_pos = sim.substitutions[newsubs - 1].position;
 				sim.setValue('LfixedPos', c(sim.getValue('LfixedPos'), plus_pos));
@@ -114,7 +118,7 @@ fitness(NULL){
 				fixedGenLi = fixedGenLi + 2 * betaL;
 			}
 			
-			// the new substitution was a minus fix
+			// the new substitution was a large effect minus fix
 			if ((subs[newsubs-1] == "C")){
 				minus_pos = sim.substitutions[newsubs-1].position;
 				fixedLargeGenLi = fixedLargeGenLi - 2*betaL;
@@ -122,14 +126,9 @@ fitness(NULL){
 				old_fixedPos = sim.getValue("LfixedPos");
 				new_fixedPos = old_fixedPos[which(old_fixedPos !=minus_pos)];
 				sim.setValue("LfixedPos", new_fixedPos);
-				// double check it is from a previously fixed large effect size 
-				if (length(sim.getValue("LfixedPos")) ==0){
-					if (sum(minus_pos == sim.getValue("LfixedPos")) ==0){
-						print("The substitution did not happen from a previously fixed position", error=T);
-					}
-				}
 			}
 			
+			// the new substitution was a small effect plus fix 			
 			if (subs[newsubs - 1] == 'G'){
 				plus_pos = sim.substitutions[newsubs - 1].position;
 				sim.setValue('SfixedPos', c(sim.getValue('SfixedPos'), plus_pos));
@@ -137,7 +136,7 @@ fitness(NULL){
 				fixedGenLi = fixedGenLi + 2 * betaS;
 			}
 			
-			// the new substitution was a minus fix
+			// the new substitution was a small effect minus fix 			
 			if ((subs[newsubs-1] == "A")){
 				minus_pos = sim.substitutions[newsubs-1].position;
 				fixedSmallGenLi = fixedSmallGenLi - 2*betaL;
@@ -145,63 +144,108 @@ fitness(NULL){
 				old_fixedPos = sim.getValue("SfixedPos");
 				new_fixedPos = old_fixedPos[which(old_fixedPos !=minus_pos)];
 				sim.setValue("SfixedPos", new_fixedPos);
-				// double check it is from a previously fixed smalleffect size 
-				if (length(sim.getValue("SfixedPos")) ==0){
-					if (sum(minus_pos == sim.getValue("SfixedPos")) ==0){
-						print("The substitution did not happen from a previously fixed position", error=T);
-					}
-				}
 			}
 		
 		}
 	}
 	
-	// calculate the liability for the segregating sites 
 	Ninds = length(inds);
+	
+	if(sim.generation % 2000 == 0) 			
+		slimgui.pauseExecution();;	
+	
+	if(T){
+		// remove back mutations from the mutations list, but leave the nucleotide change
+		// this is needed in order to maintain the right finite sites accounting given slim's 
+		// mutation model
+		seg_backL1 = sim.mutations[sim.mutations.nucleotide=="C" & sim.mutations.originGeneration==sim.generation];
+		if (length(sim.getValue("LfixedPos")) !=0){
+			seg_backL1 = seg_backL1[match(seg_backL1.position, sim.getValue("LfixedPos"))==-1];
+			for (i in seg_backL1){
+				sim.subpopulations.genomes.removeMutations(i, F);
+			}
+		}
+		
+		seg_newS1 = sim.mutations[sim.mutations.nucleotide=="A" & sim.mutations.originGeneration==sim.generation];
+		seg_oldS1 = sim.mutations[sim.mutations.nucleotide=="G" & sim.mutations.originGeneration < sim.generation];
+		sbs1_pos_match = match(seg_newS1.position,seg_oldS1.position)!=-1;
+		if (any(sbs1_pos_match)){
+			seg_backS1 = seg_newS1[sbs1_pos_match];
+			for (i in seg_backS1){
+				sim.subpopulations.genomes.removeMutations(i, F);
+			}
+		}
+		
+		seg_newS2 = sim.mutations[sim.mutations.nucleotide=="G" & sim.mutations.originGeneration==sim.generation];
+		seg_oldS2 = sim.mutations[sim.mutations.nucleotide=="A" & sim.mutations.originGeneration < sim.generation];
+		sbs2_pos_match = match(seg_newS2.position,seg_oldS2.position)!=-1;
+		if(any(sbs2_pos_match)){
+//			slimgui.pauseExecution();
+//			print("Back mutation occurred at segregating site");
+			seg_backS2 = seg_newS2[sbs2_pos_match];
+			for (i in seg_backS2){
+				sim.subpopulations.genomes.removeMutations(i, F);
+			}
+		}
+	} else {
+		
+		muts = sim.mutations;
+		new_muts = muts[muts.originGeneration == sim.generation];
+		back_muts = NULL;
+		for (mut in new_muts) {
+			pos = mut.position;
+			if (mut.nucleotide == sim.chromosome.ancestralNucleotides(pos, pos)){
+				back_muts = c(back_muts, mut);
+//				print("Back mutation occurred at segregating site");
+			}
+		}
+		if (size(back_muts))
+			sim.subpopulations.genomes.removeMutations(back_muts);
+	
+	}
+	
+	
+	
+	
+	
+	
+	// calculate the liability for the segregating sites 
 	segGenLi = rep(0.0, Ninds);
 	largesegGenLi = rep(0.0, Ninds);
 	smallsegGenLi = rep(0.0, Ninds);
 	for (i in c(0:(Ninds-1))){
 		ind_mut = sim.subpopulations.individuals[i].genomes.mutations.nucleotide;
 		smallsegGenLi[i] = sum(ind_mut =="G") * betaS - sum(ind_mut =="A") * betaS;
-		largesegGenLi[i] = sum(ind_mut =="T") *betaL - sum(ind_mut =="C") * betaL;
-		segGenLi[i] = smallsegGenLi[i] + largesegGenLi[i];
+		largesegGenLi[i] = sum(ind_mut =="T") * betaL - sum(ind_mut =="C") * betaL;
 	}
+	
 	
 	// calculate components of genetic liability 
+	segGenLi = smallsegGenLi + largesegGenLi;
 	genLi=fixedGenLi+segGenLi;
 	inds.tagF = genLi + rnorm(N, 0.0, ENV_SIGMA);
-	
-	mean=mean(genLi);
-	genVar=var(genLi);
-	phenVar=var(inds.tagF);
-	h2=genVar/phenVar;
-	genVarSmall = var(fixedSmallGenLi + smallsegGenLi);
-	h2s = genVarSmall/phenVar;
-	genVarLarge = var(fixedLargeGenLi + largesegGenLi);
-	h2l = genVarLarge/ phenVar;
-	prev=sum(inds.tagF>THR)/length(inds.tagF);
-	
-	
-	
-	
-	if (sim.generation % 5000 ==0){print(sim.generation);}
-	if (sim.generation < 10 & TOYRUN == 1)
-	{
-		writeFile(MEANOUT, append=T);
-		writeFile(PREVOUT, append=T);
-		writeFile(H2OUT, append=T);
-		writeFile(H2SOUT, append=T);
-		writeFile(H2LOUT, append=T);
-		writeFile(GENVAROUT, append=T);
-	}
+
 	else if (sim.generation < 10 & TOYRUN == 1)
 	{
 		sim.simulationFinished();
 	}
 	
-	if (sim.generation > 10*N & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE & TOYRUN == 0)
+	if (
+		(sim.generation > 10*N & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE & TOYRUN == 0) |
+		(sim.generation < 10 & TOYRUN == 1)
+		)
 	{
+
+		mean=mean(genLi);
+		genVar=var(genLi);
+		phenVar=var(inds.tagF);
+		h2=genVar/phenVar;
+		genVarSmall = var(fixedSmallGenLi + smallsegGenLi);
+		h2s = genVarSmall/phenVar;
+		genVarLarge = var(fixedLargeGenLi + largesegGenLi);
+		h2l = genVarLarge/ phenVar;
+		prev=sum(inds.tagF>THR)/length(inds.tagF);		
+	
 		writeFile(MEANOUT, append=T);
 		writeFile(PREVOUT, append=T);
 		writeFile(H2OUT, append=T);
@@ -209,6 +253,7 @@ fitness(NULL){
 		writeFile(H2LOUT, append=T);
 		writeFile(GENVAROUT, append=T);
 		sim.setValue("cycles", sim.getValue("cycles") +1);
+	
 	}
 	else if (sim.getValue("cycles") >= CYCLE)
 	{

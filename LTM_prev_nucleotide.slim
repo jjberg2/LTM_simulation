@@ -12,7 +12,7 @@ initialize() {
 	perSiteRecRate = 100 * perSiteMutRate; // set the perSiteRecRate equal to 1000 * perSiteMutRate 
 	popSize = p;
 	envSD = e;
-	fitnessCost = f;	
+	fitnessCost = f;
 	defineConstant('ENV_SIGMA',envSD);
 	
 	
@@ -33,16 +33,16 @@ initialize() {
 		// if not, start at threshold point - THR_MINUS, set corresponding number of alleles to be protective and liability increasing 
 		startingPoint = 0;
 		defineConstant('A_INIT',asInteger(L - THR/2 + THR_MINUS));
-		defineConstant('G_INIT',L - A_INIT);		
+		defineConstant('G_INIT',L - A_INIT);
 		sequence_tmp = sample(c(rep('A',A_INIT),rep('G',G_INIT)),L,replace=F);
 		initial_sequence='';
 		for(i in 0:(length(sequence_tmp)-1)){
 			initial_sequence = initial_sequence + sequence_tmp[i];
 		}
-//		initial_sequence = randomNucleotides(L, c(L-asInteger(L*RHO)+ asInteger(THR_MINUS), 0, asInteger(L*RHO)- asInteger(THR_MINUS), 0));
+		//		initial_sequence = randomNucleotides(L, c(L-asInteger(L*RHO)+ asInteger(THR_MINUS), 0, asInteger(L*RHO)- asInteger(THR_MINUS), 0));
 		initializeAncestralNucleotides(initial_sequence);
 		defineConstant('ANC',initial_sequence);
-	}	
+	}
 	
 	
 	// define constants
@@ -50,7 +50,7 @@ initialize() {
 	defineConstant('REC',perSiteRecRate);
 	defineConstant('N',popSize);
 	defineConstant('START',startingPoint);
-	defineConstant('FITCOST',fitnessCost);	
+	defineConstant('FITCOST',fitnessCost);
 	defineConstant('SAMPLE_INT', sampleInt);
 	defineConstant('CYCLE', cyc);
 	defineConstant('REP',rep);
@@ -66,7 +66,7 @@ initialize() {
 	defineConstant('DELTAROUT',deltaROut);
 	defineConstant('RISKFREQOUT',riskFreqOut);
 	defineConstant('DERFREQOUT',derFreqOut);
-	defineConstant('SITEVAROUT',siteVarOut);	
+	defineConstant('SITEVAROUT',siteVarOut);
 	
 	
 	
@@ -186,14 +186,7 @@ fitness(NULL){
 		liabilities = genLi;
 	}
 	
-	// things to output
-	mean=mean(genLi);
-	genVar=var(genLi);
-	phenVar=var(liabilities);
 	
-	h2=genVar/phenVar;
-	prev=sum(liabilities >THR)/length(liabilities );
-	nSeg = sum(sim.mutations.nucleotide=="A") + sum(sim.mutations.nucleotide=="G");
 	inds.tagF = liabilities;
 	
 	
@@ -215,11 +208,23 @@ fitness(NULL){
 			}
 		}
 		
+			
+		// things to output
+		mean=mean(genLi);
+		genVar=var(genLi);
+		phenVar=var(liabilities);
 		
+		h2=genVar/phenVar;
+		prev=sum(liabilities >THR)/length(liabilities );
+		nSeg = sum(sim.mutations.nucleotide=="A") + sum(sim.mutations.nucleotide=="G");
 		
+		// compute things to output
+		// before that, need to account for any back mutations that were removed earlier
+		// as by default they aren't remove from the mutation list until the end of 
+		// the generation 		
 		mutTypes = sim.mutationTypes;
 		tmp_all_lia = sim.mutationsOfType(mutTypes[0]);
-		all_lia = tmp_all_lia[match(tmp_all_lia,seg_back)==-1];
+		all_lia = tmp_all_lia[match(tmp_all_lia,seg_back)==-1];		
 		if(length(all_lia)!=0){
 			siteVar = rep(0.0, length(all_lia));
 			riskFreq = rep(0.0, length(all_lia));
@@ -274,7 +279,7 @@ fitness(NULL){
 		sim.generation > 10 & TOYRUN == 1
 		)
 	{
-		sim.simulationFinished();	
+		sim.simulationFinished();
 	}
 }
 
