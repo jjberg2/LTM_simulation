@@ -1,5 +1,5 @@
 library(numDeriv,quietly=TRUE,warn.conflicts=FALSE)
-library(BB,quietly=TRUE)
+## library(BB,quietly=TRUE)
 library(nleqslv)
 source('scripts/freqSpecFuncs.R')
 recoversOn <- F

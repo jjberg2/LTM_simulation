@@ -3,18 +3,18 @@ import sys
 print(sys.version)
 import numpy as np 
 import pandas as pd
-import subprocess as sb
+import subprocess as sp
 
 def trim_trailingzero(x):
     return(x.astype(str).strip("0").strip("."))
 
 
-subprocess.call ("Rscript --vanilla scripts/makeTwoEffectPrevInsensitivityParamsTable.R", shell=True)
-subprocess.call ("Rscript --vanilla scripts/makeTwoEffectCostInsensitivityParamsTable.R", shell=True)
+#subprocess.call ("Rscript --vanilla scripts/makeTwoEffectPrevInsensitivityParamsTable.R", shell=True)
+sp.call ("Rscript --vanilla scripts/makeTwoEffectPopSizeInsensitivityParamsTable.R", shell=True)
 
 
-input_table_prevInsens = "twoEffectPrevInsensitivityParamsTable.txt"
-params_table = pd.read_csv(input_table_prevInsens, delim_whitespace=True)
+input_table_popSizeInsens = "twoEffectPopSizeInsensitivityParamsTable.txt"
+params_table = pd.read_csv(input_table_popSizeInsens, delim_whitespace=True)
 #params_table = params_table.iloc[[0,49,99,149,199],:].reset_index(drop=True)
 
 ## global parameter ( doesn't change) 
@@ -49,29 +49,29 @@ envSD = np.array(['{:.3f}'.format(r) for r in tmpEnvSD], dtype=str)
 print(params_table)
 
 
-rule allPrevInsensitiivty:
+rule all:
   input:
-    input_table_prevInsens,
-    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.fixedSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
-    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.fixedLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
-    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.meanSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
-    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.meanLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
-    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.mean", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
-    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.prev", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
-    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2l", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
-    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2s", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
-    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.genVar", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
-    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.nSegSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
-    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.nSegLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
-    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.deltaRSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
-    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.deltaRLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost)
+    input_table_popSizeInsens,
+    expand("twoEffectCostInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.fixedSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectCostInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.fixedLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectCostInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.meanSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectCostInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.meanLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectCostInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.mean", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectCostInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.prev", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectCostInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2l", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectCostInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2s", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectCostInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.genVar", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectCostInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.nSegSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectCostInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.nSegLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectCostInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.deltaRSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectCostInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.deltaRLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost)
   params:
      time="36:00:00",
      partition="broadwl",
      mem="4Gb",
-     path="twoEffectPrevInsensitivity/all"
+     path="twoEffectCostInsensitivity/all"
   output:
-     "twoEffectPrevInsensitivityResultsTable.Rdata"
+     "twoEffectCostInsensitivityResultsTable.Rdata"
   shell:
     """Rscript scripts/collateTwoEffectResults.R {input} {params.path} {output}"""
 
@@ -80,6 +80,23 @@ rule allPrevInsensitiivty:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
 
     
 rule twoEffectBackup:
@@ -99,7 +116,7 @@ rule twoEffectBackup:
 
     
 def find_index(wildcards, col):                                                                                                                                          
-    index = np.where( np.round(params_table["al"],3) == float(wildcards.alphaLarge))[0][0]             
+    index = np.where( (np.round(params_table["al"],3) == float(wildcards.alphaLarge)) & (params_table["Ne"] == float(wildcards.N)))[0][0]             
     return(params_table[col][index])
 
 

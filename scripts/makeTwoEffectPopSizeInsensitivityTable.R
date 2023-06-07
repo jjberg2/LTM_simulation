@@ -1,6 +1,42 @@
 source('scripts/solveTwoEffect.R')
+N <-
 
-recover.flag <- FALSE
+my.table <- read.table("twoEffectPrevInsensitivityParamsTable.txt",header=TRUE)
+
+targets <- c(0.1,0.3)
+keep <- list()
+for(i in seq_along(targets)){
+    keep[[i]] <- which.min(abs(targets[i] - my.table$deltal))
+}
+these.ones <- unlist(keep)
+a.table <- my.table[these.ones,]
+b.table <- a.table[rep(c(1,2),each=length(C)),]
+b.table$C <- rep(C,times=2)
+c.table <- b.table[,!colnames(b.table) %in% c('h2s','h2l','prev','h2os','h2ol','deltas','deltal')]
+
+
+
+write.table(c.table, "twoEffectCostInsensitivityParamsTable.txt", col.names=T, row.names=F, quote=F)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if(FALSE){
+
+recover.flag <- TRUE
 
 ## params
 L.init <- 1e7
@@ -8,44 +44,58 @@ Lmeana <- 1e7
 Ne <- 5e2
 u <- 1e-8
 as <- 1
-C <- 0.1
+
 r2n <- 1/2
 theta <- 4*Ne*u
 
 
 
 my.bt <- 0.4
-my.als <- exp(seq(log(12),log(100),length.out=1000))
+al <- 15
 
 last.Ll <- numeric()
-last.Ll[1] <- 90000
+Ls <-  9150253
+Ll <-  59501
+L <- Ls + Ll
+meana <- (Ls + al*Ll)/L
+Lmeana <- L*meana
 last.bs <- numeric()
-last.bs[1] <- 0.32
+bs <- 0.38
+rhos <- 1/2 - bs/2
+rhot <- (rhos * 1*Ls + al*Ll)/Lmeana
 last.Ls <- numeric()
 last.Ls[1] <- L.init - last.Ll
+
+
+
+
+
+
+
+
 
 my.cols <- c('as','Ls','bs','rhos','al','Ll','bl','rhol','bt','rhot','Ne','u','C','Ve','h2s','h2l','prev')
 output <- data.frame(matrix(ncol = length(my.cols), nrow = 0))
 colnames(output) <- my.cols
 
 solns <- list()
-for( i in seq_along(my.als)){
+for( i in seq_along(C)){
 
     solns[[i]] <- solveTwoEffect(
-        bs=last.bs[i],
+        bs=bs,
         bt=my.bt,
         Ne=Ne,
-        Ls=last.Ls[i],
-        Ll=last.Ll[i],
+        Ls=Ls,
+        Ll=Ll,
         as=as,
-        al=my.als[i],
+        al=al,
         L.init=L.init,
         r2n=r2n,
         Lmeana=Lmeana,
         Ve=NULL,
         u=u,
-        C=C,
-        LL.soln=TRUE,
+        C=C[i],
+        LL.soln=FALSE,
         var.ratio=1,
         equalize.observed.vars=TRUE
     )
@@ -101,5 +151,6 @@ written.output <- output[these.ones,]
 
 
 
-write.table(written.output, "twoEffectPrevInsensitivityParamsTable.txt", col.names=T, row.names=F, quote=F)
+
 #a=read.table("params_test_twoeffect_Ls1e6.txt")
+}

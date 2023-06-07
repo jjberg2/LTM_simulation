@@ -1,7 +1,7 @@
 source('scripts/solveSingleEffect.R')
 
 
-solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,r2n=NULL,Ve=NULL,u,C,LL.soln=FALSE,var.ratio=NULL,equalize.observed.vars=FALSE){
+solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,r2n=NULL,Ve=NULL,u,C,LL.soln=FALSE,var.ratio=NULL,equalize.observed.vars=FALSE){
 
     ## bs:  asymmetry for small effects
     ## Ne:  pop size
@@ -18,7 +18,8 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,r2n=NULL,Ve=NULL,u,C,LL.s
     ## bt <- bs
 
     if(recover.flag) recover()
-    
+
+
     if(LL.soln)
         stopifnot(!is.null(var.ratio))
 
@@ -32,7 +33,7 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,r2n=NULL,Ve=NULL,u,C,LL.s
     ft <- ys*(4*Ne*C)^-1  #originally ys*(2*Ne*C)^-1
 
     ## get small effect additive genetic variance
-    Vas <- 8*Ne*u*L*as^2*bs/ys  ## originally 4*Ne*u*Ls*as^2*bs/ys
+    Vas <- 8*Ne*u*L.init*as^2*bs/ys  ## originally 4*Ne*u*Ls*as^2*bs/ys
     if(is.null(Ve))
         Ve <- Vas*(1-r2n)/r2n
     norm.sd <- sqrt(Vas+Ve)
@@ -71,7 +72,7 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,r2n=NULL,Ve=NULL,u,C,LL.s
 
 
     init.Ll <- Ll
-    
+
 
     ## get 2d solution
     soln <- nleqslv(
@@ -100,7 +101,7 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,r2n=NULL,Ve=NULL,u,C,LL.s
     trans.deltal <- soln$x[1]
     deltal <- 1/(1+exp(trans.deltal))
     tstar <- soln$x[2]
-    
+
 
     if(LL.soln){
 
@@ -127,7 +128,8 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,r2n=NULL,Ve=NULL,u,C,LL.s
                 ##Ls <- L-Ll
                 bs <- 1/(1+exp(X[4]))
                 Ls <- X[5]
-                
+                L  <- Ll + Ls
+
                 ## small effect stuff
                 ys <- log((1+bs)/(1-bs))
                 Vas <- 8*Ne*u*Ls*as^2*bs/ys # originall 4*Ne*u*Ls*as^2*bs/ys
@@ -137,7 +139,7 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,r2n=NULL,Ve=NULL,u,C,LL.s
 
                 ## large effect stuff
                 my.s <- deltal*C
-                my.y <- 4*Ne*my.s #originally 2*Ne*my.s 
+                my.y <- 4*Ne*my.s #originally 2*Ne*my.s
                 mean.nl <- 2*Ll*u/my.s
                 my.range <- seq(qpois(1e-8,mean.nl),qpois(1-1e-8,mean.nl))
                 prot <- pPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=FALSE)
@@ -169,7 +171,7 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,r2n=NULL,Ve=NULL,u,C,LL.s
                 diff.four <- bt - bt.tild
 
                 diff.five <- L*meana - Lmeana
-                
+
                 return(c(diff.one,diff.two,diff.three,diff.four,diff.five))
             },
             control=list(scalex=c(1,1/new.init.tstar,1/init.Ll,1,1/init.Ls),maxit=800,allowSingular=FALSE)
@@ -181,7 +183,7 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,r2n=NULL,Ve=NULL,u,C,LL.s
         Ll <- soln$x[3]
         bs <- 1/(1+exp(soln$x[4]))
         Ls <- soln$x[5]
-        L <- Ls+Ll
+
         ys <- log((1+bs)/(1-bs))
         ft <- ys*(4*Ne*C)^-1 #originally ys*(2*Ne*C)^-1
 
@@ -193,7 +195,7 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,r2n=NULL,Ve=NULL,u,C,LL.s
 
     }
 
-
+    L <- Ls+Ll
     meana <- (as*Ls + al*Ll)/L
     deltas <- as*ft
     mean.nl <- 2*Ll*u/(deltal*C)
@@ -211,7 +213,7 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,r2n=NULL,Ve=NULL,u,C,LL.s
     ldens <- dpois(my.range,mean.nl) ## density on large effect liability
     pdil <- pnorm(tstar, al*my.range,norm.sd,lower.tail=FALSE) ## prev among inds with i large effect alleles
     pidl <- ldens*pdil/prev ## density on number of large effect alleles conditional on having disease
-    
+
 
     ## does mut-sel balance actually hold??
     mutl <- 2*Ll*al*u
@@ -222,8 +224,8 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,r2n=NULL,Ve=NULL,u,C,LL.s
     sels <- Vas*ft*C
     selall <- sell+sels
     stopifnot(abs((mutall-selall)/(mutall+selall))<1e-8)
-    
-       
+
+
     tol <- 1e-5
     min.gl <- uniroot(
         function(X)
