@@ -14,10 +14,10 @@ initialize() {
 	perSiteRecRate = 100 * perSiteMutRate; // set the perSiteRecRate equal to 30 * perSiteMutRate 
 	popSize = p;   // input p 
 	
-//	rho = rhot;   //input rho total 
+	//	rho = rhot;   //input rho total 
 	envSD = e;   // input e 
 	fitnessCost = f;    // input f
-//	prefix=pre;	// output file prefix
+	//	prefix=pre;	// output file prefix
 	
 	L = Ls + Ll;
 	maxG = 2 * (Ls * betaS + Ll * betaL);
@@ -25,8 +25,8 @@ initialize() {
 	offset = envSD;
 	startingPoint = 2 * Ls * rhoS - offset ;
 	
-	// A and C are protective states for small effect and large effect 	
-	// G and T are risk states for small effect and large effect 	
+	// A and C are protective states for small effect and large effect, respectively
+	// G and T are risk states for small effect and large effect, respectively
 	defineConstant('G_INIT',asInteger(startingPoint/2));
 	defineConstant('A_INIT',Ls - G_INIT);
 	defineConstant('C_INIT',Ll);
@@ -50,14 +50,20 @@ initialize() {
 	defineConstant('TOYRUN',0);
 	
 	
-	//	// output files
-	//	defineConstant('MEAN',mean);
-	//	defineConstant('H2OUT',h2Out);
-	//	defineConstant('H2SOUT',h2sOut);
-	//	defineConstant('H2LOUT',h2lOut);
-	//	defineConstant('PREVOUT',prevOut);
-	//	defineConstant('GENVAROUT',genVar);
-	
+	// output files
+	defineConstant('FIXEDSMALLOUT',fixedSmallOut);
+	defineConstant('FIXEDLARGEOUT',fixedLargeOut);
+	defineConstant('MEANSMALLOUT',meanSmallOut);
+	defineConstant('MEANLARGEOUT',meanLargeOut);
+	defineConstant('MEAN',mean);
+	defineConstant('H2OUT',h2Out);
+	defineConstant('H2SOUT',h2sOut);
+	defineConstant('H2LOUT',h2lOut);
+	defineConstant('PREVOUT',prevOut);
+	defineConstant('GENVAROUT',genVar);
+	defineConstant('NSEGSMALLOUT',nSegSmallOut);
+	defineConstant('NSEGLARGEOUT',nSegLargeOut);
+	defineConstant('DELTARSMALLOUT',deltaRSmallOut);	
 	
 	// liability mutations
 	LiaMuts = initializeMutationTypeNuc("m1", 0.5, 'f', 0);
@@ -149,109 +155,152 @@ fitness(NULL){
 		}
 	}
 	
-	Ninds = length(inds);
 	
-	if(sim.generation % 2000 == 0) 			
-		slimgui.pauseExecution();;	
 	
-	if(T){
-		// remove back mutations from the mutations list, but leave the nucleotide change
-		// this is needed in order to maintain the right finite sites accounting given slim's 
-		// mutation model
-		seg_backL1 = sim.mutations[sim.mutations.nucleotide=="C" & sim.mutations.originGeneration==sim.generation];
-		if (length(sim.getValue("LfixedPos")) !=0){
-			seg_backL1 = seg_backL1[match(seg_backL1.position, sim.getValue("LfixedPos"))==-1];
-			for (i in seg_backL1){
-				sim.subpopulations.genomes.removeMutations(i, F);
-			}
-		}
-		
-		seg_newS1 = sim.mutations[sim.mutations.nucleotide=="A" & sim.mutations.originGeneration==sim.generation];
-		seg_oldS1 = sim.mutations[sim.mutations.nucleotide=="G" & sim.mutations.originGeneration < sim.generation];
-		sbs1_pos_match = match(seg_newS1.position,seg_oldS1.position)!=-1;
-		if (any(sbs1_pos_match)){
-			seg_backS1 = seg_newS1[sbs1_pos_match];
-			for (i in seg_backS1){
-				sim.subpopulations.genomes.removeMutations(i, F);
-			}
-		}
-		
-		seg_newS2 = sim.mutations[sim.mutations.nucleotide=="G" & sim.mutations.originGeneration==sim.generation];
-		seg_oldS2 = sim.mutations[sim.mutations.nucleotide=="A" & sim.mutations.originGeneration < sim.generation];
-		sbs2_pos_match = match(seg_newS2.position,seg_oldS2.position)!=-1;
-		if(any(sbs2_pos_match)){
-//			slimgui.pauseExecution();
-//			print("Back mutation occurred at segregating site");
-			seg_backS2 = seg_newS2[sbs2_pos_match];
-			for (i in seg_backS2){
-				sim.subpopulations.genomes.removeMutations(i, F);
-			}
-		}
-	} else {
-		
-		muts = sim.mutations;
-		new_muts = muts[muts.originGeneration == sim.generation];
-		back_muts = NULL;
-		for (mut in new_muts) {
-			pos = mut.position;
-			if (mut.nucleotide == sim.chromosome.ancestralNucleotides(pos, pos)){
-				back_muts = c(back_muts, mut);
-//				print("Back mutation occurred at segregating site");
-			}
-		}
-		if (size(back_muts))
-			sim.subpopulations.genomes.removeMutations(back_muts);
 	
+	// remove back mutations from the mutations list, but leave the nucleotide change
+	// this is needed in order to maintain the right finite sites accounting given slim's 
+	// mutation model
+	muts = sim.mutations;
+	new_muts = muts[muts.originGeneration == sim.generation];
+	back_muts = NULL;
+	for (mut in new_muts) {
+		pos = mut.position;
+		if (mut.nucleotide == sim.chromosome.ancestralNucleotides(pos, pos)){
+			back_muts = c(back_muts, mut);
+		}
 	}
-	
-	
-	
-	
+	if (size(back_muts))
+		sim.subpopulations.genomes.removeMutations(back_muts);
 	
 	
 	// calculate the liability for the segregating sites 
+	Ninds = length(inds);
 	segGenLi = rep(0.0, Ninds);
-	largesegGenLi = rep(0.0, Ninds);
-	smallsegGenLi = rep(0.0, Ninds);
+	segLargeGenLi = rep(0.0, Ninds);
+	segSmallGenLi = rep(0.0, Ninds);
 	for (i in c(0:(Ninds-1))){
 		ind_mut = sim.subpopulations.individuals[i].genomes.mutations.nucleotide;
-		smallsegGenLi[i] = sum(ind_mut =="G") * betaS - sum(ind_mut =="A") * betaS;
-		largesegGenLi[i] = sum(ind_mut =="T") * betaL - sum(ind_mut =="C") * betaL;
+		segSmallGenLi[i] = sum(ind_mut =="G") * betaS - sum(ind_mut =="A") * betaS;
+		segLargeGenLi[i] = sum(ind_mut =="T") * betaL - sum(ind_mut =="C") * betaL;
 	}
 	
 	
 	// calculate components of genetic liability 
-	segGenLi = smallsegGenLi + largesegGenLi;
+	segGenLi = segSmallGenLi + segLargeGenLi;
+	smallMeanGenLi = fixedSmallGenLi + segSmallGenLi;
+	largeMeanGenLi = fixedLargeGenLi + segLargeGenLi;
 	genLi=fixedGenLi+segGenLi;
 	inds.tagF = genLi + rnorm(N, 0.0, ENV_SIGMA);
-
-	else if (sim.generation < 10 & TOYRUN == 1)
-	{
-		sim.simulationFinished();
-	}
 	
 	if (
 		(sim.generation > 10*N & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE & TOYRUN == 0) |
 		(sim.generation < 10 & TOYRUN == 1)
 		)
 	{
-
+		
+		// need to account for any back mutations that were removed earlier
+		// as by default they aren't remove from the mutation list until the end of 
+		// the generation 	
+		//		nucs=sim.mutations.nucleotide	
+		tmp_muts = sim.mutations;
+		muts2 = tmp_muts[match(tmp_muts,back_muts)==-1];
+		nucs2 = muts2.nucleotide;
+		small_muts = muts2[nucs2=="A" | nucs2=="G"];
+		large_muts = muts2[nucs2=="C" | nucs2=="T"];
+		
+		// site quantities for small effect sites
+		if(length(small_muts)!=0){
+			smallSiteVar = rep(0.0, length(small_muts));
+			smallRiskFreq = rep(0.0, length(small_muts));
+			smallDerVar = rep(0.0, length(small_muts));
+			smallRiskEffect = rep(0.0, length(small_muts));
+			for (i in c(0: (length(small_muts)-1))){
+				x = asInteger(p1.individuals.genome1.containsMutations(small_muts[i])) + asInteger(p1.individuals.genome2.containsMutations(small_muts[i]));
+				if (small[i].nucleotide == "A") {
+					x = 2-x;
+				}
+				meanx = mean(x);
+				num = sum((x-meanx)*(risk - mean(risk)));
+				denom = sum( (x-meanx)^2 );
+				smallRiskEffect[i] = num/denom;
+				smallSiteVar[i] = denom/(N-1);
+				smallRiskFreq[i]=meanx/2;
+				if (small_muts[i].nucleotide == "A") {
+					smallDerFreq[i] = 1 - smallRiskFreq[i];
+				} else {
+					smallDerFreq[i] = smallRiskFreq[i];
+				}
+			}
+		}
+		meanSmallRiskEffect = mean(smallRiskEffect);		
+		
+		// site quantities for large effect sites
+		if(length(large_muts)!=0){
+			largeSiteVar = rep(0.0, length(large_muts));
+			largeRiskFreq = rep(0.0, length(large_muts));
+			largeDerVar = rep(0.0, length(large_muts));
+			largeRiskEffect = rep(0.0, length(large_muts));
+			for (i in c(0: (length(large_muts)-1))){
+				x = asInteger(p1.individuals.genome1.containsMutations(large_muts[i])) + asInteger(p1.individuals.genome2.containsMutations(large_muts[i]));
+				if (large[i].nucleotide == "C") {
+					x = 2-x;
+				}
+				meanx = mean(x);
+				num = sum((x-meanx)*(risk - mean(risk)));
+				denom = sum( (x-meanx)^2 );
+				largeRiskEffect[i] = num/denom;
+				largeSiteVar[i] = denom/(N-1);
+				largeRiskFreq[i]=meanx/2;
+				if (large_muts[i].nucleotide == "C") {
+					largeDerFreq[i] = 1 - largeRiskFreq[i];
+				} else {
+					largeDerFreq[i] = largeRiskFreq[i];
+				}
+			}
+		}
+		meanLargeRiskEffect = mean(largeRiskEffect);
+		
+		
+		
+		// compute things to output		
 		mean=mean(genLi);
 		genVar=var(genLi);
 		phenVar=var(inds.tagF);
 		h2=genVar/phenVar;
-		genVarSmall = var(fixedSmallGenLi + smallsegGenLi);
+		genVarSmall = var(fixedSmallGenLi + segSmallGenLi);
 		h2s = genVarSmall/phenVar;
-		genVarLarge = var(fixedLargeGenLi + largesegGenLi);
+		genVarLarge = var(fixedLargeGenLi + segLargeGenLi);
 		h2l = genVarLarge/ phenVar;
-		prev=sum(inds.tagF>THR)/length(inds.tagF);		
-	
-		writeFile(MEANOUT, append=T);
-		writeFile(PREVOUT, append=T);
-		writeFile(H2OUT, append=T);
-		writeFile(H2SOUT, append=T);
-		writeFile(H2LOUT, append=T);
-		writeFile(GENVAROUT, append=T);
+		prev=sum(inds.tagF>THR)/length(inds.tagF);
+		nSegSmall = length(small_muts);
+		nSegLarge = length(large_muts);
+		
+		if(length(all_lia)!=0){
+			siteVarSmall = rep(0.0, length(all_lia));
+			riskFreq = rep(0.0, length(all_lia));
+			derFreq = rep(0.0, length(all_lia));
+			riskEffect = rep(0.0, length(all_lia));
+		
+		}
+		
+		
+		
+		writeFile(FIXEDSMALLOUT, paste(fixedSmallGenLi , sep=","), append=T);
+		writeFile(FIXEDLARGEOUT, paste(fixedLargeGenLi , sep=","), append=T);
+		writeFile(MEANSMALLOUT, paste(smallMeanGenLi , sep=","), append=T);
+		writeFile(MEANLARGEOUT, paste(largeMeanGenLi , sep=","), append=T);
+		writeFile(MEANOUT, paste(mean, sep=","), append=T);
+		writeFile(H2OUT, paste(h2, sep=","), append=T);
+		writeFile(H2SOUT, paste(h2s, sep=","), append=T);
+		writeFile(H2LOUT, paste(h2l, sep=","), append=T);
+		writeFile(PREVOUT, paste(prev, sep=","), append=T);
+		writeFile(GENVAROUT, paste(genVar, sep=","), append=T);
+		writeFile(NSEGSMALLOUT, paste(nSegSmall, sep=","), append=T);
+		writeFile(NSEGLARGEOUT, paste(nSegSmall, sep=","), append=T);
+		writeFile(DELTARSMALLOUT, paste(meanSmallRiskEffect, sep=","), append=T);
+		writeFile(DELTARLARGEOUT, paste(meanLargeRiskEffect, sep=","), append=T);
+		
 		sim.setValue("cycles", sim.getValue("cycles") +1);
 	
 	}

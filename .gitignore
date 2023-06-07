@@ -2,3 +2,5 @@
 *.py~
 *.sh~
 *slurm*.out
+twoEffectInsensitivity/*rep*
+twoEffectInsensitivity/*all*

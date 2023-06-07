@@ -216,12 +216,12 @@ fitness(NULL){
 		
 		h2=genVar/phenVar;
 		prev=sum(liabilities >THR)/length(liabilities );
-		nSeg = sum(sim.mutations.nucleotide=="A") + sum(sim.mutations.nucleotide=="G");
+		nSeg = length(sim.mutations);
 		
 		// compute things to output
 		// before that, need to account for any back mutations that were removed earlier
 		// as by default they aren't remove from the mutation list until the end of 
-		// the generation 		
+		// the generation 	
 		mutTypes = sim.mutationTypes;
 		tmp_all_lia = sim.mutationsOfType(mutTypes[0]);
 		all_lia = tmp_all_lia[match(tmp_all_lia,seg_back)==-1];		
@@ -239,11 +239,8 @@ fitness(NULL){
 				meanx = mean(x);
 				num = sum((x-meanx)*(risk - mean(risk)));
 				denom = sum( (x-meanx)^2 );
-				
-				
 				riskEffect[i] = num/denom;
 				siteVar[i] = denom/(N-1);
-				
 				riskFreq[i]=meanx/2;
 				if (all_lia[i].nucleotide == "A") {
 					derFreq[i] = 1 - riskFreq[i];
