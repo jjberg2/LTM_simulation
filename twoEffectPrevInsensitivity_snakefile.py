@@ -9,8 +9,7 @@ def trim_trailingzero(x):
     return(x.astype(str).strip("0").strip("."))
 
 
-subprocess.call ("Rscript --vanilla scripts/makeTwoEffectPrevInsensitivityParamsTable.R", shell=True)
-subprocess.call ("Rscript --vanilla scripts/makeTwoEffectCostInsensitivityParamsTable.R", shell=True)
+##subprocess.call ("Rscript --vanilla scripts/makeTwoEffectPrevInsensitivityParamsTable.R", shell=True)
 
 
 input_table_prevInsens = "twoEffectPrevInsensitivityParamsTable.txt"
