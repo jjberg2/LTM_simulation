@@ -21,7 +21,7 @@ params_table = pd.read_csv(input_table_popSizeInsens, delim_whitespace=True)
 cyc = 200
 sampleInt = 50
 reps = 1
-toyRun = 0
+toyRun = 1
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
 
@@ -137,6 +137,12 @@ rule slim_simulate_withsegregating:
     nSegLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.nSegLarge",
     deltaRSmall="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.deltaRSmall",
     deltaRLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.deltaRLarge",
+    riskFreqSmall="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.riskFreqSmall",
+    derFreqSmall="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.derFreqSmall",
+    siteVarSmall="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.siteVarSmall",
+    riskFreqLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.riskFreqLarge",
+    derFreqLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.derFreqLarge",
+    siteVarLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.siteVarLarge",    
     tmp="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.tmp"
   params:
     mu = lambda wildcards: find_index(wildcards, col="u"),
@@ -155,7 +161,7 @@ rule slim_simulate_withsegregating:
   log:
     '"{prefix}/logs/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.log",'
   shell:
-    """set +u; slim -d mu={params.mu} -d thr={params.thr} -d rhos={params.rhos} -d p={wildcards.N}  -d f={params.fitCost}  -d e={wildcards.envSD} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d aS={params.alphaSmall} -d aL={wildcards.alphaLarge} -d liaSmall={params.liaSmall} -d liaLarge={params.liaLarge} -d "fixedSmallOut='{output.fixedSmall}'" -d "fixedLargeOut='{output.fixedLarge}'" -d "meanSmallOut='{output.meanSmall}'" -d "meanLargeOut='{output.meanLarge}'" -d "meanOut='{output.mean}'" -d "h2Out='{output.h2}'" -d "h2sOut='{output.h2s}'" -d "h2lOut='{output.h2l}'" -d "prevOut='{output.prev}'" -d "genVarOut='{output.genVar}'" -d "nSegSmallOut='{output.nSegSmall}'"  -d "nSegLargeOut='{output.nSegLarge}'" -d "deltaRSmallOut='{output.deltaRSmall}'" -d "deltaRLargeOut='{output.deltaRLarge}'" -d toyRun={params.toyRun} {input.slim_script} > {output.tmp}; set -u; """
+    """set +u; slim -d mu={params.mu} -d thr={params.thr} -d rhos={params.rhos} -d p={wildcards.N}  -d f={params.fitCost}  -d e={wildcards.envSD} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d aS={params.alphaSmall} -d aL={wildcards.alphaLarge} -d liaSmall={params.liaSmall} -d liaLarge={params.liaLarge} -d "fixedSmallOut='{output.fixedSmall}'" -d "fixedLargeOut='{output.fixedLarge}'" -d "meanSmallOut='{output.meanSmall}'" -d "meanLargeOut='{output.meanLarge}'" -d "meanOut='{output.mean}'" -d "h2Out='{output.h2}'" -d "h2sOut='{output.h2s}'" -d "h2lOut='{output.h2l}'" -d "prevOut='{output.prev}'" -d "genVarOut='{output.genVar}'" -d "nSegSmallOut='{output.nSegSmall}'"  -d "nSegLargeOut='{output.nSegLarge}'" -d "deltaRSmallOut='{output.deltaRSmall}'" -d "deltaRLargeOut='{output.deltaRLarge}'" -d "riskFreqSmallOut='{output.riskFreqSmall}'" -d "derFreqSmallOut='{output.derFreqSmall}'" -d "siteVarSmallOut='{output.siteVarSmall}'" -d "riskFreqLargeOut='{output.riskFreqLarge}'" -d "derFreqLargeOut='{output.derFreqLarge}'" -d "siteVarLargeOut='{output.siteVarLarge}'" -d toyRun={params.toyRun} {input.slim_script} > {output.tmp}; set -u; """
 
 
 
@@ -179,33 +185,3 @@ rule result_combined_two_small:
     
 
     
-# rule result_combined: 
-#    input:
-#      fixedSmall=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.fixedSmall", rep=rep),
-#      fixedLarge=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.fixedLarge", rep=rep),
-#      meanSmall=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.meanSmall", rep=rep),
-#      meanLarge=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.meanLarge", rep=rep),
-#      mean=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.mean", rep=rep),
-#      h2=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.h2", rep=rep),
-#      prev=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.prev", rep=rep),
-#      h2l=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.h2l", rep=rep),
-#      h2s=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.h2s", rep=rep),
-#      genVar=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.genVar", rep=rep),
-#      nSegSmall=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.nSegSmall", rep=rep),
-#      nSegLarge=expand("{{prefix}}/PopSize{{N}}_aL{{alphaLarge}}_thr{{thr}}_envSD{{envSD}}_cost{{cost}}_rep{rep}.nSegLarge", rep=rep)
-#    output:
-#      fixedSmall="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.fixedSmall",
-#      fixedLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.fixedLarge",
-#      meanSmall="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.meanSmall",
-#      meanLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.meanLarge",
-#      mean="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.mean",
-#      h2="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2",
-#      prev="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.prev",
-#      h2l="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2l",
-#      h2s="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2s",
-#      genVar="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.genVar",
-#      nSegSmall="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.nSegSmall",
-#      nSegLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.nSegLarge"
-#    shell: 
-#      """cat {input.fixedSmall} >> {output.fixedSmall}; cat {input.fixedLarge} >> {output.fixedLarge}; cat {input.meanSmall} >> {output.meanSmall}; cat {input.meanLarge} >> {output.meanLarge}; cat {input.mean} >> {output.mean}; cat {input.h2} >> {output.h2}; cat {input.prev} >> {output.prev}; cat {input.h2l} >> {output.h2l}; cat {input.h2s} >> {output.h2s}; cat {input.genVar} >> {output.genVar}; cat {input.nSegSmall} >> {output.nSegSmall}; cat {input.nSegLarge} >> {output.nSegLarge}""" 
- 

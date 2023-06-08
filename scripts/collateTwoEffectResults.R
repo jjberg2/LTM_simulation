@@ -36,12 +36,12 @@ merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.
 
 options(scipen=400)
 if(interactive()){
-    my.path <- "twoEffectInsensitivity/all"
+    my.path <- "twoEffectPopSizeInsensitivity/all"
     my.args <- c(
-        "twoEffectPrevInsensitivityParamTable.txt",
+        "twoEffectPopSizeInsensitivityParamsTable.txt",
         sapply(dir(my.path),function(X) paste(my.path,X,sep="/")),
         my.path,
-        "twoEffectInsensitivityResultsTable.Rdata"
+        "twoEffectPopSizeInsensitivityResultsTable.Rdata"
     )
 } else {
     ## read in command line arguments

@@ -52,6 +52,12 @@ initialize() {
 		defineConstant('NSEGLARGEOUT',nSegLargeOut);
 		defineConstant('DELTARSMALLOUT',deltaRSmallOut);
 		defineConstant('DELTARLARGEOUT',deltaRLargeOut);
+		defineConstant('RISKFREQSMALLOUT',riskFreqSmallOut);
+		defineConstant('DERFREQSMALLOUT',derFreqSmallOut);
+		defineConstant('SITEVARSMALLOUT',siteVarSmallOut);
+		defineConstant('RISKFREQLARGEOUT',riskFreqLargeOut);
+		defineConstant('DERFREQLARGEOUT',derFreqLargeOut);
+		defineConstant('SITEVARLARGEOUT',siteVarSmallOut);
 	}
 	
 	
@@ -277,6 +283,9 @@ fitness(NULL){
 				}
 			}
 			meanSmallRiskEffect = mean(smallRiskEffect);
+			writeFile(RISKFREQSMALLOUT, paste(smallRiskFreq, sep=","), append=T);
+			writeFile(DERFREQSMALLOUT, paste(smallDerFreq, sep=","), append=T);
+			writeFile(SITEVARSMALLOUT, paste(smallSiteVar, sep=","), append=T);
 			writeFile(DELTARSMALLOUT, paste(meanSmallRiskEffect, sep=","), append=T);
 		}
 		
@@ -305,6 +314,9 @@ fitness(NULL){
 				}
 			}
 			meanLargeRiskEffect = mean(largeRiskEffect);
+			writeFile(RISKFREQLARGEOUT, paste(largeRiskFreq, sep=","), append=T);
+			writeFile(DERFREQLARGEOUT, paste(largeDerFreq, sep=","), append=T);
+			writeFile(SITEVARLARGEOUT, paste(largeSiteVar, sep=","), append=T);
 			writeFile(DELTARLARGEOUT, paste(meanLargeRiskEffect, sep=","), append=T);
 		}
 		

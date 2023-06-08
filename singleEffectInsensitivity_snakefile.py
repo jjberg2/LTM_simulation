@@ -193,7 +193,7 @@ rule allSmallEffectVariance:
     
 rule slim_simulate_small:
   input:
-    slim_script="LTM_prev_nucleotide.slim",
+    slim_script="scripts/LTM_prev_nucleotide.slim",
     paramTable="smallEffect{suffix}ParamTable.txt"
   params:
     mu=mu,
