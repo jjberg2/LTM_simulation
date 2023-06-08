@@ -49,6 +49,8 @@ envSD = np.array(['{:.3f}'.format(r) for r in tmpEnvSD], dtype=str)
 print(params_table)
 
 
+
+
 rule all:
   input:
     input_table_popSizeInsens,
@@ -64,7 +66,13 @@ rule all:
     expand("twoEffectPopSizeInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.nSegSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
     expand("twoEffectPopSizeInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.nSegLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
     expand("twoEffectPopSizeInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.deltaRSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
-    expand("twoEffectPopSizeInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.deltaRLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost)
+    expand("twoEffectPopSizeInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.deltaRLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectPopSizeInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.derFreqSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectPopSizeInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.riskFreqSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectPopSizeInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.siteVarSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectPopSizeInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.derFreqLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectPopSizeInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.riskFreqLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectPopSizeInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.siteVarLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost)
   params:
      time="36:00:00",
      partition="broadwl",
@@ -73,6 +81,49 @@ rule all:
 
 
 
+
+
+
+
+# rule all:
+#   input:
+#     input_table_popSizeInsens,
+#     expand(
+#         multiext(
+#             "twoEffectPopSizeInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all",
+#             '.fixedSmall',
+#             '.fixedLarge',
+#             '.meanSmall',
+#             '.meanLarge',
+#             '.mean',
+#             '.prev',
+#             '.h2l',
+#             '.h2s',
+#             '.genVar',
+#             '.nSegSmall',
+#             '.nSegLarge',
+#             '.deltaRSmall',
+#             '.deltaRLarge',
+#             '.derFreqSmall',
+#             '.riskFreqSmall',
+#             '.siteVarSmall',
+#             '.derFreqLarge',
+#             '.riskFreqLarge',
+#             '.siteVarLarge'
+#         ),
+#         zip,
+#         N=N,
+#         alphaLarge = alphaLarge,
+#         thr=thr,
+#         envSD=envSD,
+#         cost=cost
+#     )
+    
+#   params:
+#      time="36:00:00",
+#      partition="broadwl",
+#      mem="4Gb",
+#      path="twoEffectPopSizeInsensitivity/all"
 
 
 

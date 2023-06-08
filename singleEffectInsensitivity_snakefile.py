@@ -11,7 +11,7 @@ smallCyc = 200
 largeCyc = 1600
 mu=1e-6
 sampleInt = 25
-toyRun=0
+toyRun=1
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
 
@@ -94,15 +94,15 @@ params_table_small = pd.read_csv(input_table_filename_small, delim_whitespace=Tr
 ## simulation variable
 liaSizesSmall = np.array((params_table_small["target.size"]).astype(int))
 tmpCostSmall = np.round((params_table_small["cost"]),2)
-costSmall = np.array(['{:.2f}'.format(r) for r in tmpCostSmall], dtype=np.str)
+costSmall = np.array(['{:.2f}'.format(r) for r in tmpCostSmall], dtype=str)
 NSmall = np.array(params_table_small["Ne"].astype(int))
 ## thr = np.array(params_table_small["thr"].astype(int))
 tmpEnvSDsSmall = np.array(params_table_small["env.sd"])
-envsdSmall = np.array(['{:.5f}'.format(r) for r in tmpEnvSDsSmall], dtype=np.str)
+envsdSmall = np.array(['{:.5f}'.format(r) for r in tmpEnvSDsSmall], dtype=str)
 tmpRhosSmall = np.array(params_table_small["rho"])
-rhosSmall = np.array(['{:.5f}'.format(r) for r in tmpRhosSmall], dtype=np.str)
+rhosSmall = np.array(['{:.5f}'.format(r) for r in tmpRhosSmall], dtype=str)
 tmpThrSmall = np.array(params_table_small["thr"])
-thrSmall = np.array(['{:.2f}'.format(r) for r in tmpThrSmall], dtype=np.str)
+thrSmall = np.array(['{:.2f}'.format(r) for r in tmpThrSmall], dtype=str)
     
 rule allSmallEffectCost:
   input:
@@ -123,7 +123,8 @@ rule allSmallEffectCost:
      mem="4Gb",
      path="smallEffectInsensitivity/all"
   output:
-     "smallEffectInsensitivityResultsTable.Rdata"
+     "smallEffectInsensitivityResultsTable.Rdata",
+     "smallEffectInsensitivityDerProbs.Rdata"
   shell:
     """Rscript scripts/collateSingleEffectResults.R {input} {params.path} {output}"""
 
@@ -151,15 +152,15 @@ print(input_table_filename_smallVe)
 ## simulation variable
 liaSizesSmallVe = np.array((params_table_smallVe["target.size"]).astype(int))
 tmpCostSmallVe = np.round((params_table_smallVe["cost"]),2)
-costSmallVe = np.array(['{:.2f}'.format(r) for r in tmpCostSmallVe], dtype=np.str)
+costSmallVe = np.array(['{:.2f}'.format(r) for r in tmpCostSmallVe], dtype=str)
 NSmallVe = np.array(params_table_smallVe["Ne"].astype(int))
 ## thr = np.array(params_table_smallVe["thr"].astype(int))
 tmpEnvSDsSmallVe = np.array(params_table_smallVe["env.sd"])
-envsdSmallVe = np.array(['{:.5f}'.format(r) for r in tmpEnvSDsSmallVe], dtype=np.str)
+envsdSmallVe = np.array(['{:.5f}'.format(r) for r in tmpEnvSDsSmallVe], dtype=str)
 tmpRhosSmallVe = np.array(params_table_smallVe["rho"])
-rhosSmallVe = np.array(['{:.5f}'.format(r) for r in tmpRhosSmallVe], dtype=np.str)
+rhosSmallVe = np.array(['{:.5f}'.format(r) for r in tmpRhosSmallVe], dtype=str)
 tmpThrSmallVe = np.array(params_table_smallVe["thr"])
-thrSmallVe = np.array(['{:.2f}'.format(r) for r in tmpThrSmallVe], dtype=np.str)
+thrSmallVe = np.array(['{:.2f}'.format(r) for r in tmpThrSmallVe], dtype=str)
                          
 
 rule allSmallEffectVariance:
@@ -287,15 +288,15 @@ params_table_large = pd.read_csv(input_table_filename_large, delim_whitespace=Tr
 ## simulation variable
 liaSizesLarge = np.array((params_table_large["target.size"]).astype(int))
 tmpCostLarge = np.round((params_table_large["cost"]),2)
-costLarge = np.array(['{:.2f}'.format(r) for r in tmpCostLarge], dtype=np.str)
+costLarge = np.array(['{:.2f}'.format(r) for r in tmpCostLarge], dtype=str)
 NLarge = np.array(params_table_large["Ne"].astype(int))
 ## thr = np.array(params_table_large["thr"].astype(int))
 tmpEnvSDsLarge = np.array(params_table_large["env.sd"])
-envsdLarge = np.array(['{:.5f}'.format(r) for r in tmpEnvSDsLarge], dtype=np.str)
+envsdLarge = np.array(['{:.5f}'.format(r) for r in tmpEnvSDsLarge], dtype=str)
 tmpRhosLarge = np.array(params_table_large["rho"])
-rhosLarge = np.array(['{:.5f}'.format(r) for r in tmpRhosLarge], dtype=np.str)
+rhosLarge = np.array(['{:.5f}'.format(r) for r in tmpRhosLarge], dtype=str)
 tmpThrLarge = np.array(params_table_large["thr"])
-thrLarge = np.array(['{:.2f}'.format(r) for r in tmpThrLarge], dtype=np.str)
+thrLarge = np.array(['{:.2f}'.format(r) for r in tmpThrLarge], dtype=str)
 ## print(thrLarge)
 
 

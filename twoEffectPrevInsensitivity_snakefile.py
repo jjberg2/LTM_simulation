@@ -20,7 +20,7 @@ params_table = pd.read_csv(input_table_prevInsens, delim_whitespace=True)
 cyc = 200
 sampleInt = 50
 reps = 1
-toyRun = 0
+toyRun = 1
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
 
@@ -59,11 +59,21 @@ rule allPrevInsensitiivty:
     expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.prev", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
     expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2l", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
     expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2s", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2os", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2ol", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.h2o", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
     expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.genVar", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
     expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.nSegSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
     expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.nSegLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
     expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.deltaRSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
-    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.deltaRLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost)
+    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.deltaRLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.derFreqSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.riskFreqSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.siteVarSmall", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.derFreqLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.riskFreqLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost),
+    expand("twoEffectPrevInsensitivity/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.siteVarLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost)
   params:
      time="36:00:00",
      partition="broadwl",
@@ -120,7 +130,6 @@ def find_index(wildcards, col):
 
 
 
-
 rule slim_simulate_withsegregating:
   input:
     slim_script="scripts/LTM_prev_nucleotide_multieffect_diffstart.slim"
@@ -134,11 +143,21 @@ rule slim_simulate_withsegregating:
     prev="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.prev",
     h2s="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.h2s",
     h2l="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.h2l",
+    h2os="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.h2os",
+    h2ol="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.h2ol",
+    h2o="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.h2o",     
     genVar="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.genVar",
     nSegSmall="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.nSegSmall",
     nSegLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.nSegLarge",
     deltaRSmall="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.deltaRSmall",
     deltaRLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.deltaRLarge",
+    riskFreqSmall="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.riskFreqSmall",
+    derFreqSmall="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.derFreqSmall",
+    siteVarSmall="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.siteVarSmall",
+    riskFreqLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.riskFreqLarge",
+    derFreqLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.derFreqLarge",
+    siteVarLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.siteVarLarge",
+        
     tmp="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.tmp"
   params:
     mu = lambda wildcards: find_index(wildcards, col="u"),
@@ -157,7 +176,7 @@ rule slim_simulate_withsegregating:
   log:
     '"{prefix}/logs/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.log",'
   shell:
-    """set +u; slim -d mu={params.mu} -d thr={params.thr} -d rhos={params.rhos} -d p={wildcards.N}  -d f={params.fitCost}  -d e={wildcards.envSD} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d aS={params.alphaSmall} -d aL={wildcards.alphaLarge} -d liaSmall={params.liaSmall} -d liaLarge={params.liaLarge} -d "fixedSmallOut='{output.fixedSmall}'" -d "fixedLargeOut='{output.fixedLarge}'" -d "meanSmallOut='{output.meanSmall}'" -d "meanLargeOut='{output.meanLarge}'" -d "meanOut='{output.mean}'" -d "h2Out='{output.h2}'" -d "h2sOut='{output.h2s}'" -d "h2lOut='{output.h2l}'" -d "prevOut='{output.prev}'" -d "genVarOut='{output.genVar}'" -d "nSegSmallOut='{output.nSegSmall}'"  -d "nSegLargeOut='{output.nSegLarge}'" -d "deltaRSmallOut='{output.deltaRSmall}'" -d "deltaRLargeOut='{output.deltaRLarge}'" -d toyRun={params.toyRun} {input.slim_script} > {output.tmp}; set -u; """
+    """set +u; slim -d mu={params.mu} -d thr={params.thr} -d rhos={params.rhos} -d p={wildcards.N}  -d f={params.fitCost}  -d e={wildcards.envSD} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d aS={params.alphaSmall} -d aL={wildcards.alphaLarge} -d liaSmall={params.liaSmall} -d liaLarge={params.liaLarge} -d "fixedSmallOut='{output.fixedSmall}'" -d "fixedLargeOut='{output.fixedLarge}'" -d "meanSmallOut='{output.meanSmall}'" -d "meanLargeOut='{output.meanLarge}'" -d "meanOut='{output.mean}'" -d "h2Out='{output.h2}'" -d "h2sOut='{output.h2s}'" -d "h2lOut='{output.h2l}'" -d "h2osOut='{output.h2os}'" -d "h2olOut='{output.h2ol}'" -d "h2oOut='{output.h2o}'" -d "prevOut='{output.prev}'" -d "genVarOut='{output.genVar}'" -d "nSegSmallOut='{output.nSegSmall}'"  -d "nSegLargeOut='{output.nSegLarge}'" -d "deltaRSmallOut='{output.deltaRSmall}'" -d "deltaRLargeOut='{output.deltaRLarge}'" -d "riskFreqSmallOut='{output.riskFreqSmall}'" -d "derFreqSmallOut='{output.derFreqSmall}'" -d "siteVarSmallOut='{output.siteVarSmall}'" -d "riskFreqLargeOut='{output.riskFreqLarge}'" -d "derFreqLargeOut='{output.derFreqLarge}'" -d "siteVarLargeOut='{output.siteVarLarge}'" -d toyRun={params.toyRun} {input.slim_script} > {output.tmp}; set -u; """
 
 
 

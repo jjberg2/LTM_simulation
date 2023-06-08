@@ -22,15 +22,41 @@ merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.
         myenvSD  <- format(round(sqrt(params.table[i,'Ve']),3),nsmall=3)
         temp_prefix = paste(my.path,"/PopSize", myNe, "_aL", myaL, "_thr", mythr, "_envSD", myenvSD,  "_cost", mycost, "_all", sep="")
         sim.files <- sapply(sim.exts,function(X) paste(temp_prefix,X,sep="."))
-        sim.results[i,] <- sapply(sim.files,function(X) mean(as.numeric(read.table(X)[[1]])))
+        sim.results[i,] <- sapply(sim.files,function(X) mean(as.numeric(read.table(X)[[1]]),na.rm=TRUE))
         ## was causing memory issues on cluster so temporarilily deleted
-        ##site.files <- sapply(site.exts,function(X) paste(temp_prefix,X,sep="."))
-        ##for(j in 1:length(site.files)){
-        ##    site.results[i,j] <- mean(unlist(sapply(readLines(site.files[j]),function(X) as.numeric(strsplit(X,',')[[1]]))))
-        ##}
+        site.files <- sapply(site.exts,function(X) paste(temp_prefix,X,sep="."))
+        for(j in 1:length(site.files)){
+            my.file <- file(site.files[j],'r')
+            lines <- list()
+            my.mean <- 0
+            k <- 1
+            n.tot <- 0
+            while(TRUE){
+                line <- readLines(my.file,n=1)
+                if(length(line)==0){
+                    close(my.file)
+                    break
+                }
+                if(line=="NA"){
+                    next
+                }
+                obs <- as.numeric(strsplit(line,',')[[1]])
+                this.mean <- mean(obs)
+                n.obs <- length(obs)
+                new.tot <- n.tot + n.obs
+                my.mean <- my.mean*n.tot/(new.tot) + this.mean*n.obs/(new.tot)
+                n.tot <- new.tot
+                k <- k+1
+            }
+            if(k==1){
+                site.results[i,j] <- NA
+            } else {
+                site.results[i,j] <- my.mean
+            }
+        }
         if(i %% 10 ==0 ) print(i)
     }
-    results <- cbind(params.table,sim.results)
+    results <- cbind(params.table,sim.results,site.results)
     return(results)
 }
 

@@ -46,6 +46,9 @@ initialize() {
 		defineConstant('H2OUT',h2Out);
 		defineConstant('H2SOUT',h2sOut);
 		defineConstant('H2LOUT',h2lOut);
+		defineConstant('H2OSOUT',h2osOut);
+		defineConstant('H2OLOUT',h2olOut);
+		defineConstant('H2OOUT',h2oOut);
 		defineConstant('PREVOUT',prevOut);
 		defineConstant('GENVAROUT',genVarOut);
 		defineConstant('NSEGSMALLOUT',nSegSmallOut);
@@ -57,7 +60,9 @@ initialize() {
 		defineConstant('SITEVARSMALLOUT',siteVarSmallOut);
 		defineConstant('RISKFREQLARGEOUT',riskFreqLargeOut);
 		defineConstant('DERFREQLARGEOUT',derFreqLargeOut);
-		defineConstant('SITEVARLARGEOUT',siteVarSmallOut);
+		defineConstant('SITEVARLARGEOUT',siteVarLargeOut);
+
+
 	}
 	
 	
@@ -229,7 +234,7 @@ fitness(NULL){
 		!(exists('slimgui')) &
 		(
 		(sim.generation > 10*N & sim.generation % SAMPLE_INT ==0 & sim.getValue("cycles") < CYCLE & TOYRUN == 0) |
-		(sim.generation > 1 & sim.generation < 10 & TOYRUN == 1)
+		(sim.generation > 1 & sim.generation < 50 & TOYRUN == 1)
 		)
 		)
 	{
@@ -259,68 +264,6 @@ fitness(NULL){
 		small_muts = muts2[nucs2=="A" | nucs2=="G"];
 		large_muts = muts2[nucs2=="C" | nucs2=="T"];
 		
-		// site quantities for small effect sites
-		if(length(small_muts)!=0){
-			smallSiteVar = rep(0.0, length(small_muts));
-			smallRiskFreq = rep(0.0, length(small_muts));
-			smallDerFreq = rep(0.0, length(small_muts));
-			smallRiskEffect = rep(0.0, length(small_muts));
-			for (i in c(0: (length(small_muts)-1))){
-				x = asInteger(p1.individuals.genome1.containsMutations(small_muts[i])) + asInteger(p1.individuals.genome2.containsMutations(small_muts[i]));
-				if (small_muts[i].nucleotide == "A") {
-					x = 2-x;
-				}
-				meanx = mean(x);
-				num = sum((x-meanx)*(risk - mean(risk)));
-				denom = sum( (x-meanx)^2 );
-				smallRiskEffect[i] = num/denom;
-				smallSiteVar[i] = denom/(N-1);
-				smallRiskFreq[i]=meanx/2;
-				if (small_muts[i].nucleotide == "A") {
-					smallDerFreq[i] = 1 - smallRiskFreq[i];
-				} else {
-					smallDerFreq[i] = smallRiskFreq[i];
-				}
-			}
-			meanSmallRiskEffect = mean(smallRiskEffect);
-			writeFile(RISKFREQSMALLOUT, paste(smallRiskFreq, sep=","), append=T);
-			writeFile(DERFREQSMALLOUT, paste(smallDerFreq, sep=","), append=T);
-			writeFile(SITEVARSMALLOUT, paste(smallSiteVar, sep=","), append=T);
-			writeFile(DELTARSMALLOUT, paste(meanSmallRiskEffect, sep=","), append=T);
-		}
-		
-		
-		// site quantities for large effect sites
-		if(length(large_muts)!=0){
-			largeSiteVar = rep(0.0, length(large_muts));
-			largeRiskFreq = rep(0.0, length(large_muts));
-			largeDerFreq = rep(0.0, length(large_muts));
-			largeRiskEffect = rep(0.0, length(large_muts));
-			for (i in c(0: (length(large_muts)-1))){
-				x = asInteger(p1.individuals.genome1.containsMutations(large_muts[i])) + asInteger(p1.individuals.genome2.containsMutations(large_muts[i]));
-				if (large_muts[i].nucleotide == "C") {
-					x = 2-x;
-				}
-				meanx = mean(x);
-				num = sum((x-meanx)*(risk - mean(risk)));
-				denom = sum( (x-meanx)^2 );
-				largeRiskEffect[i] = num/denom;
-				largeSiteVar[i] = denom/(N-1);
-				largeRiskFreq[i]=meanx/2;
-				if (large_muts[i].nucleotide == "C") {
-					largeDerFreq[i] = 1 - largeRiskFreq[i];
-				} else {
-					largeDerFreq[i] = largeRiskFreq[i];
-				}
-			}
-			meanLargeRiskEffect = mean(largeRiskEffect);
-			writeFile(RISKFREQLARGEOUT, paste(largeRiskFreq, sep=","), append=T);
-			writeFile(DERFREQLARGEOUT, paste(largeDerFreq, sep=","), append=T);
-			writeFile(SITEVARLARGEOUT, paste(largeSiteVar, sep=","), append=T);
-			writeFile(DELTARLARGEOUT, paste(meanLargeRiskEffect, sep=","), append=T);
-		}
-		
-		
 		
 		
 		// compute things to output		
@@ -335,9 +278,10 @@ fitness(NULL){
 		genVarLarge = var(largeGenLi);
 		h2l = genVarLarge/ phenVar;
 		prev=sum(inds.tagF>THR)/length(inds.tagF);
+		expPrev=mean(risk);
+		expTotRiskVar = expPrev*(1-expPrev);
 		nSegSmall = length(small_muts);
 		nSegLarge = length(large_muts);
-		
 		
 		
 		writeFile(FIXEDSMALLOUT, paste(fixedSmallGenLi , sep=","), append=T);
@@ -351,14 +295,119 @@ fitness(NULL){
 		writeFile(PREVOUT, paste(prev, sep=","), append=T);
 		writeFile(GENVAROUT, paste(genVar, sep=","), append=T);
 		writeFile(NSEGSMALLOUT, paste(nSegSmall, sep=","), append=T);
-		writeFile(NSEGLARGEOUT, paste(nSegLarge, sep=","), append=T);
+		writeFile(NSEGLARGEOUT, paste(nSegLarge, sep=","), append=T);		
+		
+		
+		
+		
+		
+		
+		// site quantities for small effect sites
+		if(length(small_muts)!=0){
+			smallSiteVar = rep(0.0, length(small_muts));
+			smallRiskFreq = rep(0.0, length(small_muts));
+			smallDerFreq = rep(0.0, length(small_muts));
+			smallRiskEffect = rep(0.0, length(small_muts));
+			smallRiskVarPerSite = rep(0.0, length(small_muts));
+			for (i in c(0: (length(small_muts)-1))){
+				x = asInteger(p1.individuals.genome1.containsMutations(small_muts[i])) + asInteger(p1.individuals.genome2.containsMutations(small_muts[i]));
+				if (small_muts[i].nucleotide == "A") {
+					x = 2-x;
+				}
+				meanx = mean(x);
+				num = sum((x-meanx)*(risk - mean(risk)));
+				denom = sum( (x-meanx)^2 );
+				smallRiskEffect[i] = num/denom;
+				smallSiteVar[i] = denom/(N-1);
+				smallRiskFreq[i]=meanx/2;
+				smallRiskVarPerSite[i] = smallRiskEffect[i]^2*smallSiteVar[i];
+				if (small_muts[i].nucleotide == "A") {
+					smallDerFreq[i] = 1 - smallRiskFreq[i];
+				} else {
+					smallDerFreq[i] = smallRiskFreq[i];
+				}
+			}
+			smallRiskVar = sum(smallRiskVarPerSite);
+			if(expTotRiskVar>0){
+				h2os=smallRiskVar/expTotRiskVar;
+				writeFile(H2OSOUT, paste(h2os, sep=","), append=T);
+			} else {
+				writeFile(H2OSOUT, "NA", append=T);
+			}
+			meanSmallRiskEffect = mean(smallRiskEffect);
+			writeFile(RISKFREQSMALLOUT, paste(smallRiskFreq, sep=","), append=T);
+			writeFile(DERFREQSMALLOUT, paste(smallDerFreq, sep=","), append=T);
+			writeFile(SITEVARSMALLOUT, paste(smallSiteVar, sep=","), append=T);
+			writeFile(DELTARSMALLOUT, paste(meanSmallRiskEffect, sep=","), append=T);
+		} else {
+			smallRiskVar=0;
+			writeFile(RISKFREQSMALLOUT, "NA", append=T);
+			writeFile(DERFREQSMALLOUT, "NA", append=T);
+			writeFile(SITEVARSMALLOUT, "NA", append=T);
+			writeFile(DELTARSMALLOUT, "NA", append=T);			
+			writeFile(H2OSOUT, "0", append=T);
+		}
+		
+		
+		// site quantities for large effect sites
+		if(length(large_muts)!=0){
+			largeSiteVar = rep(0.0, length(large_muts));
+			largeRiskFreq = rep(0.0, length(large_muts));
+			largeDerFreq = rep(0.0, length(large_muts));
+			largeRiskEffect = rep(0.0, length(large_muts));
+			largeRiskVarPerSite = rep(0.0, length(large_muts));
+			for (i in c(0: (length(large_muts)-1))){
+				x = asInteger(p1.individuals.genome1.containsMutations(large_muts[i])) + asInteger(p1.individuals.genome2.containsMutations(large_muts[i]));
+				if (large_muts[i].nucleotide == "C") {
+					x = 2-x;
+				}
+				meanx = mean(x);
+				num = sum((x-meanx)*(risk - mean(risk)));
+				denom = sum( (x-meanx)^2 );
+				largeRiskEffect[i] = num/denom;
+				largeSiteVar[i] = denom/(N-1);
+				largeRiskFreq[i]=meanx/2;
+				largeRiskVarPerSite[i] = largeRiskEffect[i]^2*largeSiteVar[i];
+				if (large_muts[i].nucleotide == "C") {
+					largeDerFreq[i] = 1 - largeRiskFreq[i];
+				} else {
+					largeDerFreq[i] = largeRiskFreq[i];
+				}
+			}
+			largeRiskVar = sum(largeRiskVarPerSite);
+			meanLargeRiskEffect = mean(largeRiskEffect);
+			if(expTotRiskVar>0){
+				h2ol=largeRiskVar/expTotRiskVar;
+				writeFile(H2OLOUT, paste(h2ol, sep=","), append=T);
+			} else {
+				writeFile(H2OLOUT, "NA", append=T);
+			}
+			writeFile(RISKFREQLARGEOUT, paste(largeRiskFreq, sep=","), append=T);
+			writeFile(DERFREQLARGEOUT, paste(largeDerFreq, sep=","), append=T);
+			writeFile(SITEVARLARGEOUT, paste(largeSiteVar, sep=","), append=T);
+			writeFile(DELTARLARGEOUT, paste(meanLargeRiskEffect, sep=","), append=T);
+		} else {
+			largeRiskVar=0;
+			writeFile(RISKFREQLARGEOUT, "NA", append=T);
+			writeFile(DERFREQLARGEOUT, "NA", append=T);
+			writeFile(SITEVARLARGEOUT, "NA", append=T);
+			writeFile(DELTARLARGEOUT, "NA", append=T);			
+			writeFile(H2OLOUT, "0", append=T);
+		}
+		if(expTotRiskVar>0){
+			h2o=(smallRiskVar+largeRiskVar)/expTotRiskVar;
+			writeFile(H2OOUT, paste(h2o, sep=","), append=T);
+		} else {
+			writeFile(H2OOUT, "NA", append=T);
+		}
+		
 		
 		
 		
 		sim.setValue("cycles", sim.getValue("cycles") +1);
 	
 	}
-	else if ((sim.getValue("cycles") >= CYCLE) | (sim.generation > 10 & TOYRUN == 1))
+	else if ((sim.getValue("cycles") >= CYCLE) | (sim.generation > 30 & TOYRUN == 1))
 	{
 		sim.simulationFinished();
 	}
