@@ -1,6 +1,6 @@
 ## functions
 merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.path){
-    ## recover()
+    recover()
     param.rows <- nrow(params.table)
     n.sims <- length(file.roots)
     if(param.rows!=n.sims)
@@ -13,6 +13,7 @@ merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.
     n.site.exts <- length(site.exts)
     site.results <- matrix(NA,nrow=n.sims,ncol=n.site.exts)
     colnames(site.results) <- sapply(site.exts,function(X) paste("sim",X,sep="."))
+    probDerTable <- list()
     for (i in 1:nrow(params.table) ) {
         myNe <- format(round(params.table[i,'Ne'],3),3)
         myL <- floor(params.table[i,'target.size'])
@@ -25,7 +26,6 @@ merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.
         sim.results[i,] <- colMeans(sapply(sim.files,function(X) as.numeric(read.table(X)[[1]])),na.rm=TRUE)
         ## was causing memory issues on cluster so temporarilily deleted
         site.files <- sapply(site.exts,function(X) paste(temp_prefix,X,sep="."))
-        probDerTable <- list()
         for(j in 1:length(site.files)){
             my.file <- file(site.files[j],'r')
             my.mean <- 0
