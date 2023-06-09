@@ -1,7 +1,7 @@
 source('scripts/solveSingleEffect.R')
 
 mu <- 1e-6
-Ne <- 5000
+Ne <- 500
 theta <- 4*Ne*mu
 cost <- c(seq(0.01,0.97,by=0.06),1)
 h2 <- 0.5
