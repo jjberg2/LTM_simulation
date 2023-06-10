@@ -3,7 +3,7 @@ source('scripts/solveSingleEffect.R')
 mu <- 1e-6
 Ne <- 500
 theta <- 4*Ne*mu
-cost <- c(seq(0.01,0.97,by=0.06),1)
+cost <- c(seq(0.01,0.97,by=0.03),1)
 h2 <- 0.5
 my.L <- 1e5
 my.thrs <- c(exp(seq(log(4000),log(2*my.L*0.4),length.out=6)))
