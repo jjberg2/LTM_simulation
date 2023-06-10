@@ -233,8 +233,6 @@ rule result_combined_single_small:
      "smallEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all_{ext}.log"
   output:
     "smallEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.{ext}"
-  group:
-    "combine_small"
   shell:
      """cat {input} >> {output}"""
 
