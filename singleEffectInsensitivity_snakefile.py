@@ -125,6 +125,8 @@ rule allSmallEffectCost:
   output:
      "smallEffectInsensitivityResultsTable.Rdata",
      "smallEffectInsensitivityDerProbs.Rdata"
+  group:
+    'sim_small'
   shell:
     """Rscript scripts/collateSingleEffectResults.R {input} {params.path} {output}"""
 
