@@ -9,7 +9,7 @@ initialize() {
 	
 	// set parameters
 	perSiteMutRate = mu;
-	perSiteRecRate = 100 * perSiteMutRate; // set the perSiteRecRate equal to 1000 * perSiteMutRate 
+	perSiteRecRate = 100 * perSiteMutRate; // set the perSiteRecRate equal to 100 * perSiteMutRate 
 	popSize = p;
 	envSD = e;
 	fitnessCost = f;
@@ -22,16 +22,16 @@ initialize() {
 	
 	
 	// you can change this, when THR smaller than this number, starting point is 0; otherwise, it is THR - THR_MINUS
-	defineConstant('THR_START', 2000);
-	defineConstant('THR_MINUS', 2*ENV_SIGMA);
-	if (THR <= THR_START) {
+//	defineConstant('THR_START', 2000);
+
+	if ( zeroStart ) {
 		// if large effect, start at point 0, set all ancestral alleles to be protective 
-		startingPoint = 0;
+
 		initializeAncestralNucleotides(paste0(rep("A", L))); // Ancestral allele start with protective 
 	}
 	else {
 		// if not, start at threshold point - THR_MINUS, set corresponding number of alleles to be protective and liability increasing 
-		startingPoint = 0;
+		defineConstant('THR_MINUS', 2*ENV_SIGMA);
 		defineConstant('A_INIT',asInteger(L - THR/2 + THR_MINUS));
 		defineConstant('G_INIT',L - A_INIT);
 		sequence_tmp = sample(c(rep('A',A_INIT),rep('G',G_INIT)),L,replace=F);
@@ -49,7 +49,6 @@ initialize() {
 	defineConstant('MU',perSiteMutRate);
 	defineConstant('REC',perSiteRecRate);
 	defineConstant('N',popSize);
-	defineConstant('START',startingPoint);
 	defineConstant('FITCOST',fitnessCost);
 	defineConstant('SAMPLE_INT', sampleInt);
 	defineConstant('CYCLE', cyc);
@@ -67,11 +66,6 @@ initialize() {
 	defineConstant('RISKFREQOUT',riskFreqOut);
 	defineConstant('DERFREQOUT',derFreqOut);
 	defineConstant('SITEVAROUT',siteVarOut);
-	
-	
-	
-	
-	
 	
 	
 	
@@ -97,7 +91,7 @@ fitness(NULL){
 	print(sim.generation);
 	sim.addSubpop('p1', N);
 	sim.setValue("cycles", 0);
-	if (THR <= THR_START) {
+	if ( zeroStart ) {
 		sim.setValue("fixedPos", NULL);  // record position fixed for risk allele
 	}
 	
@@ -178,8 +172,7 @@ fitness(NULL){
 	
 	
 	// calculate components of genetic liability
-	fixedState=START+fixedGenLi;
-	genLi=fixedState+segGenLi;
+	genLi=fixedGenLi+segGenLi;
 	if(ENV_SIGMA != 0){
 		liabilities = genLi + rnorm(N, 0.0, ENV_SIGMA);
 	} else {
@@ -257,7 +250,7 @@ fitness(NULL){
 			
 			
 			
-			writeFile(FIXEDOUT, paste(fixedState, sep=","), append=T);
+			writeFile(FIXEDOUT, paste(fixedGenLi, sep=","), append=T);
 			writeFile(MEANOUT, paste(mean, sep=","), append=T);
 			writeFile(PREVOUT, paste(prev, sep=","), append=T);
 			writeFile(H2OUT, paste(h2, sep=","), append=T);
