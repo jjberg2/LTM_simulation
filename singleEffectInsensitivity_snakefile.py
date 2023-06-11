@@ -17,7 +17,7 @@ if(toyRun==1):
 
 
 rep_large = list(np.arange(0,5))
-rep_small = list(np.arange(0,1))
+rep_small = list(np.arange(0,8))
 
 
 
