@@ -236,7 +236,7 @@ rule result_combined_single_small:
   output:
     "smallEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.{ext}"
   group:
-    "small_combine"
+    "sim_small"
   shell:
      """cat {input} >> {output}"""
 
