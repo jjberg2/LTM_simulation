@@ -219,7 +219,7 @@ rule slim_simulate_small:
     siteVar="smallEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.siteVar",
     tmp="smallEffect{suffix}/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.tmp"
   group:
-    'sim_small'
+    "sim_small"
   shell:
     """thr=`awk 'BEGIN {{print {wildcards.thr}}}'`;
     set +u; slim  -d mu={params.mu} -d thr_input={wildcards.thr} -d p={wildcards.N} -d liaSize={wildcards.liaSizes} -d f={wildcards.cost}  -d e={wildcards.envsd} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d "fixedOut='{output.fixed}'" -d "meanOut='{output.mean}'" -d "h2Out='{output.h2}'" -d "prevOut='{output.prev}'" -d "genVarOut='{output.genVar}'" -d "nSegOut='{output.nSeg}'" -d "deltaROut='{output.deltaR}'" -d "riskFreqOut='{output.riskFreq}'" -d "derFreqOut='{output.derFreq}'" -d "siteVarOut='{output.siteVar}'" -d toyRun={params.toyRun} -d zeroStart=F {input.slim_script} > {output.tmp}; set -u"""
@@ -236,7 +236,7 @@ rule result_combined_single_small:
   output:
     "smallEffect{suffix}/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.{ext}"
   group:
-    "sim_small"
+    "small_combine"
   shell:
      """cat {input} >> {output}"""
 
