@@ -175,6 +175,8 @@ rule slim_simulate_withsegregating:
     mem="4Gb"
   log:
     "{prefix}/logs/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.log"
+  group:
+    "sim"
   shell:
     """set +u; slim -d mu={params.mu} -d thr={params.thr} -d rhos={params.rhos} -d p={wildcards.N}  -d f={params.fitCost}  -d e={wildcards.envSD} -d cyc={params.cyc} -d sampleInt={params.sampleInt} -d rep={wildcards.rep} -d aS={params.alphaSmall} -d aL={wildcards.alphaLarge} -d liaSmall={params.liaSmall} -d liaLarge={params.liaLarge} -d "fixedSmallOut='{output.fixedSmall}'" -d "fixedLargeOut='{output.fixedLarge}'" -d "meanSmallOut='{output.meanSmall}'" -d "meanLargeOut='{output.meanLarge}'" -d "meanOut='{output.mean}'" -d "h2Out='{output.h2}'" -d "h2sOut='{output.h2s}'" -d "h2lOut='{output.h2l}'" -d "h2osOut='{output.h2os}'" -d "h2olOut='{output.h2ol}'" -d "h2oOut='{output.h2o}'" -d "prevOut='{output.prev}'" -d "genVarOut='{output.genVar}'" -d "nSegSmallOut='{output.nSegSmall}'"  -d "nSegLargeOut='{output.nSegLarge}'" -d "deltaRSmallOut='{output.deltaRSmall}'" -d "deltaRLargeOut='{output.deltaRLarge}'" -d "riskFreqSmallOut='{output.riskFreqSmall}'" -d "derFreqSmallOut='{output.derFreqSmall}'" -d "siteVarSmallOut='{output.siteVarSmall}'" -d "riskFreqLargeOut='{output.riskFreqLarge}'" -d "derFreqLargeOut='{output.derFreqLarge}'" -d "siteVarLargeOut='{output.siteVarLarge}'" -d toyRun={params.toyRun} {input.slim_script} > {output.tmp}; set -u; """
 
@@ -191,6 +193,8 @@ rule result_combined_two_small:
     "{prefix}/PopSize{N}_aL{liaSizes}_thr{thr}_envSD{envsd}_cost{cost}_all_{ext}.log"
   output:
     "{prefix}/all/PopSize{N}_aL{liaSizes}_thr{thr}_envSD{envsd}_cost{cost}_all.{ext}"
+  group:
+    "combine"
   shell:
      """cat {input} >> {output}"""
 
