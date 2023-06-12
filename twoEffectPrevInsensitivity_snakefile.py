@@ -19,7 +19,7 @@ params_table = pd.read_csv(input_table_prevInsens, delim_whitespace=True)
 ## global parameter ( doesn't change) 
 cyc = 200
 sampleInt = 50
-n.reps = 10
+nreps = 10
 toyRun = 0
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
@@ -30,7 +30,7 @@ if(toyRun==1):
 
     
 ## simulation variable 
-reps = list(np.arange(0,n.reps))
+reps = list(np.arange(0,nreps))
 rhot = np.round(np.array(params_table["rhot"]),3)
 tmpThr = np.round(np.array(params_table["thr"]),1)
 thr = np.array(['{:.1f}'.format(r) for r in tmpThr], dtype=str)
