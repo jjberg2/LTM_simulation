@@ -156,8 +156,7 @@ rule slim_simulate_withsegregating:
     siteVarSmall="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.siteVarSmall",
     riskFreqLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.riskFreqLarge",
     derFreqLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.derFreqLarge",
-    siteVarLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.siteVarLarge",
-        
+    siteVarLarge="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.siteVarLarge",    
     tmp="{prefix}/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.tmp"
   params:
     mu = lambda wildcards: find_index(wildcards, col="u"),

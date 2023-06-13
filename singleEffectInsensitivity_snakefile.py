@@ -7,10 +7,10 @@ import pandas as pd
 
 
 ## global parameter ( doesn't change)
-smallCyc = 200
+smallCyc = 1600
 largeCyc = 1600
 mu=1e-6
-sampleInt = 25
+sampleInt = 50
 toyRun=0
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
