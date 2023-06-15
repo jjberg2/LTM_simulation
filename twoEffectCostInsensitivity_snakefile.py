@@ -10,7 +10,7 @@ def trim_trailingzero(x):
 
 
 #subprocess.call ("Rscript --vanilla scripts/makeTwoEffectPrevInsensitivityParamsTable.R", shell=True)
-sp.call ("Rscript --vanilla scripts/makeTwoEffectCostInsensitivityParamsTable.R", shell=True)
+## sp.call ("Rscript --vanilla scripts/makeTwoEffectCostInsensitivityParamsTable.R", shell=True)
 
 
 input_table_costInsens = "twoEffectCostInsensitivityParamsTable.txt"
@@ -20,7 +20,7 @@ params_table = pd.read_csv(input_table_costInsens, delim_whitespace=True)
 ## global parameter ( doesn't change) 
 cyc = 200
 sampleInt = 50
-reps = 1
+reps = 12
 toyRun = 0
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
@@ -164,7 +164,7 @@ rule slim_simulate_withsegregating:
 
 rule result_combined_two_small:
   input:
-    expand("{{prefix}}/PopSize{{N}}_aL{{liaSizes}}_thr{{thr}}_envSD{{envsd}}_cost{{cost}}_rep{rep}.{{ext}}", rep=reps)
+    expand("{{prefix}}/PopSize{{N}}_aL{{liaSizes}}_thr{{thr}}_envSD{{envsd}}_cost{{cost}}_rep{rep}.{{ext}}", rep=rep)
   params:
      time="36:00:00",
      partition="broadwl",
