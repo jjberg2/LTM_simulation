@@ -1,6 +1,6 @@
 ## functions
 merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.path){
-    ## recover()
+    recover()
     param.rows <- nrow(params.table)
     n.sims <- length(file.roots)
     if(param.rows!=n.sims)
@@ -27,7 +27,6 @@ merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.
         site.files <- sapply(site.exts,function(X) paste(temp_prefix,X,sep="."))
         print(i)
         for(j in 1:length(site.files)){
-            print(site.files[j])
             my.file <- file(site.files[j],'r')
             lines <- list()
             my.mean <- 0
@@ -64,12 +63,12 @@ merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.
 
 options(scipen=400)
 if(interactive()){
-    my.path <- "twoEffectPopSizeInsensitivity/all"
+    my.path <- "twoEffectCostInsensitivity/all"
     my.args <- c(
-        "twoEffectPopSizeInsensitivityParamsTable.txt",
+        "twoEffectCostInsensitivityParamsTable.txt",
         sapply(dir(my.path),function(X) paste(my.path,X,sep="/")),
         my.path,
-        "twoEffectPopSizeInsensitivityResultsTable.Rdata"
+        "twoEffectCostInsensitivityResultsTable.Rdata"
     )
 } else {
     ## read in command line arguments
