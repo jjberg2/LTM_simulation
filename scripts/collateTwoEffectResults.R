@@ -14,6 +14,7 @@ merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.
     site.results <- matrix(NA,nrow=n.sims,ncol=n.site.exts)
     colnames(site.results) <- sapply(site.exts,function(X) paste("sim",X,sep="."))
     for (i in 1:nrow(params.table) ) {
+        print(i)
         myNe <- format(round(params.table[i,'Ne'],3),nsmall=0)
         myaL <- format(round(params.table[i,'al'],3),nsmall=3)
         ## myrho <- format(round(params.table[i,'rho'],5),nsmall=5)
