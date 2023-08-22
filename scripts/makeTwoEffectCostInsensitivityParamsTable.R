@@ -3,15 +3,15 @@ C <- c(seq(0.05,0.97,by=0.06),1)
 
 my.table <- read.table("twoEffectPrevInsensitivityParamsTable.txt",header=TRUE)
 
-targets <- c(0.1,0.3)
+targets <- 0.3
 keep <- list()
 for(i in seq_along(targets)){
     keep[[i]] <- which.min(abs(targets[i] - my.table$deltal))
 }
 these.ones <- unlist(keep)
 a.table <- my.table[these.ones,]
-b.table <- a.table[rep(c(1,2),each=length(C)),]
-b.table$C <- rep(C,times=2)
+b.table <- a.table[rep(1:length(targets),each=length(C)),]
+b.table$C <- rep(C,times=length(targets))
 c.table <- b.table[,!colnames(b.table) %in% c('h2s','h2l','prev','h2os','h2ol','deltas','deltal')]
 
 
