@@ -3,7 +3,7 @@ C <- c(seq(0.05,0.97,by=0.06),1)
 
 my.table <- read.table("twoEffectPrevInsensitivityParamsTable.txt",header=TRUE)
 
-targets <- 0.3
+targets <- c(0.3,0.6)
 keep <- list()
 for(i in seq_along(targets)){
     keep[[i]] <- which.min(abs(targets[i] - my.table$deltal))
