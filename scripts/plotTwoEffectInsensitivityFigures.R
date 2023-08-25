@@ -3,11 +3,217 @@ library(viridis)
 
 
 input <- get(load('twoEffectCostInsensitivityResultsTable.Rdata'))
-small  <- input[input$sim.prev < 1/2,]
-small.thr <- unique(small$thr)
-small.cost <- unique(small$C)
-## small$thetaL <- small$theta*small$target.size
-## small$sim.genVarPerSite <- small$sim.genVar/small$thetaL
+d  <- input[input$sim.prev < 1/2,]
+als <- unique(d$al)
+
+ds <- split(d,d$al)
+
+
+## compute relative per site heterozygosities
+for( i in 1:length(ds)){
+    lethal <- ds[[i]]$C==1
+    ds[[i]]$rel.sim.siteVarSmall <- ds[[i]]$sim.siteVarSmall / ds[[i]]$sim.siteVarSmall[lethal]
+    ds[[i]]$rel.sim.siteVarLarge <- ds[[i]]$sim.siteVarLarge / ds[[i]]$sim.siteVarLarge[lethal]
+    ds[[i]]$rel.sim.derFreqLarge <- ds[[i]]$sim.derFreqLarge / ds[[i]]$sim.derFreqLarge[lethal]
+    ## compute relative prevalence
+    ds[[i]]$rel.sim.prev  <- ds[[i]]$sim.prev / ds[[i]]$sim.prev[lethal]
+}
+min.C <- min(sapply(ds, function(X) min(X$C)))
+max.relprev <- max(sapply(ds, function(X) max(X$rel.sim.prev)))
+max.deltaRLarge <- max(sapply(ds, function(X) max(X$sim.deltaRLarge)))
+max.deltaRSmall <- max(sapply(ds, function(X) max(X$sim.deltaRSmall)))
+max.h2s <- max(sapply(ds, function(X) max(X$sim.h2s)))
+max.h2l <- max(sapply(ds, function(X) max(X$sim.h2l)))
+
+
+
+my.cols <- c('black','blue','red')
+pdf('figures/twoEffectFigures/costInsensitivityFigure.pdf',width=20,height=12)
+par(mfrow = c(1,2))
+plot(
+    NA,
+    bty = 'n',
+    xlim = c(0,1),
+    ylim = c(0,1/min.C),
+    xlab = 'Fitness Cost of Disease',
+    ylab = 'Relative per site heterozygosity'
+)
+legend(
+    'topright',
+    legend = c('Small', 'Large'),
+    pch = c(19,17),
+    bty = 'n'
+)
+lines(
+    x = my.seq,
+    y = 1/my.seq,
+    lty = 3 ,
+    lwd = 1
+)
+abline(
+    h = 1 ,
+    lty = 2 ,
+    lwd = 1
+)
+for(i in 1:length(ds)){
+    points(
+        x = ds[[i]]$C,
+        y = ds[[i]]$rel.sim.siteVarSmall,
+        pch = 19,
+        col = my.cols[i]
+    )
+    points(
+        x = ds[[i]]$C,
+        y = ds[[i]]$rel.sim.siteVarLarge,
+        pch = 17,
+        col = my.cols[i]
+    )
+}
+my.seq = seq(0,1,length.out = 1000)
+plot(
+    NA,
+    ylim = c(0,max.relprev),
+    bty = 'n',
+    xlim = c(0,1),
+    pch = 19,
+    xlab = 'Fitness Cost of Disease',
+    ylab = 'Relative Prevalence'
+)
+legend(
+    'topright',
+    col = my.cols,
+    pch = 19,
+    legend = round(als,2),
+    bty = 'n'
+)
+for(i in 1:length(ds)){
+    points(
+        x = ds[[i]]$C,
+        y = ds[[i]]$rel.sim.prev,
+        pch = 19,
+        col = my.cols[i]
+    )
+}
+lines(
+    x = my.seq,
+    y = 1/my.seq,
+    lty = 3,
+    lwd = 1
+)
+abline(
+    h = 1 ,
+    lty = 2 ,
+    lwd = 1
+)
+dev.off()
+
+
+
+
+
+pdf('figures/twoEffectFigures/riskEffectFigure.pdf',width=20,height=12)
+par(mfrow=c(1,2))
+plot(
+    NA,
+    ylim = c(0,max.deltaRSmall),
+    bty = 'n',
+    xlim = c(0,1),
+    pch = 19,
+    xlab = 'Fitness Cost of Disease',
+    ylab = 'Effect Size on Risk Scale'
+)
+for(i in 1:length(ds)){
+    points(
+        x = ds[[i]]$C,
+        y = ds[[i]]$sim.deltaRSmall,
+        pch = 19,
+        col = my.cols[i]
+    )
+}
+plot(
+    NA,
+    ylim = c(0,max.deltaRLarge),
+    bty = 'n',
+    xlim = c(0,1),
+    pch = 19,
+    xlab = 'Fitness Cost of Disease',
+    ylab = 'Effect Size on Risk Scale'
+)
+legend(
+    'topright',
+    col = my.cols,
+    pch = 19,
+    legend = round(als,2),
+    bty = 'n'
+)
+for(i in 1:length(ds)){
+    points(
+        x = ds[[i]]$C,
+        y = ds[[i]]$sim.deltaRLarge,
+        pch = 19,
+        col = my.cols[i]
+    )
+}
+dev.off()
+
+
+
+
+
+pdf('figures/twoEffectFigures/h2ContribFigure.pdf',width=20,height=12)
+par(mfrow=c(1,2))
+plot(
+    NA,
+    ylim = c(0,max.h2s),
+    bty = 'n',
+    xlim = c(0,1),
+    pch = 19,
+    xlab = 'Fitness Cost of Disease',
+    ylab = 'Small Effect Contribution to Heritability'
+)
+for(i in 1:length(ds)){
+    points(
+        x = ds[[i]]$C,
+        y = ds[[i]]$sim.h2s,
+        pch = 19,
+        col = my.cols[i]
+    )
+}
+plot(
+    NA,
+    ylim = c(0,max.h2l),
+    bty = 'n',
+    xlim = c(0,1),
+    pch = 19,
+    xlab = 'Fitness Cost of Disease',
+    ylab = 'Small Effect Contribution to Heritability'
+)
+legend(
+    'topright',
+    col = my.cols,
+    pch = 19,
+    legend = round(als,2),
+    bty = 'n'
+)
+for(i in 1:length(ds)){
+    points(
+        x = ds[[i]]$C,
+        y = ds[[i]]$sim.h2l,
+        pch = 19,
+        col = my.cols[i]
+    )
+}
+dev.off()
+
+
+
+
+
+
+
+
+
+
 
 
 

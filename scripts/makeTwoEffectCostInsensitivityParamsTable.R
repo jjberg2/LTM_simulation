@@ -1,22 +1,27 @@
 source('scripts/solveTwoEffect.R')
 C <- c(seq(0.05,0.97,by=0.06),1)
 
-my.table <- read.table("twoEffectPrevInsensitivityParamsTable.txt",header=TRUE)
+my.table <- get(load("twoEffectCostInsensitivityPreliminaryParamsTable.Rdata"))
 
-targets <- c(0.3,0.6)
-keep <- list()
-for(i in seq_along(targets)){
-    keep[[i]] <- which.min(abs(targets[i] - my.table$deltal))
+targets <- c(0.1,0.3,0.5,0.7,0.9)
+c.table <- list()
+for(j in seq_along(my.table)){
+    keep <- numeric()
+    for(i in seq_along(targets)){
+        keep[i] <- which.min(abs(targets[i] - my.table[[j]]$deltal))
+    }
+    these.ones <- unlist(keep)
+    a.table <- my.table[[j]][these.ones,]
+    b.table <- a.table[rep(1:length(targets),each=length(C)),]
+    b.table$C <- rep(C,times=length(targets))
+    c.table[[j]] <- b.table[,!colnames(b.table) %in% c('h2s','h2l','prev','h2os','h2ol','deltas','deltal')]
 }
-these.ones <- unlist(keep)
-a.table <- my.table[these.ones,]
-b.table <- a.table[rep(1:length(targets),each=length(C)),]
-b.table$C <- rep(C,times=length(targets))
-c.table <- b.table[,!colnames(b.table) %in% c('h2s','h2l','prev','h2os','h2ol','deltas','deltal')]
 
 
 
-write.table(c.table, "twoEffectCostInsensitivityParamsTable.txt", col.names=T, row.names=F, quote=F)
+out.table <- do.call(rbind, c.table)
+save(c.table,file="twoEffectCostInsensitivityParamsTable.Rdata")
+write.table(out.table, "twoEffectCostInsensitivityParamsTable.txt", col.names=T, row.names=F, quote=F)
 
 
 
