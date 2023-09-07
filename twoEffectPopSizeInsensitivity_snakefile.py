@@ -163,7 +163,7 @@ rule slim_simulate_withsegregating:
 
 rule result_combined_two_small:
   input:
-    expand("{{prefix}}/PopSize{{N}}_aL{{liaSizes}}_thr{{thr}}_envSD{{envsd}}_cost{{cost}}_rep{rep}.{{ext}}", rep=reps)
+    expand("{{prefix}}/PopSize{{N}}_aL{{liaSizes}}_thr{{thr}}_envSD{{envsd}}_cost{{cost}}_rep{rep}.{{ext}}", rep=rep)
   params:
      time="36:00:00",
      partition="broadwl",
