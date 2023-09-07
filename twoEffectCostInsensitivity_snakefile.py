@@ -13,7 +13,7 @@ def trim_trailingzero(x):
 ## sp.call ("Rscript --vanilla scripts/makeTwoEffectCostInsensitivityParamsTable.R", shell=True)
 
 
-input_table_costInsens = "twoEffectCostInsensitivityN500ParamsTable.txt"
+input_table_costInsens = "twoEffectCostInsensitivityN1000ParamsTable.txt"
 params_table = pd.read_csv(input_table_costInsens, delim_whitespace=True)
 #params_table = params_table.iloc[[0,49,99,149,199],:].reset_index(drop=True)
 
@@ -86,6 +86,12 @@ rule make_results_table:
 rule N500_results_table:
   input:
     "twoEffectCostInsensitivityN500ResultsTable.Rdata"
+
+
+
+rule N1000_results_table:
+  input:
+    "twoEffectCostInsensitivityN1000ResultsTable.Rdata"
 
 
 
