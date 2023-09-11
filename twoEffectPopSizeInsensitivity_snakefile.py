@@ -10,7 +10,7 @@ def trim_trailingzero(x):
 
 
 #subprocess.call ("Rscript --vanilla scripts/makeTwoEffectPrevInsensitivityParamsTable.R", shell=True)
-sp.call ("Rscript --vanilla scripts/makeTwoEffectPopSizeInsensitivityParamsTable.R", shell=True)
+## sp.call ("Rscript --vanilla scripts/makeTwoEffectPopSizeInsensitivityParamsTable.R", shell=True)
 
 
 input_table_popSizeInsens = "twoEffectPopSizeInsensitivityParamsTable.txt"
