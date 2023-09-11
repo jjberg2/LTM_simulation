@@ -159,7 +159,7 @@ rule slim_simulate_withsegregating:
     toyRun=toyRun,
     time="36:00:00",
     partition="broadwl",
-    mem="4Gb"
+    mem="6Gb"
   log:
     "{prefix}/logs/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.log"
   shell:
