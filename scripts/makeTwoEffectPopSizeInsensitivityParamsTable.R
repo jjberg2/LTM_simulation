@@ -1,9 +1,12 @@
 source('scripts/solveTwoEffect.R')
 Ne <- round(exp(seq(log(500),log(10000),length.out=10)),0)
 
-my.table <- read.table("twoEffectPrevInsensitivityParamsTable.txt",header=TRUE)
+tmp.table <- get(load("twoEffectCostInsensitivityPreliminaryParamsTable.Rdata"))
+my.table <- tmp.table[[2]]
 
-targets <- c(0.1,0.3)
+
+
+targets <- c(0.1,0.3,0.5,0.7,0.9)
 keep <- list()
 for(i in seq_along(targets)){
     keep[[i]] <- which.min(abs(targets[i] - my.table$deltal))
