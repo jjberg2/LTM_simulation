@@ -2,7 +2,7 @@ library(viridis)
 
 
 
-input <- get(load('twoEffectCostInsensitivityResultsTable.Rdata'))
+input <- get(load('twoEffectCostInsensitivityN1000ResultsTable.Rdata'))
 d  <- input[input$sim.prev < 1/2 & input$sim.fixedLarge == 0,]
 
 
