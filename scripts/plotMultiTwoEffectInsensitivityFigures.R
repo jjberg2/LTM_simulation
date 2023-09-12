@@ -1,4 +1,6 @@
 library(viridis)
+library(wesanderson)
+
 
 
 
@@ -35,24 +37,62 @@ max.h2s <- max(sapply(ds.clumped, function(X) max(X$sim.h2s)))
 max.h2l <- max(sapply(ds.clumped, function(X) max(X$sim.h2l)))
 
 
+my.axis.cex = 1.2
+my.pt.cex = 1.3
 my.seq = seq(0,1,length.out = 1000)
-my.cols <- 1:5
+my.cols <- wes_palette('Zissou1',5)
 for(j in 1:length(ds)){
-    pdf(paste('figures/twoEffectFigures/costInsensitivityFigure_bt=' , sprintf('%.2f',bt[j]), '.pdf',sep=''),width=20,height=12)
+    pdf(paste('figures/twoEffectFigures/costInsensitivity/costInsensitivityFigure_bt=' , sprintf('%.2f',bt[j]), '.pdf',sep=''),width=20,height=12)
     par(mfrow = c(1,2))
     plot(
         NA,
         bty = 'n',
         xlim = c(0,1),
         ylim = c(0,1/min.C),
-        xlab = 'Fitness Cost of Disease',
-        ylab = 'Relative per site heterozygosity'
+        xlab = '',
+        ylab = '',
+        cex.lab = 1.4
+    )
+    mtext(
+      side = 1 ,
+      text = 'Fitness Cost of Disease',
+      line = 2.7,
+      cex = 1.4
+    )
+    mtext(
+      side = 2 ,
+      text = 'Relative per site contribution to variance',
+      line = 2.7,
+      cex = 1.4
+    )
+    text(
+        x = 0.84,
+        y = 17.2,
+        labels = 'Type of site',
+        cex = 1.2
     )
     legend(
-        'topright',
-        legend = c('Small', 'Large'),
+        x = 0.8,
+        y = 17,
+        legend = c('Small effect', 'Large effect'),
         pch = c(19,17),
-        bty = 'n'
+        bty = 'n',
+        cex = 1.2
+    )
+    text(
+      x = 0.87,
+      y = 13.2,
+      labels = 'Large effect size',
+      cex = 1.2
+    )
+    legend(
+      x = 0.8,
+      y = 13 ,
+      col = my.cols,
+      pch = 17,
+      legend = round(als[,j],2),
+      bty = 'n',
+      cex = 1.2
     )
     lines(
         x = my.seq,
@@ -70,13 +110,15 @@ for(j in 1:length(ds)){
             x = ds[[j]][[i]]$C,
             y = ds[[j]][[i]]$rel.sim.siteVarSmall,
             pch = 19,
-            col = my.cols[i]
+            col = my.cols[i] ,
+            cex = my.pt.cex
         )
         points(
             x = ds[[j]][[i]]$C,
             y = ds[[j]][[i]]$rel.sim.siteVarLarge,
             pch = 17,
-            col = my.cols[i]
+            col = my.cols[i] ,
+            cex = my.pt.cex
         )
     }
     plot(
@@ -85,22 +127,29 @@ for(j in 1:length(ds)){
         bty = 'n',
         xlim = c(0,1),
         pch = 19,
-        xlab = 'Fitness Cost of Disease',
-        ylab = 'Relative Prevalence'
+        xlab = '',
+        ylab = '' ,
+        cex.lab = 1.4
     )
-    legend(
-        'topright',
-        col = my.cols,
-        pch = 19,
-        legend = round(als[,j],2),
-        bty = 'n'
+    mtext(
+      side = 1 ,
+      text = 'Fitness Cost of Disease',
+      line = 2.7,
+      cex = 1.4
+    )
+    mtext(
+      side = 2 ,
+      text = 'Relative Prevalence',
+      line = 2.7,
+      cex = 1.4
     )
     for(i in 1:length(ds[[j]])){
         points(
             x = ds[[j]][[i]]$C,
             y = ds[[j]][[i]]$rel.sim.prev,
             pch = 19,
-            col = my.cols[i]
+            col = my.cols[i],
+            cex = my.pt.cex
         )
     }
     lines(
@@ -120,23 +169,42 @@ for(j in 1:length(ds)){
 
 
 for(j in 1:length(ds)){
-    pdf(paste('figures/twoEffectFigures/riskEffectFigure_bt=', sprintf('%.2f',bt[j]), '.pdf',sep=''),width=20,height=12)
+    pdf(paste('figures/twoEffectFigures/riskEffect/riskEffectFigure_bt=', sprintf('%.2f',bt[j]), '.pdf',sep=''),width=20,height=12)
     par(mfrow=c(1,2))
     plot(
         NA,
-        ylim = c(0,max.deltaRSmall),
+        ylim = c(0,0.01),
         bty = 'n',
         xlim = c(0,1),
         pch = 19,
-        xlab = 'Fitness Cost of Disease',
-        ylab = 'Effect Size on Risk Scale'
+        xlab = '',
+        ylab = ''
+    )
+    mtext(
+      side = 3 ,
+      text = 'Small effect loci',
+      line = 1,
+      cex = 1.4
+    )
+    mtext(
+      side = 1 ,
+      text = 'Fitness Cost of Disease',
+      line = 2.7,
+      cex = 1.4
+    )
+    mtext(
+      side = 2 ,
+      text = 'Effect Size on Risk Scale',
+      line = 2.7,
+      cex = 1.4
     )
     for(i in 1:length(ds[[j]])){
         points(
             x = ds[[j]][[i]]$C,
             y = ds[[j]][[i]]$sim.deltaRSmall,
             pch = 19,
-            col = my.cols[i]
+            col = my.cols[i],
+            cex = my.pt.cex
         )
     }
     plot(
@@ -145,22 +213,55 @@ for(j in 1:length(ds)){
         bty = 'n',
         xlim = c(0,1),
         pch = 19,
-        xlab = 'Fitness Cost of Disease',
-        ylab = 'Effect Size on Risk Scale'
+        xlab = '',
+        ylab = ''
+    )
+    mtext(
+      side = 3 ,
+      text = 'Large effect loci',
+      line = 1,
+      cex = 1.4
+    )
+    mtext(
+      side = 1 ,
+      text = 'Fitness Cost of Disease',
+      line = 2.7,
+      cex = 1.4
+    )
+    mtext(
+      side = 2 ,
+      text = 'Effect Size on Risk Scale',
+      line = 2.7,
+      cex = 1.4
+    )
+    text(
+      x = 0.93 , 
+      y = 1.02 ,
+      labels = 'Relative size of' ,
+      cex = 1.2
+    )
+    text(
+      x = 0.94 , 
+      y = 0.99 ,
+      labels = 'large effect sites' ,
+      cex = 1.2
     )
     legend(
-        'topright',
+        x = 0.87,
+        y = 0.99,
         col = my.cols,
         pch = 19,
         legend = round(als[,j],2),
-        bty = 'n'
+        bty = 'n',
+        cex = 1.2
     )
     for(i in 1:length(ds[[j]])){
         points(
             x = ds[[j]][[i]]$C,
             y = ds[[j]][[i]]$sim.deltaRLarge,
             pch = 19,
-            col = my.cols[i]
+            col = my.cols[i] ,
+            cex = my.pt.cex
         )
     }
     dev.off()
@@ -173,23 +274,43 @@ for(j in 1:length(ds)){
 
 
 for(j in 1:length(ds)){
-    pdf(paste('figures/twoEffectFigures/selCoefFigure_bt=', sprintf('%.2f',bt[j]), '.pdf',sep=''),width=20,height=12)
+    pdf(paste('figures/twoEffectFigures/selCoef/selCoefFigure_bt=', sprintf('%.2f',bt[j]), '.pdf',sep=''),width=20,height=12)
     par(mfrow=c(1,2))
     plot(
         NA,
-        ylim = c(0,max.deltaRSmall),
+        ylim = c(0,0.002),
         bty = 'n',
         xlim = c(0,1),
         pch = 19,
-        xlab = 'Fitness Cost of Disease',
-        ylab = 'Selection Coefficient'
+        xlab = '',
+        ylab = '' ,
+        cex.axis = my.axis.cex
+    )
+    mtext(
+      side = 3 ,
+      text = 'Small effect loci',
+      line = 1,
+      cex = 1.4
+    )
+    mtext(
+      side = 1 ,
+      text = 'Fitness Cost of Disease',
+      line = 2.7,
+      cex = 1.4
+    )
+    mtext(
+      side = 2 ,
+      text = 'Product of risk effect and fitness cost  (selection coefficient)',
+      line = 2.7,
+      cex = 1.4
     )
     for(i in 1:length(ds[[j]])){
         points(
             x = ds[[j]][[i]]$C,
             y = ds[[j]][[i]]$sim.deltaRSmall*ds[[j]][[i]]$C,
             pch = 19,
-            col = my.cols[i]
+            col = my.cols[i] ,
+            cex = my.pt.cex
         )
     }
     plot(
@@ -198,23 +319,57 @@ for(j in 1:length(ds)){
         bty = 'n',
         xlim = c(0,1),
         pch = 19,
-        xlab = 'Fitness Cost of Disease',
-        ylab = 'Selection Coefficient'
+        xlab = '',
+        ylab = '',
+        cex.axis = my.axis.cex
+    )
+    mtext(
+      side = 3 ,
+      text = 'Large effect loci',
+      line = 1,
+      cex = 1.4
+    )
+    mtext(
+      side = 1 ,
+      text = 'Fitness Cost of Disease',
+      line = 2.7,
+      cex = 1.4
+    )
+    mtext(
+      side = 2 ,
+      text = 'Product of risk effect and fitness cost (selection coefficient)',
+      line = 2.7,
+      cex = 1.4
     )
     abline(a=0,b=1,lty=2)
+    text(
+      x = 0.21 , 
+      y = 1.02 ,
+      labels = 'Relative size of' ,
+      cex = 1.2
+    )
+    text(
+      x = 0.22 , 
+      y = 0.99 ,
+      labels = 'large effect sites' ,
+      cex = 1.2
+    )
     legend(
-        'topright',
-        col = my.cols,
-        pch = 19,
-        legend = round(als[,j],2),
-        bty = 'n'
+      x = 0.13,
+      y = 0.99,
+      col = my.cols,
+      pch = 19,
+      legend = round(als[,j],2),
+      bty = 'n',
+      cex = 1.2
     )
     for(i in 1:length(ds[[j]])){
         points(
             x = ds[[j]][[i]]$C,
             y = ds[[j]][[i]]$sim.deltaRLarge*ds[[j]][[i]]$C,
             pch = 19,
-            col = my.cols[i]
+            col = my.cols[i] ,
+            cex = my.pt.cex
         )
     }
     dev.off()
@@ -231,7 +386,7 @@ for(j in 1:length(ds)){
 
 
 for(j in 1:length(ds)){
-    pdf(paste('figures/twoEffectFigures/h2ContribFigure_bt=', sprintf('%.2f',bt[j]), '.pdf', sep = ''),width=20,height=12)
+    pdf(paste('figures/twoEffectFigures/h2Contrib/h2ContribFigure_bt=', sprintf('%.2f',bt[j]), '.pdf', sep = ''),width=20,height=12)
     par(mfrow=c(1,2))
     plot(
         NA,
@@ -239,15 +394,35 @@ for(j in 1:length(ds)){
         bty = 'n',
         xlim = c(0,1),
         pch = 19,
-        xlab = 'Fitness Cost of Disease',
-        ylab = 'Small Effect Contribution to Heritability'
+        xlab = '',
+        ylab = '',
+        cex.axis = my.axis.cex
+    )
+    mtext(
+      side = 3 ,
+      text = 'Small effect loci',
+      line = 1,
+      cex = 1.4
+    )
+    mtext(
+      side = 1 ,
+      text = 'Fitness cost of disease',
+      line = 2.7,
+      cex = 1.4
+    )
+    mtext(
+      side = 2 ,
+      text = 'Contribution to heritability',
+      line = 2.7,
+      cex = 1.4
     )
     for(i in 1:length(ds[[j]])){
         points(
             x = ds[[j]][[i]]$C,
             y = ds[[j]][[i]]$sim.h2s,
             pch = 19,
-            col = my.cols[i]
+            col = my.cols[i] ,
+            cex = my.pt.cex
         )
     }
     plot(
@@ -256,22 +431,55 @@ for(j in 1:length(ds)){
         bty = 'n',
         xlim = c(0,1),
         pch = 19,
-        xlab = 'Fitness Cost of Disease',
-        ylab = 'Large Effect Contribution to Heritability'
+        xlab = '',
+        ylab = ''
+    )
+    mtext(
+      side = 3 ,
+      text = 'Large effect loci',
+      line = 1,
+      cex = 1.4
+    )
+    mtext(
+      side = 1 ,
+      text = 'Fitness cost of disease',
+      line = 2.7,
+      cex = 1.4
+    )
+    mtext(
+      side = 2 ,
+      text = 'Contribution to heritability',
+      line = 2.7,
+      cex = 1.4
+    )
+    text(
+      x = 0.93 , 
+      y = 0.057 ,
+      labels = 'Relative size of' ,
+      cex = 1.2
+    )
+    text(
+      x = 0.94 , 
+      y = 0.0555 ,
+      labels = 'large effect sites' ,
+      cex = 1.2
     )
     legend(
-        'topright',
-        col = my.cols,
-        pch = 19,
-        legend = round(als[,j],2),
-        bty = 'n'
+      x = 0.87,
+      y = 0.055,
+      col = my.cols,
+      pch = 19,
+      legend = round(als[,j],2),
+      bty = 'n',
+      cex = 1.2
     )
     for(i in 1:length(ds[[j]])){
         points(
             x = ds[[j]][[i]]$C,
             y = ds[[j]][[i]]$sim.h2l,
             pch = 19,
-            col = my.cols[i]
+            col = my.cols[i],
+            cex = my.pt.cex
         )
     }
     dev.off()
@@ -281,6 +489,63 @@ for(j in 1:length(ds)){
 
 
 
+for(j in 1:length(ds)){
+  my.fixed = unlist(sapply(ds[[j]], function(X) X$sim.fixedSmall))
+  my.means = unlist(sapply(ds[[j]],function(X) X$sim.mean))
+  y.lower = min(my.means,my.fixed) - (min(my.means,my.fixed) %% 100)
+  y.upper = max(my.means,my.fixed) + (100-(max(my.means,my.fixed) %% 100)) + 100
+  pdf(paste('figures/twoEffectFigures/means/meansFigure_bt=', sprintf('%.2f',bt[j]), '.pdf', sep = ''),width=20,height=12)
+  ## par(mfrow=c(1,2))
+  plot(
+    NA,
+    ylim = c(y.lower,y.upper),
+    bty = 'n',
+    xlim = c(0,1),
+    pch = 19,
+    xlab = '',
+    ylab = '',
+    cex.axis = my.axis.cex
+  )
+  mtext(
+    side = 1 ,
+    text = 'Fitness cost of disease',
+    line = 2.7,
+    cex = 1.4
+  )
+  mtext(
+    side = 2 ,
+    text = 'Liability',
+    line = 2.7,
+    cex = 1.4
+  )
+  ##for(i in 1:length(ds[[j]])){
+  i=3
+  points(
+    x = ds[[j]][[i]]$C,
+    y = ds[[j]][[i]]$sim.fixedSmall,
+    pch = 17,
+    col = my.cols[i] ,
+    cex = my.pt.cex
+  )
+  points(
+    x = ds[[j]][[i]]$C,
+    y = ds[[j]][[i]]$sim.mean,
+    pch = 19,
+    col = my.cols[i] ,
+    cex = my.pt.cex
+  )
+  abline(h = ds[[j]][[i]]$thr[1],lty=2)
+  legend(
+   'topright',
+    col = c(rep(my.cols[i],2),'black'),
+    pch = c(17,19,-1),
+    lty = c(0,0,2),
+    legend = c('Fixed','Mean','Threshold'),
+    bty = 'n',
+    cex = 1.2
+  )
+  dev.off()
+}
 
 
 
