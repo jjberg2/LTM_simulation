@@ -3,7 +3,8 @@ library(wesanderson)
 
 
 
-input <- get(load('twoEffectCostInsensitivityN500ResultsTable.Rdata'))
+
+input <- get(load('twoEffectCostInsensitivityN1000ResultsTable.Rdata'))
 d  <- input[input$sim.prev < 1/2 & input$sim.fixedLarge == 0,]
 
 
