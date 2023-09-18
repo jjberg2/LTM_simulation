@@ -158,7 +158,7 @@ rule slim_simulate_withsegregating:
     sampleInt = sampleInt,
     toyRun=toyRun,
     partition="jjberg",
-    mem="10Gb"
+    mem="12Gb"
   log:
     "{prefix}/logs/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.log"
   shell:
