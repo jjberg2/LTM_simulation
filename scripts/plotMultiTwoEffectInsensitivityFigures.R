@@ -21,6 +21,7 @@ compute_rels <- function(SIMS){
         SIMS[[i]]$rel.sim.siteVarSmall <- SIMS[[i]]$sim.siteVarSmall / SIMS[[i]]$sim.siteVarSmall[lethal]
         SIMS[[i]]$rel.sim.siteVarLarge <- SIMS[[i]]$sim.siteVarLarge / SIMS[[i]]$sim.siteVarLarge[lethal]
         SIMS[[i]]$rel.sim.derFreqLarge <- SIMS[[i]]$sim.derFreqLarge / SIMS[[i]]$sim.derFreqLarge[lethal]
+        SIMS[[i]]$rel.sim.riskFreqLarge <- SIMS[[i]]$sim.riskFreqLarge / SIMS[[i]]$sim.riskFreqLarge[lethal]
         ## compute relative prevalence
         SIMS[[i]]$rel.sim.prev  <- SIMS[[i]]$sim.prev / SIMS[[i]]$sim.prev[lethal]
     }
@@ -35,6 +36,13 @@ max.deltaRLarge <- max(sapply(ds.clumped, function(X) max(X$sim.deltaRLarge)))
 max.deltaRSmall <- max(sapply(ds.clumped, function(X) max(X$sim.deltaRSmall)))
 max.h2s <- max(sapply(ds.clumped, function(X) max(X$sim.h2s)))
 max.h2l <- max(sapply(ds.clumped, function(X) max(X$sim.h2l)))
+
+
+
+
+
+
+
 
 
 my.axis.cex = 1.2
@@ -550,15 +558,76 @@ for(j in 1:length(ds)){
 
 
 
+for(j in 1:length(ds)){
+    y.lower = 0
+    y.upper = 1/min(ds[[1]][[1]]$C)
+    pdf(paste('figures/twoEffectFigures/riskFreqLarge/riskFreqLarge_bt=', sprintf('%.2f',bt[j]), '.pdf', sep = ''),width=20,height=12)
+    ## par(mfrow=c(1,2))
+    plot(
+        NA,
+        ylim = c(y.lower,y.upper),
+        bty = 'n',
+        xlim = c(0,1),
+        pch = 19,
+        xlab = '',
+        ylab = '',
+        cex.axis = my.axis.cex
+    )
+    mtext(
+        side = 1 ,
+        text = 'Fitness cost of disease',
+        line = 2.7,
+        cex = 1.4
+    )
+    mtext(
+        side = 2 ,
+        text = 'Relative Mean Frequency of Large Effect Alleles',
+        line = 2.7,
+        cex = 1.4
+    )
+    for(i in 1:length(ds[[j]])){
+        points(
+            x = ds[[j]][[i]]$C,
+            y = ds[[j]][[i]]$rel.sim.riskFreqLarge,
+            pch = 17,
+            col = my.cols[i] ,
+            cex = my.pt.cex
+        )
+    }
+    lines(1:9999/10000,10000/(1:9999),lty = 2)
+    legend(
+        x = 0.13,
+        y = 0.99,
+        col = my.cols,
+        pch = 19,
+        legend = round(als[,j],2),
+        bty = 'n',
+        cex = 1.2
+    )
+    dev.off()
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 if(FALSE){
-
-
-
-
-
-
 
 small$sim.addRiskHet <- small$sim.siteVar*small$sim.deltaR
 

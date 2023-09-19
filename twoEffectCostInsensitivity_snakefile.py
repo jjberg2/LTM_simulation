@@ -18,7 +18,7 @@ params_table = pd.read_csv(input_table_costInsens, delim_whitespace=True)
 #params_table = params_table.iloc[[0,49,99,149,199],:].reset_index(drop=True)
 
 ## global parameter ( doesn't change) 
-cyc = 200
+cyc = 800
 sampleInt = 50
 reps = 20
 toyRun = 0
