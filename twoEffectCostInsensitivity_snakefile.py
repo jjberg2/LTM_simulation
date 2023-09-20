@@ -20,7 +20,7 @@ params_table = pd.read_csv(input_table_costInsens, delim_whitespace=True)
 ## global parameter ( doesn't change) 
 cyc = 800
 sampleInt = 50
-reps = 2
+reps = 20
 toyRun = 0
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
