@@ -76,7 +76,7 @@ rule make_results_table:
     expand("{{prefix}}/all/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_all.siteVarLarge", zip, N=N, alphaLarge = alphaLarge, thr=thr, envSD=envSD, cost=cost)
   params:
      time="36:00:00",
-     partition="broadwl",
+     partition="caslake",
      mem="4Gb",
      path="{prefix}/all"
   output:
@@ -121,7 +121,7 @@ rule twoEffectBackup:
     "{paramTableName}ResultsTable.Rdata"
   params:
     time="36:00:00",
-    partition="broadwl",
+    partition="caslake",
     mem="2Gb"
   output:
     protected("{paramTableName}ResultsTableBackup.Rdata")
@@ -179,7 +179,7 @@ rule slim_simulate_withsegregating:
     sampleInt = sampleInt,
     toyRun=toyRun,
     time="36:00:00",
-    partition="broadwl",
+    partition="caslake",
     mem="4Gb"
   log:
     "{prefix}/logs/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.log"
@@ -193,7 +193,7 @@ rule result_combined_two_small:
     expand("{{prefix}}/PopSize{{N}}_aL{{liaSizes}}_thr{{thr}}_envSD{{envsd}}_cost{{cost}}_rep{rep}.{{ext}}", rep=rep)
   params:
      time="36:00:00",
-     partition="broadwl",
+     partition="caslake",
      mem="2Gb"
   log:
     "{prefix}/PopSize{N}_aL{liaSizes}_thr{thr}_envSD{envsd}_cost{cost}_all_{ext}.log"
