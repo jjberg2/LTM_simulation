@@ -77,7 +77,7 @@ rule make_results_table:
   params:
      time="36:00:00",
      partition="caslake",
-     mem="4Gb",
+     mem="8Gb",
      path="{prefix}/all"
   output:
      "{prefix}ResultsTable.Rdata"
