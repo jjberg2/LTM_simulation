@@ -97,6 +97,10 @@ rule N1000_results_table:
     "twoEffectCostInsensitivityN1000ResultsTable.Rdata"
 
 
+rule N1000_results_table:
+  input:
+    "twoEffectCostInsensitivityN5000ResultsTable.Rdata"
+
 
 
 
