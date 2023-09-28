@@ -3,22 +3,40 @@ library('wesanderson')
 gammabt = function(bt) log((1+bt)/(1-bt))
 balpha = function(a) (exp(a)-1)/(exp(a)+1)
 my.q = 1e-6
-my.mean = 1.098
+## my.mean = 1.098
 
 bt.diff = function(my.mean,my.sd,my.bt){
   my.shape = my.mean^2/my.sd^2
   my.rate = my.mean / my.sd^2
   ## qgamma(my.q,my.shape,my.rate)
   ## balpha(my.mean)
-  my.bt-1/my.mean*integrate(function(a) a*dgamma(a,my.shape,my.rate)*balpha(a),lower = qgamma(my.q,my.shape,my.rate),upper=qgamma(1-my.q,my.shape,my.rate))$value
+  my.bt-(1/my.mean)*integrate(function(a) dgamma(a,my.shape,my.rate)*a*balpha(a),lower = qgamma(my.q,my.shape,my.rate),upper=qgamma(1-my.q,my.shape,my.rate))$value
 }
+
+bt.diff2 = function(my.mean,dist,my.bt){
+    ## qgamma(my.q,my.shape,my.rate)
+    ## balpha(my.mean)
+    low = my.mean - dist/2
+    high = my.mean + dist/2
+    var = low*balpha(low)/2 + high*balpha(high)/2
+    my.bt-(1/my.mean)*var
+}
+
+
 
 
 my.bts = seq(1e-3,0.99,length.out=1000)
 my.sds = c(1e-2,1e-1,0.5,0.8)
 my.lowers = c(1e-6,4e-6,1e-4,1e-4)
 
-##uniroot(function(X) bt.diff(X,my.sd = 1e-1,my.bts[i]),lower=max(1e-8,10^(log(my.sds[j],10)-4)),upper=5)$root
+se.gammas = log((1+my.bts)/(1-my.bts))
+se.vars = 2*se.gammas*my.bts
+this.gamma = tail(se.gammas,1)
+tail.sd = tail(my.sds,1)
+this.shape = this.gamma^2/tail.sd^2
+this.rate = this.gamma / tail.sd^2
+
+
 
 tmp = list()
 my.gammas = list()
@@ -26,20 +44,33 @@ for ( j in 1:length(my.sds)){
   tmp[[j]] = list()
   my.gammas[[j]] = numeric()
   for ( i in 1:length(my.bts)){
-    tmp[[j]][[i]] = try(
-      uniroot(function(X) bt.diff(X,my.sd = my.sds[j],my.bts[i]),lower=my.lowers[j],upper=10)
-    )
+    tmp[[j]][[i]] = uniroot(function(X) bt.diff(X,my.sd = my.sds[j],my.bts[i]),lower=my.lowers[j],upper=12)
     my.gammas[[j]][i] = tmp[[j]][[i]]$root
   }
 }
 
 
-se.gammas = log((1+my.bts)/(1-my.bts))
-se.vars = 2*se.gammas*my.bts
-this.gamma =tail(se.gammas,1)
-tail.sd =tail(my.sds,1)
-this.shape = this.gamma^2/tail.sd^2
-this.rate = this.gamma / tail.sd^2
+tmp = list()
+my.gammas = list()
+for ( j in 1:length(my.sds)){
+  tmp[[j]] = list()
+  my.gammas[[j]] = numeric()
+  for ( i in 1:length(my.bts)){
+      tmp[[j]][[i]] = uniroot(function(X) bt.diff2(X,dist = 1e-2,my.bts[i]),lower=se.gammas[i]/100,upper=10*se.gammas[i])
+      my.gammas[[j]][i] = tmp[[j]][[i]]$root
+  }
+}
+
+my.gammas[[1]]/se.gammas
+
+
+
+
+
+
+
+
+
 qgamma(my.q,this.shape,this.rate)
 qgamma(1-my.q,this.shape,this.rate)
 
@@ -62,7 +93,6 @@ for ( j in 1:length(my.sds)){
     )$value
   }
   normed.vars[[j]] = my.vars[[j]]/se.vars
-  
 }
 
 
@@ -141,7 +171,7 @@ for ( j in 1:length(my.gammas) ){
 plot(
   NA,
   xlim = c(0,1),
-  ylim = c(-1,1),
+  ylim = c(-0.1,0.1),
   type = 'l' ,
   xlab = 'Mutational Asymmetry',
   ylab = 'Fold change in genetic variance relative to single effect model'
@@ -162,7 +192,7 @@ dev.off()
 
 
 
-my.gammas = seq(0.01,10,length.out = 1000)
+my.gammas = seq(0.01,100,length.out = 1000)
 plot(
   my.gammas ,
   dgamma(my.gammas,shape = this.shape, rate = this.rate),
@@ -180,14 +210,14 @@ if(FALSE){
   
   
   plot(
-    my.gammas, 
-    my.gammas*balpha(my.gammas),
+    my.bts, 
+    se.gammas*balpha(se.gammas),
     type='l'
   )
   
   plot(
-    my.gammas, 
-    balpha(my.gammas),
+    se.gammas, 
+    balpha(se.gammas),
     type='l'
   )
 }
