@@ -57,7 +57,8 @@ for ( j in 1:length(my.sds)){
         dgamma(a,this.shape,this.rate)*2*a*balpha(a)
       },
       lower = qgamma(my.q,this.shape,this.rate),
-      upper = qgamma(1-my.q,this.shape,this.rate)
+      upper = qgamma(1-my.q,this.shape,this.rate),
+      rel.tol = .Machine$double.eps^0.5
     )$value
   }
   normed.vars[[j]] = my.vars[[j]]/se.vars
@@ -136,23 +137,57 @@ for ( j in 1:length(my.gammas) ){
     col = my.cols[j]
   )
 }
+
+plot(
+  NA,
+  xlim = c(0,1),
+  ylim = c(-1,1),
+  type = 'l' ,
+  xlab = 'Mutational Asymmetry',
+  ylab = 'Fold change in genetic variance relative to single effect model'
+)
+for ( j in 1:length(my.gammas) ){
+  plot.these = my.gammas[[j]] > 0.002
+  lines(
+    x = my.bts[plot.these],
+    y = 2*my.gammas[[j]][plot.these]*my.bts[plot.these] - my.vars[[j]][plot.these],
+    lty = 2,
+    lwd = 2,
+    col = my.cols[j]
+  )
+}
 dev.off()
 
 
 
 
-my.gammas = seq(0.01,5,length.out = 1000)
 
-
+my.gammas = seq(0.01,10,length.out = 1000)
 plot(
-  my.gammas, 
-  my.gammas*balpha(my.gammas),
+  my.gammas ,
+  dgamma(my.gammas,shape = this.shape, rate = this.rate),
   type='l'
 )
 
-plot(
-  my.gammas, 
-  balpha(my.gammas),
-  type='l'
-)
 
+
+
+
+
+if(FALSE){
+  
+  
+  
+  
+  plot(
+    my.gammas, 
+    my.gammas*balpha(my.gammas),
+    type='l'
+  )
+  
+  plot(
+    my.gammas, 
+    balpha(my.gammas),
+    type='l'
+  )
+}
