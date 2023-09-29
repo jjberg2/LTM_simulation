@@ -159,17 +159,36 @@ for ( j in 1:length(my.gammas) ){
 dev.off()
 
 
+small.one = TRUE
+if(small.one){
+  this.one = min(which(my.gammas[[4]] > 0.002))
+  this.mean = my.gammas[[4]][this.one]
+  this.shape = this.mean^2/tail.sd^2
+  this.rate = this.mean / tail.sd^2
+} else {
+  this.one = max(which(my.gammas[[4]] > 0.002))
+  this.mean = my.gammas[[4]][this.one]
+  this.shape = this.mean^2/tail.sd^2
+  this.rate = this.mean / tail.sd^2
+}
 
 
 
-my.gammas = seq(0.01,10,length.out = 1000)
+
+
+
+plot.gammas = seq(0.01,3,length.out = 1000)
 plot(
-  my.gammas ,
-  dgamma(my.gammas,shape = this.shape, rate = this.rate),
+  plot.gammas ,
+  dgamma(plot.gammas,shape = this.shape, rate = this.rate),
   type='l'
 )
-
-
+integrate(
+  f=function(a) dgamma(a,shape = this.shape, rate = this.rate)*a*(exp(a)-1)/(exp(a) + 1),
+  lower=1e-6,
+  upper=15
+)$value/this.mean
+(exp(this.mean)-1)/(exp(this.mean) + 1)
 
 
 
@@ -180,14 +199,14 @@ if(FALSE){
   
   
   plot(
-    my.gammas, 
-    my.gammas*balpha(my.gammas),
+    plot.gammas, 
+    plot.gammas*balpha(plot.gammas),
     type='l'
   )
   
   plot(
-    my.gammas, 
-    balpha(my.gammas),
+    plot.gammas, 
+    balpha(plot.gammas),
     type='l'
   )
 }
