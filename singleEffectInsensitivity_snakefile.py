@@ -86,7 +86,7 @@ rule makeAllParamTables:
 ##################################################
 
 ## read small parameter tables
-input_table_filename_small = "smallEffectInsensitivityParamTable.txt"
+input_table_filename_small = "smallEffectInsensitivityN1000ParamTable.txt"
 output_table_filename_small = "smallEffectInsensitivityResultsTable.Rdata"
 params_table_small = pd.read_csv(input_table_filename_small, delim_whitespace=True)
 
@@ -107,24 +107,24 @@ thrSmall = np.array(['{:.2f}'.format(r) for r in tmpThrSmall], dtype=str)
 rule allSmallEffectCost:
   input:
     input_table_filename_small,
-    expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.fixed",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
-    expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.mean",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
-    expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.h2",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),    
-    expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.prev",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
-    expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.genVar",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
-    expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.nSeg",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
-    expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.deltaR",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
-    expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.riskFreq",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
-    expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.derFreq",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
-    expand("smallEffectInsensitivity/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.siteVar",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall)
+    expand("smallEffect{{suffix}}/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.fixed",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
+    expand("smallEffect{{suffix}}/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.mean",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
+    expand("smallEffect{{suffix}}/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.h2",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),    
+    expand("smallEffect{{suffix}}/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.prev",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
+    expand("smallEffect{{suffix}}/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.genVar",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
+    expand("smallEffect{{suffix}}/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.nSeg",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
+    expand("smallEffect{{suffix}}/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.deltaR",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
+    expand("smallEffect{{suffix}}/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.riskFreq",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
+    expand("smallEffect{{suffix}}/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.derFreq",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
+    expand("smallEffect{{suffix}}/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.siteVar",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall)
   params:
      time="36:00:00",
      partition="broadwl",
      mem="4Gb",
-     path="smallEffectInsensitivity/all"
+     path="smallEffect{suffix}/all"
   output:
-     "smallEffectInsensitivityResultsTable.Rdata",
-     "smallEffectInsensitivityDerProbs.Rdata"
+     "smallEffect{suffix}ResultsTable.Rdata",
+     "smallEffect{suffix}DerProbs.Rdata"
   shell:
     """Rscript scripts/collateSingleEffectResults.R {input} {params.path} {output}"""
 
@@ -251,7 +251,7 @@ rule result_combined_single_small:
 
 rule allSmallEffect:
   input:
-    "smallEffectInsensitivityResultsTable.Rdata",
+    "smallEffectInsensitivityN1000ResultsTable.Rdata",
     "smallEffectVarianceInsensResultsTable.Rdata"
     
 

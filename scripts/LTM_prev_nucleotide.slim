@@ -32,7 +32,7 @@ initialize() {
 	else {
 		// if not, start at threshold point - THR_MINUS, set corresponding number of alleles to be protective and liability increasing 
 		defineConstant('THR_MINUS', 2*ENV_SIGMA);
-		defineConstant('A_INIT',asInteger(L - THR/2 + THR_MINUS));
+		defineConstant('A_INIT',min(asInteger(L - THR/2 + THR_MINUS),L));
 		defineConstant('G_INIT',L - A_INIT);
 		sequence_tmp = sample(c(rep('A',A_INIT),rep('G',G_INIT)),L,replace=F);
 		initial_sequence='';
