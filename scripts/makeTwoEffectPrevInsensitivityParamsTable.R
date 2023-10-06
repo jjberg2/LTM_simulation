@@ -5,17 +5,18 @@ recover.flag <- FALSE
 ## params
 L.init <- 1e7
 Lmeana <- 1e7
-Ne <- 5e2
+Ne <- 3e3
 u <- 1e-8
 as <- 1
-C <- 0.1
-r2n <- 1/2
+C <- 1
+Ve <- 385
+##r2n <- 1/2
 theta <- 4*Ne*u
 
 
 
-my.bt <- 0.4
-my.als <- exp(seq(log(12),log(100),length.out=1000))
+my.bt <- 0.8
+my.als <- exp(seq(log(12),log(130),length.out=1000))
 
 last.Ll <- numeric()
 last.Ll[1] <- 90000
@@ -40,17 +41,21 @@ for( i in seq_along(my.als)){
         as=as,
         al=my.als[i],
         L.init=L.init,
-        r2n=r2n,
+        r2n=NULL,
         Lmeana=Lmeana,
-        Ve=NULL,
+        Ve=Ve,
         u=u,
         C=C,
         LL.soln=TRUE,
-        var.ratio=1,
+        var.ratio=4,
         equalize.observed.vars=TRUE
     )
 
     output[i,'as'] <- solns[[i]]$as  ## small effect size
+    output[i,'as.std'] <- solns[[i]]$as.std  ## standardized small effect size
+    output[i,'al.std'] <- solns[[i]]$al.std  ## standardized large effect size
+    output[i,'ys'] <- solns[[i]]$ys  ## small scaled selection coefficient
+    output[i,'yl'] <- solns[[i]]$yl  ## large scaled selection coefficient
     output[i,'Ls'] <- solns[[i]]$Ls  ## numer of small effect loci
     output[i,'bs'] <- solns[[i]]$bs  ## b for small effect loci
     output[i,'rhos'] <- 1/2-output[i,'bs']/2  ## rho for small effect loci
@@ -65,6 +70,7 @@ for( i in seq_along(my.als)){
     output[i,'u'] <- solns[[i]]$u    ## mutation rate
     output[i,'C'] <- solns[[i]]$C    ## cost of disease
     output[i,'Ve'] <- solns[[i]]$Ve  ## environmental variance
+    output[i,'Vg'] <- solns[[i]]$Vg  ## environmental variance
     output[i,'h2s'] <- solns[[i]]$h2s  ## small effect h2 on liability scale
     output[i,'h2l'] <- solns[[i]]$h2l  ## large effect h2 on liability scale
     output[i,'h2os'] <- solns[[i]]$h2os  ## small effect h2 on liability scale
@@ -73,8 +79,12 @@ for( i in seq_along(my.als)){
     output[i,'deltas'] <- solns[[i]]$deltas ## risk small effect
     output[i,'deltal'] <- solns[[i]]$deltal ## risk small effect
     output[i,'maxG'] <- 2*output[i,'Ls']* output[i,'as'] + 2*output[i,'Ll']* output[i,'al']
+    output[i,'bigU_small']  <- 2 * output[i,'Ls'] * u * output[i,'as'] * output[i,'bs']
+    output[i,'bigU_large']  <- 2 * output[i,'Ll'] * u * output[i,'al'] 
     output[i,'bigU'] <- output[i,'maxG']*u*my.bt
     output[i,'thr'] <- 2*output[i,'rhos']*output[i,'Ls']*output[i,'as'] + 1
+    output[i,'mean.nl'] <- solns[[i]]$mean.nl  ## average number of large effect alleles per individual
+    output[i,'tstar'] <- solns[[i]]$tstar  ## threshold distance in standardized units
 
 
     last.Ls[i+1] <- output[i,'Ls']
@@ -95,7 +105,7 @@ my.gamma <- log((1+my.bt)/(1-my.bt))
 env.sd <- sqrt(theta*Lmeana*my.bt/my.gamma*(1-r2n)/r2n)
 U <- 2*Lmeana*u
 BigGamma <- 4*Ne*C
-norm.prev <- eqNormPrev(U*my.bt,BigGamma,my.gamma,r2n)
+##norm.prev <- eqNormPrev(U*my.bt,BigGamma,my.gamma,r2n)
 
 written.output <- output[these.ones,]
 

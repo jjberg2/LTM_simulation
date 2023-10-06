@@ -94,13 +94,13 @@ merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.
 
 options(scipen=400)
 if(interactive()){
-    my.path <- "smallEffectInsensitivity/all"
+    my.path <- "smallEffectInsensitivityN1000/all"
     my.args <- c(
-        "smallEffectInsensitivityParamTable.txt",
-        sapply(dir(my.path),function(X) paste(my.path,X,sep="/")),
+        "smallEffectInsensitivityN1000ParamTable.txt",
+        'smallEffectInsensitivityN1000/all/filenames.txt',
         my.path,
-        "smallEffectInsensitivityResultsTable.Rdata",
-        "smallEffectInsensitivityDerProbs.Rdata"
+        "smallEffectInsensitivityN1000ResultsTable.Rdata",
+        "smallEffectInsensitivityN1000DerProbs.Rdata"
     )
 } else {
     ## read in command line arguments
@@ -112,7 +112,9 @@ input.table.filename <- head(my.args,1)
 output.table.filename1 <- tail(my.args,2)[1]
 output.table.filename2 <- tail(my.args,2)[2]
 my.path <- head(tail(my.args,3),1)
-sim.filenames <- tail(head(my.args,-3),-1)
+
+filenames.file <- tail(head(my.args,-3),-1)
+sim.filenames <- readLines(filenames.file)
 
 ## load the parameter table
 param.table <- read.table(input.table.filename)

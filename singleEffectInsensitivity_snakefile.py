@@ -17,7 +17,7 @@ if(toyRun==1):
 
 
 rep_large = list(np.arange(0,5))
-rep_small = list(np.arange(0,16))
+rep_small = list(np.arange(0,8))
 
 
 
@@ -104,9 +104,9 @@ rhosSmall = np.array(['{:.5f}'.format(r) for r in tmpRhosSmall], dtype=str)
 tmpThrSmall = np.array(params_table_small["thr"])
 thrSmall = np.array(['{:.2f}'.format(r) for r in tmpThrSmall], dtype=str)
     
-rule allSmallEffectCost:
+
+rule writeSmallEffectFilenames:
   input:
-    input_table_filename_small,
     expand("smallEffect{{suffix}}/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.fixed",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
     expand("smallEffect{{suffix}}/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.mean",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
     expand("smallEffect{{suffix}}/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.h2",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),    
@@ -117,6 +117,26 @@ rule allSmallEffectCost:
     expand("smallEffect{{suffix}}/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.riskFreq",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
     expand("smallEffect{{suffix}}/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.derFreq",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
     expand("smallEffect{{suffix}}/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.siteVar",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall)
+  params:
+     time="36:00:00",
+     partition="broadwl",
+     mem="4Gb",
+     path="smallEffect{suffix}/all"
+  output:
+    'smallEffect{suffix}/all/filenames.txt'
+  shell:
+    """
+    for file in {input}; do
+      echo "$file" >> {output}
+    done
+    """
+
+
+
+rule allSmallEffectCost:
+  input:
+    input_table_filename_small,
+    'smallEffect{suffix}/all/filenames.txt'
   params:
      time="36:00:00",
      partition="broadwl",

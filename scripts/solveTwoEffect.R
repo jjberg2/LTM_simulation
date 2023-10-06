@@ -200,7 +200,10 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,r2n=NULL,Ve=NULL,u
     deltas <- as*ft
     mean.nl <- 2*Ll*u/(deltal*C)
     Val <- 2*al^2*mean.nl
-    Vt <- Vas + Ve + Val
+    Vg <- Vas + Val
+    Vt <- Vg + Ve
+    as.std  <- as / sqrt( Vt )
+    al.std  <- al / sqrt( Vt )
 
     ## risk scale variances
     Vos <- Vas*ft^2
@@ -246,9 +249,9 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,r2n=NULL,Ve=NULL,u
 
 
     ## heritabilies on liability scale
-    h2s <- Vas/(Val+Vas/r2n)
-    h2l <- Val/(Val+Vas/r2n)
-    h2 <- (Vas+Val)/(Val+Vas/r2n)
+    h2s <- Vas/(Val+Vas+Ve)
+    h2l <- Val/(Val+Vas+Ve)
+    h2 <- (Vas+Val)/(Val+Vas+Ve)
 
 
 
@@ -287,6 +290,8 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,r2n=NULL,Ve=NULL,u
             bt=bt,
             as=as,
             al=al,
+            as.std = as.std,
+            al.std = al.std,
             meana=meana,
             maxg=maxg,
             bt=bt,
@@ -306,8 +311,10 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,r2n=NULL,Ve=NULL,u
             mean.nl=mean.nl,
             prev=prev,
             Vas=Vas,
-            Ve=Ve,
             Val=Val,
+            Vg=Vg,
+            Ve=Ve,
+            norm.sd=norm.sd,
             Vos=Vos,
             Vol=Vol,
             h2s=h2s,
