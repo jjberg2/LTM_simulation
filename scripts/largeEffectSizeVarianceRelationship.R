@@ -28,6 +28,9 @@ my.derivs = sapply(
     }
 )
 
+cex.axis = 1.5
+cex.lab = 1.4
+
 pdf('figures/suppFigures/largeEffectSizeVarianceRelationship.pdf',width=12,height=12)
 par(mfrow=c(2,2))
 op = par(mar=c(5,5,4,4)+0.1)
