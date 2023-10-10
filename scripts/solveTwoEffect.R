@@ -1,7 +1,7 @@
 source('scripts/solveSingleEffect.R')
 
 
-solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,r2n=NULL,Ve=NULL,u,C,LL.soln=FALSE,var.ratio=NULL,equalize.observed.vars=FALSE){
+solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,last.tstar=NULL,r2n=NULL,Ve=NULL,u,C,LL.soln=FALSE,var.ratio=NULL,equalize.observed.vars=FALSE){
 
     ## bs:  asymmetry for small effects
     ## Ne:  pop size
@@ -102,13 +102,18 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,r2n=NULL,Ve=NULL,u
     deltal <- 1/(1+exp(trans.deltal))
     tstar <- soln$x[2]
 
-
+    
+    
     if(LL.soln){
 
         ## added the normal jitters because giving the solution as the initial condition led
         ## it to somehow find other pathological solutions for some reason. Confused..
         init.trans.deltal <- trans.deltal + rnorm(1,0,abs(trans.deltal)/1000)
-        new.init.tstar <- soln$x[2] + rnorm(1,0,tstar/1000)
+        if(!is.null(last.tstar)){
+          new.init.tstar <- last.tstar - abs(rnorm(1,0,tstar/1000))
+        } else{
+          new.init.tstar <- soln$x[2] + rnorm(1,0,tstar/1000)
+        }  
         init.Ll <- Ll + rnorm(1,0,Ll/1000)
         init.Ls <- Ls
         init.trans.bs <- log((1-bs)/bs)
@@ -119,7 +124,7 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,r2n=NULL,Ve=NULL,u
         soln <- nleqslv(
             x=c(init.trans.deltal,new.init.tstar,init.Ll,init.trans.bs,init.Ls),
             fn=function(X){
-                ## recover()
+                #recover()
                 j <- j+1
                 ## inputs
                 deltal <- 1/(1+exp(X[1]))
@@ -186,7 +191,7 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,r2n=NULL,Ve=NULL,u
 
         ys <- log((1+bs)/(1-bs))
         ft <- ys*(4*Ne*C)^-1 #originally ys*(2*Ne*C)^-1
-
+        
         ## get small effect additive genetic variance
         Vas <- 8*Ne*u*Ls*as^2*bs/ys  #originally 4*Ne*u*Ls*as^2*bs/ys
         if(is.null(Ve))
@@ -200,7 +205,11 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,r2n=NULL,Ve=NULL,u
     deltas <- as*ft
     mean.nl <- 2*Ll*u/(deltal*C)
     Val <- 2*al^2*mean.nl
-    Vt <- Vas + Ve + Val
+    Vg <- Vas + Val
+    Vt <- Vg + Ve
+    as.std  <- as / sqrt( Vt )
+    al.std  <- al / sqrt( Vt )
+    ft.std <- ft * sqrt ( Vt )
 
     ## risk scale variances
     Vos <- Vas*ft^2
@@ -246,9 +255,9 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,r2n=NULL,Ve=NULL,u
 
 
     ## heritabilies on liability scale
-    h2s <- Vas/(Val+Vas/r2n)
-    h2l <- Val/(Val+Vas/r2n)
-    h2 <- (Vas+Val)/(Val+Vas/r2n)
+    h2s <- Vas/(Val+Vas+Ve)
+    h2l <- Val/(Val+Vas+Ve)
+    h2 <- (Vas+Val)/(Val+Vas+Ve)
 
 
 
@@ -282,11 +291,14 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,r2n=NULL,Ve=NULL,u
         list(
             soln=soln,
             ft=ft,
+            ft.std=ft.std,
             phit=phit,
             bs=bs,
             bt=bt,
             as=as,
             al=al,
+            as.std = as.std,
+            al.std = al.std,
             meana=meana,
             maxg=maxg,
             bt=bt,
@@ -306,8 +318,10 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,r2n=NULL,Ve=NULL,u
             mean.nl=mean.nl,
             prev=prev,
             Vas=Vas,
-            Ve=Ve,
             Val=Val,
+            Vg=Vg,
+            Ve=Ve,
+            norm.sd=norm.sd,
             Vos=Vos,
             Vol=Vol,
             h2s=h2s,
@@ -337,6 +351,71 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,r2n=NULL,Ve=NULL,u
         )
     )
 }
+
+makeOutput = function(soln) {
+  output = numeric()
+  output['as'] <- soln$as  ## small effect size
+  output['as.std'] <-
+    soln$as.std  ## standardized small effect size
+  output['al.std'] <-
+    soln$al.std  ## standardized large effect size
+  output['phit'] <-
+    soln$phit  ## normal equivalent standardized density
+  output['ft'] <-
+    soln$ft  ## raw density
+  output['ft.std'] <-
+    soln$ft.std  ## raw density
+  output['ys'] <-
+    soln$ys  ## small scaled selection coefficient
+  output['yl'] <-
+    soln$yl  ## large scaled selection coefficient
+  output['Ls'] <- soln$Ls  ## numer of small effect loci
+  output['bs'] <- soln$bs  ## b for small effect loci
+  output['rhos'] <-
+    1 / 2 - output['bs'] / 2  ## rho for small effect loci
+  output['al'] <- soln$al  ## large effect size
+  output['Ll'] <-
+    round(soln$Ll, 0)  ## numer of large effect loci
+  output['bl'] <- 1              ## b for large effect loci
+  output['rhol'] <- 0            ## rho for large effect loci
+  output['bt'] <- soln$bt  ## total b
+  output['rhot'] <-  1 / 2 - soln$bt / 2  ## total rho
+  
+  output['Ne'] <- soln$Ne  ## population size
+  output['u'] <- soln$u    ## mutation rate
+  output['C'] <- soln$C    ## cost of disease
+  output['Ve'] <- soln$Ve  ## environmental variance
+  output['Vg'] <- soln$Vg  ## environmental variance
+  output['norm.sd'] <- soln$norm.sd  ## environmental variance
+  output['h2s'] <-
+    soln$h2s  ## small effect h2 on liability scale
+  output['h2l'] <-
+    soln$h2l  ## large effect h2 on liability scale
+  output['h2'] <- output['h2s'] + output['h2l']
+  output['h2os'] <-
+    soln$h2os  ## small effect h2 on liability scale
+  output['h2ol'] <-
+    soln$h2ol  ## large effect h2 on liability scale
+  output['prev'] <- soln$prev ## prevalence
+  output['deltas'] <- soln$deltas ## risk small effect
+  output['deltal'] <- soln$deltal ## risk small effect
+  output['maxG'] <-
+    2 * output['Ls'] * output['as'] + 2 * output['Ll'] * output['al']
+  output['bigU_small']  <-
+    2 * output['Ls'] * u * output['as'] * output['bs']
+  output['bigU_large']  <-
+    2 * output['Ll'] * u * output['al']
+  output['bigU'] <- output['maxG'] * u * my.bt
+  output['thr'] <-
+    2 * output['rhos'] * output['Ls'] * output['as'] + 1
+  output['mean.nl'] <-
+    soln$mean.nl  ## average number of large effect alleles per individual
+  output['tstar'] <-
+    soln$tstar  ## threshold distance in standardized units
+  return(output)
+}
+
+
 
 
 

@@ -19,7 +19,7 @@ params_table = pd.read_csv(input_table_prevInsens, delim_whitespace=True)
 ## global parameter ( doesn't change) 
 cyc = 200
 sampleInt = 50
-nreps = 10
+nreps = 20
 toyRun = 0
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
@@ -83,26 +83,6 @@ rule allPrevInsensitiivty:
      "twoEffectPrevInsensitivityResultsTable.Rdata"
   shell:
     """Rscript scripts/collateTwoEffectResults.R {input} {params.path} {output}"""
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     

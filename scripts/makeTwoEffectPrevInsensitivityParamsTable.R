@@ -1,36 +1,45 @@
 source('scripts/solveTwoEffect.R')
 
+
 recover.flag <- FALSE
 
 ## params
 L.init <- 1e7
 Lmeana <- 1e7
-Ne <- 5e2
+Ne <- 3e3
 u <- 1e-8
-as <- 1
-C <- 0.1
-r2n <- 1/2
+as <- 1 
+C <- 1
+Ve <- 385
+##r2n <- 1/2
 theta <- 4*Ne*u
 
 
 
-my.bt <- 0.4
-my.als <- exp(seq(log(12),log(100),length.out=1000))
+my.bt <- 0.8
+my.als <- exp(seq(log(12),log(130),length.out=1000))
 
 last.Ll <- numeric()
 last.Ll[1] <- 90000
 last.bs <- numeric()
-last.bs[1] <- 0.32
+last.bs[1] <- 0.42
 last.Ls <- numeric()
 last.Ls[1] <- L.init - last.Ll
 
-my.cols <- c('as','Ls','bs','rhos','al','Ll','bl','rhol','bt','rhot','Ne','u','C','Ve','h2s','h2l','prev')
-output <- data.frame(matrix(ncol = length(my.cols), nrow = 0))
-colnames(output) <- my.cols
+# my.cols <- c('as','Ls','bs','rhos','al','Ll','bl','rhol','bt','rhot','Ne','u','C','Ve','h2s','h2l','prev')
+# output <- data.frame(matrix(ncol = length(my.cols), nrow = 0))
+# colnames(output) <- my.cols
 
 solns <- list()
+tmp.output <- list()
 for( i in seq_along(my.als)){
-
+    
+    if(i == 1){
+      last.tstar = NULL
+    } else{
+      last.tstar = tmp.output[[i-1]]['tstar']
+    }
+  
     solns[[i]] <- solveTwoEffect(
         bs=last.bs[i],
         bt=my.bt,
@@ -40,62 +49,41 @@ for( i in seq_along(my.als)){
         as=as,
         al=my.als[i],
         L.init=L.init,
-        r2n=r2n,
+        last.tstar=NULL,
+        r2n=NULL,
         Lmeana=Lmeana,
-        Ve=NULL,
+        Ve=Ve,
         u=u,
         C=C,
         LL.soln=TRUE,
-        var.ratio=1,
+        var.ratio=4,
         equalize.observed.vars=TRUE
     )
 
-    output[i,'as'] <- solns[[i]]$as  ## small effect size
-    output[i,'Ls'] <- solns[[i]]$Ls  ## numer of small effect loci
-    output[i,'bs'] <- solns[[i]]$bs  ## b for small effect loci
-    output[i,'rhos'] <- 1/2-output[i,'bs']/2  ## rho for small effect loci
-    output[i,'al'] <- solns[[i]]$al  ## large effect size
-    output[i,'Ll'] <- round(solns[[i]]$Ll,0)  ## numer of large effect loci
-    output[i,'bl'] <- 1              ## b for large effect loci
-    output[i,'rhol'] <- 0            ## rho for large effect loci
-    output[i,'bt'] <- solns[[i]]$bt  ## total b
-    output[i,'rhot'] <-  1/2 - solns[[i]]$bt/2  ## total rho
+    tmp.output[[i]] <- makeOutput(solns[[i]]) 
 
-    output[i,'Ne'] <- solns[[i]]$Ne  ## population size
-    output[i,'u'] <- solns[[i]]$u    ## mutation rate
-    output[i,'C'] <- solns[[i]]$C    ## cost of disease
-    output[i,'Ve'] <- solns[[i]]$Ve  ## environmental variance
-    output[i,'h2s'] <- solns[[i]]$h2s  ## small effect h2 on liability scale
-    output[i,'h2l'] <- solns[[i]]$h2l  ## large effect h2 on liability scale
-    output[i,'h2os'] <- solns[[i]]$h2os  ## small effect h2 on liability scale
-    output[i,'h2ol'] <- solns[[i]]$h2ol  ## large effect h2 on liability scale
-    output[i,'prev'] <- solns[[i]]$prev ## prevalence
-    output[i,'deltas'] <- solns[[i]]$deltas ## risk small effect
-    output[i,'deltal'] <- solns[[i]]$deltal ## risk small effect
-    output[i,'maxG'] <- 2*output[i,'Ls']* output[i,'as'] + 2*output[i,'Ll']* output[i,'al']
-    output[i,'bigU'] <- output[i,'maxG']*u*my.bt
-    output[i,'thr'] <- 2*output[i,'rhos']*output[i,'Ls']*output[i,'as'] + 1
-
-
-    last.Ls[i+1] <- output[i,'Ls']
-    last.Ll[i+1] <- output[i,'Ll']
-    last.bs[i+1] <- output[i,'bs']
+    last.Ls[i+1] <- tmp.output[[i]]['Ls']
+    last.Ll[i+1] <- tmp.output[[i]]['Ll']
+    last.bs[i+1] <- tmp.output[[i]]['bs']
     if(i %% 10 == 0) print(i)
 }
+output <- as.data.frame(do.call(rbind,tmp.output))
 
 
-targets <- seq(head(output$deltal,1),tail(output$deltal,1),length.out=100)
+keep1 = which(output$deltal < 100/(4*Ne*C))
+targets <- seq(100/(4*Ne*C),tail(output$deltal,1),length.out=100)
 keep <- list()
 for(i in seq_along(targets)){
     keep[[i]] <- which.min(abs(targets[i] - output$deltal))
 }
-these.ones <- unlist(keep)
+these.ones <- sort(unique(c(unlist(keep),keep1)))
 
-my.gamma <- log((1+my.bt)/(1-my.bt))
-env.sd <- sqrt(theta*Lmeana*my.bt/my.gamma*(1-r2n)/r2n)
-U <- 2*Lmeana*u
-BigGamma <- 4*Ne*C
-norm.prev <- eqNormPrev(U*my.bt,BigGamma,my.gamma,r2n)
+norm.Vg <- 4*N*L.init*u*my.bt / log((1+my.bt/(1-my.bt)))
+h2 <- norm.Vg / (norm.Vg + Ve)
+norm.astd <- h2 / norm.Vg
+norm.dens <- 2*L.init*u*my.bt*norm.astd / (h2*C) 
+1-pnorm(dnorminv(norm.dens))
+
 
 written.output <- output[these.ones,]
 
