@@ -78,9 +78,12 @@ for(i in seq_along(targets)){
 }
 these.ones <- sort(unique(c(unlist(keep),keep1)))
 
+
+norm.ft <- 1/(4*N*C)*log((1+my.bt/(1-my.bt)))
 norm.Vg <- 4*N*L.init*u*my.bt / log((1+my.bt/(1-my.bt)))
-h2 <- norm.Vg / (norm.Vg + Ve)
-norm.astd <- h2 / norm.Vg
+norm.Vt <- norm.Vg + Ve
+h2 <- norm.Vg / norm.Vt
+norm.astd <- 1 / sqrt ( norm.Vt )
 norm.dens <- 2*L.init*u*my.bt*norm.astd / (h2*C) 
 1-pnorm(dnorminv(norm.dens))
 
