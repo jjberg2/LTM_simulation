@@ -2,11 +2,13 @@ library("MetBrewer")
 library('numDeriv')
 prevs = c(0.03,0.01,0.003,0.001)
 thr = sapply(prevs, function(PREV) qnorm(1-PREV))
-max.a = thr + max(thr)
+phits = dnorm(thr)
+max.a = 5
 min.a = rep(0.001,4)
 my.a = mapply(function(MAXA,MINA) seq(MINA,MAXA,length.out=1000), MINA = min.a, MAXA = max.a,SIMPLIFY = FALSE)
 N = 3000
 cost = 1
+four.cols = met.brewer('Hiroshige',4)[c(1,3,2,4)]
 
 
 bgamma = function(gamma) {
@@ -20,12 +22,17 @@ sigmaa = function(a,thr,nc){
     del = normDel(a,thr)
     a^2 * bgamma(4*nc*del) / (2*nc*del)
 }
+sigmaaSmall = function(a,thr,nc){
+    approxDel = a*dnorm(thr)
+    a^2 * bgamma(4*nc*approxDel) / (2*nc*approxDel)
+}
 sigmaa2 = function(a,del,nc){
   a^2 * bgamma(4*nc*del) / (2*nc*del)
 }
 
 my.del = mapply( function(THR,A) normDel(A,THR), THR = thr, A = my.a)
-my.vars = mapply(function(THR,A) sigmaa(A,THR,N*cost), THR = thr, A = my.a)
+## my.vars = mapply(function(THR,A) sigmaa(A,THR,N*cost), THR = thr, A = my.a)
+
 # my.derivs = list()
 # for( j in 1:length(thr)){
 #     my.derivs[[j]] = matrix(nrow=length(my.a[[j]]),ncol=2)
@@ -39,7 +46,7 @@ my.vars = mapply(function(THR,A) sigmaa(A,THR,N*cost), THR = thr, A = my.a)
 
 
 cex.lab = 1.4
-pdf('figures/suppFigures/largeEffectSizeVarianceRelationship1.pdf',width=12,height=12)
+pdf('figures/suppFigures/largeEffectSizeVarianceRelationship.pdf',width=12,height=12)
 par(mfrow=c(2,2))
 op = par(mar=c(5,5,4,4)+0.1)
 
@@ -56,8 +63,17 @@ for(i in 1:length(my.a)){
     lines(
         my.a[[i]],
         my.del[,i],
-        lty = i
+        lty = 1,
+        lwd = 2,
+        col = four.cols[i]
     )
+    lines(
+        my.a[[i]],
+        my.a[[i]]*phits[i],
+        lty = 2 ,
+        lwd = 1/2,
+        col = four.cols[i]
+        )
 }
 mtext(
     text=expression(paste('Standardized effect size (', alpha[std] ,')',sep='')),
@@ -80,9 +96,21 @@ legend(
     x = -0.1,
     y = 0.9,
     legend = prevs,
-    lty = 1:4,
+    lty = 1,
+    lwd = 2,
+    col = four.cols,
     bty = 'n'
 )
+legend(
+    x = -0.1,
+    y = 0.66,
+    legend = c('Normal', 'Small effect approx'),
+    lty = c(1,2),
+    lwd = c(2,1/2),
+    col = 1,
+    bty = 'n'
+)
+
 
 
 my.costs <- c(1, 2 / 3, 1 / 3)
@@ -91,6 +119,10 @@ for (j in 1:length(my.costs)) {
     sigmaa(A, THR, N * my.costs[j]),
     THR = thr,
     A = my.a)
+  small.approx.vars = mapply(function(THR,A)
+      sigmaaSmall(A, THR, N * my.costs[j]),
+      THR = thr,
+      A = my.a)
   ##2
   if(j%in%c(1,3)) {
      par(op)
@@ -107,8 +139,15 @@ for (j in 1:length(my.costs)) {
   )
   for (i in 1:length(my.a)) {
     lines(my.a[[i]],
+          small.approx.vars[,i],
+          lty = 2,
+          lwd = 1/2,
+          col = four.cols[i])
+      lines(my.a[[i]],
           my.vars[, i],
-          lty = i)
+          lty = 1,
+          lwd = 2,
+          col = four.cols[i])
   }
   mtext(
     text = expression(paste(
@@ -145,141 +184,145 @@ for (j in 1:length(my.costs)) {
 dev.off()
 
 
-## second normal figure
-four.costs <- seq(0.1, 1, length.out = 4)
-init.prev = 0.001
-thr = rep(qnorm(1 - init.prev),4)
-##thr <- dnorminv(dnorm(init.thr) / four.costs)
-##prevs <- 1 - pnorm(thr)
-max.a = thr + max(thr)
-min.a = rep(0.001, 4)
-my.a = mapply(
-  function(MAXA, MINA)
-    seq(MINA, MAXA, length.out = 1000),
-  MINA = min.a,
-  MAXA = max.a,
-  SIMPLIFY = FALSE
-)
-my.vars.four.costs001 = mapply(
-  function(THR, A, COST)
-    sigmaa(A, THR, N * COST),
-  THR = thr,
-  A = my.a,
-  COST = four.costs,
-  SIMPLIFY = FALSE
-)
 
 
-cex.lab = 1.4
-pdf('figures/suppFigures/largeEffectSizeVarianceRelationship2.pdf',width=12,height=6)
-par(mfrow=c(1,2))
-op = par(mar=c(5,5,4,4)+0.1)
-plot(
-  NA,
-  xlim = c(0,max(max.a)),
-  ylim = c(0,0.12),
-  type = 'l',
-  xlab ='',
-  ylab =''
-)
-j=1
-for(i in 1:length(my.a)){
-  lines(
-    my.a[[i]],
-    my.vars.four.costs001[[i]],
-    lty = i
-  )
-}
-mtext(
-  text=expression(paste('Standardized effect size (', alpha[std] ,')',sep='')),
-  side=1,
-  line=3,
-  cex=cex.lab
-)
-mtext(
-  text = 'Liability scale contribution to variance',
-  side = 2,
-  line = 3.75,
-  cex = cex.lab
-)
-mtext(
-  text = expression(alpha ^ 2 * b(alpha) / (2 * N * delta[R](alpha) * C)),
-  side = 2,
-  line = 2,
-  cex = cex.lab
-)
-mtext(
-  text = "Prevalence = 0.001",
-  side = 3,
-  line = 1,
-  cex = cex.lab
-)
 
 
-par(op)
-init.prev = 0.01
-thr = rep(qnorm(1 - init.prev),4)
-my.vars.four.costs01 = mapply(
-  function(THR, A, COST)
-    sigmaa(A, THR, N * COST),
-  THR = thr,
-  A = my.a,
-  COST = four.costs,
-  SIMPLIFY = FALSE
-)
-plot(
-  NA,
-  xlim = c(0,max(max.a)),
-  ylim = c(0,0.12),
-  type = 'l',
-  xlab ='',
-  ylab =''
-)
-j=1
-for(i in 1:length(my.a)){
-  lines(
-    my.a[[i]],
-    my.vars.four.costs01[[i]],
-    lty = i
-  )
-}
-mtext(
-  text=expression(paste('Standardized effect size (', alpha[std] ,')',sep='')),
-  side=1,
-  line=3,
-  cex=cex.lab
-)
-mtext(
-  text = 'Liability scale contribution to variance',
-  side = 2,
-  line = 3.75,
-  cex = cex.lab
-)
-mtext(
-  text = expression(alpha ^ 2 * b(alpha) / (2 * N * delta[R](alpha) * C)),
-  side = 2,
-  line = 2,
-  cex = cex.lab
-)
-text(
-  x = 0.8,
-  y = 0.12,
-  labels = 'Fitness cost'
-)
-legend(
-  x = -0.1,
-  y = 0.12,
-  legend = four.costs,
-  lty = 1:4,
-  bty = 'n'
-)
-mtext(
-  text = "Prevalence = 0.01",
-  side = 3,
-  line = 1,
-  cex = cex.lab
-)
-dev.off()
+## ## second normal figure
+## four.costs <- seq(0.1, 1, length.out = 4)
+## init.prev = 0.001
+## thr = rep(qnorm(1 - init.prev),4)
+## ##thr <- dnorminv(dnorm(init.thr) / four.costs)
+## ##prevs <- 1 - pnorm(thr)
+## max.a = thr + max(thr)
+## min.a = rep(0.001, 4)
+## my.a = mapply(
+##   function(MAXA, MINA)
+##     seq(MINA, MAXA, length.out = 1000),
+##   MINA = min.a,
+##   MAXA = max.a,
+##   SIMPLIFY = FALSE
+## )
+## my.vars.four.costs001 = mapply(
+##   function(THR, A, COST)
+##     sigmaa(A, THR, N * COST),
+##   THR = thr,
+##   A = my.a,
+##   COST = four.costs,
+##   SIMPLIFY = FALSE
+## )
+
+
+## cex.lab = 1.4
+## pdf('figures/suppFigures/largeEffectSizeVarianceRelationship2.pdf',width=12,height=6)
+## par(mfrow=c(1,2))
+## op = par(mar=c(5,5,4,4)+0.1)
+## plot(
+##   NA,
+##   xlim = c(0,max(max.a)),
+##   ylim = c(0,0.12),
+##   type = 'l',
+##   xlab ='',
+##   ylab =''
+## )
+## j=1
+## for(i in 1:length(my.a)){
+##   lines(
+##     my.a[[i]],
+##     my.vars.four.costs001[[i]],
+##     lty = i
+##   )
+## }
+## mtext(
+##   text=expression(paste('Standardized effect size (', alpha[std] ,')',sep='')),
+##   side=1,
+##   line=3,
+##   cex=cex.lab
+## )
+## mtext(
+##   text = 'Liability scale contribution to variance',
+##   side = 2,
+##   line = 3.75,
+##   cex = cex.lab
+## )
+## mtext(
+##   text = expression(alpha ^ 2 * b(alpha) / (2 * N * delta[R](alpha) * C)),
+##   side = 2,
+##   line = 2,
+##   cex = cex.lab
+## )
+## mtext(
+##   text = "Prevalence = 0.001",
+##   side = 3,
+##   line = 1,
+##   cex = cex.lab
+## )
+
+
+## par(op)
+## init.prev = 0.01
+## thr = rep(qnorm(1 - init.prev),4)
+## my.vars.four.costs01 = mapply(
+##   function(THR, A, COST)
+##     sigmaa(A, THR, N * COST),
+##   THR = thr,
+##   A = my.a,
+##   COST = four.costs,
+##   SIMPLIFY = FALSE
+## )
+## plot(
+##   NA,
+##   xlim = c(0,max(max.a)),
+##   ylim = c(0,0.12),
+##   type = 'l',
+##   xlab ='',
+##   ylab =''
+## )
+## j=1
+## for(i in 1:length(my.a)){
+##   lines(
+##     my.a[[i]],
+##     my.vars.four.costs01[[i]],
+##     lty = i
+##   )
+## }
+## mtext(
+##   text=expression(paste('Standardized effect size (', alpha[std] ,')',sep='')),
+##   side=1,
+##   line=3,
+##   cex=cex.lab
+## )
+## mtext(
+##   text = 'Liability scale contribution to variance',
+##   side = 2,
+##   line = 3.75,
+##   cex = cex.lab
+## )
+## mtext(
+##   text = expression(alpha ^ 2 * b(alpha) / (2 * N * delta[R](alpha) * C)),
+##   side = 2,
+##   line = 2,
+##   cex = cex.lab
+## )
+## text(
+##   x = 0.8,
+##   y = 0.12,
+##   labels = 'Fitness cost'
+## )
+## legend(
+##   x = -0.1,
+##   y = 0.12,
+##   legend = four.costs,
+##   lty = 1:4,
+##   bty = 'n'
+## )
+## mtext(
+##   text = "Prevalence = 0.01",
+##   side = 3,
+##   line = 1,
+##   cex = cex.lab
+## )
+## dev.off()
 
 
 
@@ -391,7 +434,6 @@ for (i in 1:4) {
 
 ##prevs = new.solns$prev
 prevs = c(0.002,0.02,0.002,0.02)
-my.cols = met.brewer('Hiroshige',4)[c(1,3,2,4)]
 thr = sapply(prevs, function(PREV) qnorm(1-PREV))
 max.a = thr + max(thr)
 min.a = rep(0.001,4)
@@ -402,49 +444,11 @@ alt.vars = mapply(function(DEL,A,COST) sigmaa2(A,DEL,N*COST), DEL = alt.del, A =
 
 
 
-## plot variance contributions
-plot(
-  NA,
-  type='l',
-  xlim=c(0,6),
-  ylim=c(0,max(c(my.dists[[3]]$vars,alt.vars))),
-  col = my.cols[1],
-  lwd=2
-)
-lines(
-  my.dists[[1]]$std.alpha.seq , 
-  my.dists[[1]]$vars,
-  col = my.cols[1],
-  lwd=2
-)
-lines(
-  my.dists[[2]]$std.alpha.seq,
-  my.dists[[2]]$vars,
-  col = my.cols[2],
-  lwd=2
-)
-lines(
-  my.dists[[3]]$std.alpha.seq,
-  my.dists[[3]]$vars,
-  col = my.cols[3],
-  lwd=2
-)
-lines(
-  my.dists[[4]]$std.alpha.seq,
-  my.dists[[4]]$vars,
-  col = my.cols[4],
-  lwd=2
-)
-for( i in 1:ncol(alt.vars)){
-  lines(
-    x = my.a[[i]],
-    y = alt.vars[,i],
-    col = my.cols[i],
-    lwd = 2,
-    lty = 2
-  )
-}
 
+
+pdf('figures/suppFigures/largeEffectSizeVarianceRelationshipPoisson.pdf',width=12,height=12)
+par(mfrow=c(1,2))
+op = par(mar=c(5,5,4,4)+0.1)
 
 
 ## plot risk effects
@@ -453,31 +457,31 @@ plot(
   type='l',
   xlim=c(0,6),
   ylim=c(0,1),
-  col = my.cols[1],
+  col = four.cols[1],
   lwd=2
 )
 lines(
   my.dists[[1]]$std.alpha.seq , 
   deltals[[1]],
-  col = my.cols[1],
+  col = four.cols[1],
   lwd=2
 )
 lines(
   my.dists[[2]]$std.alpha.seq,
   deltals[[2]],
-  col = my.cols[2],
+  col = four.cols[2],
   lwd=2
 )
 lines(
   my.dists[[3]]$std.alpha.seq,
   deltals[[3]],
-  col = my.cols[3],
+  col = four.cols[3],
   lwd=2
 )
 lines(
   my.dists[[4]]$std.alpha.seq,
   deltals[[4]],
-  col = my.cols[4],
+  col = four.cols[4],
   lwd=2
 )
 
@@ -486,12 +490,58 @@ for( i in 1:ncol(alt.vars)){
   lines(
     x = my.a[[i]],
     y = alt.del[[i]],
-    col = my.cols[i],
+    col = four.cols[i],
     lwd = 2,
     lty = 2
   )
 }
 
+
+par(op)
+## plot variance contributions
+plot(
+  NA,
+  type='l',
+  xlim=c(0,6),
+  ylim=c(0,max(c(my.dists[[3]]$vars,alt.vars))),
+  col = four.cols[1],
+  lwd=2
+)
+lines(
+  my.dists[[1]]$std.alpha.seq , 
+  my.dists[[1]]$vars,
+  col = four.cols[1],
+  lwd=2
+)
+lines(
+  my.dists[[2]]$std.alpha.seq,
+  my.dists[[2]]$vars,
+  col = four.cols[2],
+  lwd=2
+)
+lines(
+  my.dists[[3]]$std.alpha.seq,
+  my.dists[[3]]$vars,
+  col = four.cols[3],
+  lwd=2
+)
+lines(
+  my.dists[[4]]$std.alpha.seq,
+  my.dists[[4]]$vars,
+  col = four.cols[4],
+  lwd=2
+)
+for( i in 1:ncol(alt.vars)){
+  lines(
+    x = my.a[[i]],
+    y = alt.vars[,i],
+    col = four.cols[i],
+    lwd = 2,
+    lty = 2
+  )
+}
+
+dev.off()
 
 
 

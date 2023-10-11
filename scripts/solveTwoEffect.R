@@ -1,7 +1,6 @@
 source('scripts/solveSingleEffect.R')
 
-
-solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,last.tstar=NULL,r2n=NULL,Ve=NULL,u,C,LL.soln=FALSE,var.ratio=NULL,equalize.observed.vars=FALSE){
+solveTwoEffect <- function(bt,bs=bt,Ne,as,al,L,Ll,last.tstar=NULL,h2=NULL,Ve=NULL,u,C,LL.soln=FALSE,var.ratio=NULL,equalize.observed.vars=FALSE){
 
     ## bs:  asymmetry for small effects
     ## Ne:  pop size
@@ -23,50 +22,90 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,last.tstar=NULL,r2
     if(LL.soln)
         stopifnot(!is.null(var.ratio))
 
-    if((!is.null(r2n))&(!is.null(Ve))){
-        stop('either r2n or Ve must be NULL')
+    if((!is.null(h2))&(!is.null(Ve))){
+        stop('either h2 or Ve must be NULL')
     }
 
 
-    ## solve for ft
-    ys <- log((1+bs)/(1-bs))
-    ft <- ys*(4*Ne*C)^-1  #originally ys*(2*Ne*C)^-1
+    ## transformed params
+    Ls <- L - Ll
+    
+    ## single effect solution
+    single.norm.y <- log((1+bt/(1-bt)))
+    single.norm.ft <- 1/(4*Ne*C)*single.norm.y
+    single.norm.Vg <- 8*Ne*L*u*bt / log((1+bt/(1-bt)))
+    if(is.null(Ve)){
+        norm.Vt <- single.norm.Vg / h2
+    } else {
+        norm.Vt <- single.norm.Vg + Ve
+    }
+    std.dev.tot <- sqrt ( norm.Vt )
+    single.norm.a.std <- 1 / std.dev.tot
+    single.norm.dens <- 2*L*u*my.bt*single.norm.a.std / (h2*C)
+    single.norm.std.thr <- dnorminv(single.norm.dens)
+    single.norm.prev <- 1-pnorm(single.norm.std.thr)
 
-    ## get small effect additive genetic variance
-    Vas <- 8*Ne*u*L.init*as^2*bs/ys  ## originally 4*Ne*u*Ls*as^2*bs/ys
-    if(is.null(Ve))
-        Ve <- Vas*(1-r2n)/r2n
-    norm.sd <- sqrt(Vas+Ve)
+
+    init.as.std <- single.norm.a.std
+    init.al.std <- init.as.std * al
+
+    init.deltas <- init.as.std * single.norm.dens
+    init.deltal <- pnorm(single.norm.std.thr) - pnorm(single.norm.std.thr - init.al.std)
+    
+    
+    ## ## solve for initial guess of ft
+    ## ys <- log((1+bs)/(1-bs))
+    ## ft <- ys*(4*Ne*C)^-1  #originally ys*(2*Ne*C)^-1
+
+    ## ## get small effect additive genetic variance
+    ## Vas <- 8*Ne*u*L*as^2*bs/ys  ## originally 4*Ne*u*Ls*as^2*bs/ys
+    ## if(is.null(Ve))
+    ##     Ve <- Vas*(1-r2n)/r2n
+    ## norm.sd <- sqrt(Vas+Ve)
 
     ## initial guess for deltal
-    init.deltal <- 1##al*ft
-
+    ## init.deltal <- 1##al*ft
 
 
     ## compute selection coefficient
     init.sl <- init.deltal*C
     init.yl <- 4*Ne*init.sl  #originally 2*Ne*init.sl
-
+    
+    
     if(init.yl<3)
         warning('initial scaled selection coefficient is too small')
 
+    
+    
 
     ## mean number of large effect alleles per individual
     init.mean.nl <- 2*Ll*u/init.sl
 
-    ## solve for tstart conditional on initial guess of deltal
+    init.Vas <- 8*Ne*u*Ls*init.as.std^2*bs/single.norm.y  
+    init.Val <- init.al.std^2*init.mean.nl
 
+
+    ## rescale to achieve desired heritability
+    init.Vt <- (init.Vas + init.Val) / h2
+    sec.as.std <- init.as.std / sqrt( init.Vt )
+    sec.al.std <- init.al.std / sqrt( init.Vt )
+    sec.Vas <- 8*Ne*u*Ls*sec.as.std^2*bs/single.norm.y  
+    sec.Val <- sec.al.std^2*init.mean.nl
+    sec.norm.sd <- sqrt ( 1 - sec.Val )
+    sec.deltal <- pnorm(single.norm.std.thr) - pnorm(single.norm.std.thr - sec.al.std)
+    
+    
     init.soln <- uniroot(
         f=function(THR){
             ftild <- dPoisConv(
                 t=THR,
                 lambda=init.mean.nl,
-                norm.sd=norm.sd,
-                alphal=al
+                norm.sd=sec.norm.sd,
+                alphal=sec.al.std
             )
-            ft-ftild
+            single.norm.dens-ftild
         },
-        interval=c(0,12*norm.sd)
+        interval=c(0,12*sec.norm.sd)
     )
     init.tstar <- init.soln$root
 
@@ -76,27 +115,30 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,last.tstar=NULL,r2
 
     ## get 2d solution
     soln <- nleqslv(
-        x=c(0,init.tstar),
+        x=c(log((1-sec.deltal)/sec.deltal),init.tstar),
+        #x=c(0,init.tstar),
         fn=function(X){
-            deltal <- 1/(1+exp(X[1]))
-            tstar <- X[2]
+            my.deltal <- 1/(1+exp(X[1]))
+            my.tstar <- X[2]
 
-            my.s <- deltal*C
+            my.s <- my.deltal*C
             my.y <- 4*Ne*my.s ## originally 2*Ne*my.s
-            mean.nl <- 2*Ll*u/my.s
-            my.range <- seq(qpois(1e-8,mean.nl),qpois(1-1e-8,mean.nl))
-            prot <- pPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=FALSE)
-            risk <- pPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=TRUE)
-            deltal.tild <- risk - prot
-            ft.tild <- dPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=FALSE)
-            Val <- 2*al*mean.nl
-            diff.one <- deltal-deltal.tild
-            diff.two <- ft-ft.tild
+            my.mean.nl <- 2*Ll*u/my.s
+            my.Val <- sec.al.std^2*my.mean.nl
+            my.norm.sd <- sqrt ( 1 - my.Val )
+            my.range <- seq(qpois(1e-8,my.mean.nl),qpois(1-1e-8,my.mean.nl))
+            my.prot <- pPoisConv(my.tstar,my.mean.nl,my.norm.sd,alphal=sec.al.std,risk.allele=FALSE)
+            my.risk <- pPoisConv(my.tstar,my.mean.nl,my.norm.sd,alphal=sec.al.std,risk.allele=TRUE)
+            my.deltal.tild <- my.risk - my.prot
+            ft.tild <- dPoisConv(my.tstar,my.mean.nl,my.norm.sd,alphal=sec.al.std,risk.allele=FALSE)
+            ##Val <- 2*sec.al.std^2*my.mean.nl
+            diff.one <- my.deltal-my.deltal.tild
+            diff.two <- single.norm.dens-ft.tild
             ##diff.three <- Val-Vas
-            ##diff.three <- 4*al^2*mean.nl - Vas*h2l/(1-h2l)
+            ##diff.three <- 4*al^2*my.mean.nl - Vas*h2l/(1-h2l)
             c(diff.one,diff.two)
         },
-        control=list(scalex=c(1,1/init.tstar),maxit=400)
+        control=list(scalex=c(1,1),maxit=400)
     )
     trans.deltal <- soln$x[1]
     deltal <- 1/(1+exp(trans.deltal))
@@ -108,13 +150,14 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,last.tstar=NULL,r2
 
         ## added the normal jitters because giving the solution as the initial condition led
         ## it to somehow find other pathological solutions for some reason. Confused..
-        init.trans.deltal <- trans.deltal + rnorm(1,0,abs(trans.deltal)/1000)
-        if(!is.null(last.tstar)){
-          new.init.tstar <- last.tstar - abs(rnorm(1,0,tstar/1000))
-        } else{
-          new.init.tstar <- soln$x[2] + rnorm(1,0,tstar/1000)
-        }  
-        init.Ll <- Ll + rnorm(1,0,Ll/1000)
+        init.trans.deltal <- trans.deltal## + rnorm(1,0,abs(trans.deltal)/1000)
+        ## if(!is.null(last.tstar)){
+        ##   new.init.tstar <- last.tstar - abs(rnorm(1,0,tstar/1000))
+        ## } else{
+        ##   new.init.tstar <- soln$x[2] + rnorm(1,0,tstar/1000)
+        ## }
+        new.init.tstar <- tstar
+        init.Ll <- Ll## + rnorm(1,0,Ll/1000)
         init.Ls <- Ls
         init.trans.bs <- log((1-bs)/bs)
 
@@ -122,64 +165,78 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,last.tstar=NULL,r2
         j <- 1
         ## get 4d solution
         soln <- nleqslv(
-            x=c(init.trans.deltal,new.init.tstar,init.Ll,init.trans.bs,init.Ls),
+            x=c(init.trans.deltal,new.init.tstar,init.Ll,init.trans.bs),
             fn=function(X){
                 #recover()
                 j <- j+1
                 ## inputs
-                deltal <- 1/(1+exp(X[1]))
-                tstar <- X[2]
-                Ll <- X[3]
+                my.deltal <- 1/(1+exp(X[1]))
+                my.tstar <- X[2]
+                my.Ll <- X[3]
                 ##Ls <- L-Ll
-                bs <- 1/(1+exp(X[4]))
-                Ls <- X[5]
-                L  <- Ll + Ls
-
-                ## small effect stuff
-                ys <- log((1+bs)/(1-bs))
-                Vas <- 8*Ne*u*Ls*as^2*bs/ys # originall 4*Ne*u*Ls*as^2*bs/ys
-                if(is.null(Ve))
-                    Ve <- Vas*(1-r2n)/r2n
-                norm.sd <- sqrt(Vas + Ve)
-
-                ## large effect stuff
-                my.s <- deltal*C
+                my.bs <- 1/(1+exp(X[4]))
+                my.Ls <- L - my.Ll
+                ##my.L  <- my.Ll + my.Ls
+                
+                ## unscaled small effect stuff
+                my.ys <- log((1+bs)/(1-bs))
+                my.raw.Vas <- 8*Ne*u*my.Ls*as^2*my.bs/my.ys # originall 4*Ne*u*Ls*as^2*bs/ys
+                
+                
+                ## raw large effect stuff
+                my.s <- my.deltal*C
                 my.y <- 4*Ne*my.s #originally 2*Ne*my.s
-                mean.nl <- 2*Ll*u/my.s
-                my.range <- seq(qpois(1e-8,mean.nl),qpois(1-1e-8,mean.nl))
-                prot <- pPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=FALSE)
-                risk <- pPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=TRUE)
+                my.mean.nl <- 2*my.Ll*u/my.s
+                my.raw.Val <- al^2*my.mean.nl
 
+                ## get total variance in original units
+                my.raw.Vt <- (my.raw.Vas + my.raw.Val) / h2
+
+                ## standardized effects
+                my.std.as <- as / sqrt ( my.raw.Vt )
+                my.std.al <- al / sqrt ( my.raw.Vt )
+
+                ## standardize variances
+                my.std.Vas <- my.raw.Vas / my.raw.Vt
+                my.std.Val <- my.raw.Val / my.raw.Vt
+                my.std.norm.sd <- sqrt(1 - h2 + my.std.Vas)
+
+                ## standardized thr dens
+                my.ft <- my.ys/(4*Ne*C*my.std.as)
+                
+                my.range <- seq(qpois(1e-8,my.mean.nl),qpois(1-1e-8,my.mean.nl))
+                my.prot <- pPoisConv(my.tstar,my.mean.nl,my.std.norm.sd,alphal=my.std.al,risk.allele=FALSE)
+                my.risk <- pPoisConv(my.tstar,my.mean.nl,my.std.norm.sd,alphal=my.std.al,risk.allele=TRUE)
+                
                 ## global stuff
-                meana <- (as*Ls + al*Ll)/L
-                maxg <- 2*meana*L
-                prev <- as.numeric(pPoisConv(tstar,mean.nl,sqrt(Vas+Ve),alphal=al))
-                risk.var <- (prev*(1-prev))
+                my.meana <- (my.std.as*my.Ls + my.std.al*my.Ll)/L
+                my.maxg <- 2*my.meana*L
+                my.prev <- as.numeric(pPoisConv(my.tstar,my.mean.nl,my.std.norm.sd,alphal=my.std.al))
+                my.risk.var <- (my.prev*(1-my.prev))
 
                 ## differences
-                deltal.tild <- risk - prot
-                diff.one <- deltal-deltal.tild
+                my.deltal.tild <- my.risk - my.prot
+                diff.one <- my.deltal - my.deltal.tild
 
-                ft.tild <- dPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=FALSE)
-                diff.two <- ft-ft.tild
+                my.ft.tild <- dPoisConv(my.tstar,my.mean.nl,my.std.norm.sd,alphal=my.std.al,risk.allele=FALSE)
+                diff.two <- my.ft-my.ft.tild
 
                 if(equalize.observed.vars){
-                    Vol <- 2*deltal^2*mean.nl
-                    Vos <- Vas*ft^2
-                    diff.three <- (Vol-var.ratio*Vos)/risk.var
+                    my.Vol <- my.deltal^2*my.mean.nl
+                    my.Vos <- my.std.Vas*my.ft^2
+                    diff.three <- (my.Vol-var.ratio*my.Vos)/my.risk.var
                 } else {
-                    Val <- 2*al^2*mean.nl
-                    diff.three <- Val-var.ratio*Vas
+                    diff.three <- my.std.Val-var.ratio*my.std.Vas
                 }
 
-                bt.tild <- (2*Ls*bs*as + 2*Ll*1*al)/(maxg)
+                bt.tild <- (2*my.Ls*my.bs*my.std.as + 2*my.Ll*1*my.std.al)/(my.maxg)
                 diff.four <- bt - bt.tild
 
-                diff.five <- L*meana - Lmeana
+                ##diff.five <- my.L*my.meana - Lmeana
 
-                return(c(diff.one,diff.two,diff.three,diff.four,diff.five))
+                return(c(diff.one,diff.two,diff.three,diff.four))
             },
-            control=list(scalex=c(1,1/new.init.tstar,1/init.Ll,1,1/init.Ls),maxit=800,allowSingular=FALSE)
+            control=list(scalex=c(1,1/new.init.tstar,1/init.Ll,1),maxit=800,allowSingular=FALSE)
         )
         if(recover.flag) recover()
         trans.deltal <- soln$x[1]
@@ -187,50 +244,52 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,last.tstar=NULL,r2
         tstar <- soln$x[2]
         Ll <- soln$x[3]
         bs <- 1/(1+exp(soln$x[4]))
-        Ls <- soln$x[5]
-
+        Ls <- L - Ll
         ys <- log((1+bs)/(1-bs))
-        ft <- ys*(4*Ne*C)^-1 #originally ys*(2*Ne*C)^-1
-        
-        ## get small effect additive genetic variance
-        Vas <- 8*Ne*u*Ls*as^2*bs/ys  #originally 4*Ne*u*Ls*as^2*bs/ys
-        if(is.null(Ve))
-            Ve <- Vas*(1-r2n)/r2n
-        norm.sd <- sqrt(Vas+Ve)
-
     }
 
-    L <- Ls+Ll
-    meana <- (as*Ls + al*Ll)/L
-    deltas <- as*ft
+    ##    L <- Ls+Ll
+    ##    meana <- (as*Ls + al*Ll)/L
+    raw.Vas <- 8*Ne*u*Ls*as^2*bs/ys # originall 4*Ne*u*Ls*as^2*bs/ys
     mean.nl <- 2*Ll*u/(deltal*C)
-    Val <- 2*al^2*mean.nl
-    Vg <- Vas + Val
-    Vt <- Vg + Ve
-    as.std  <- as / sqrt( Vt )
-    al.std  <- al / sqrt( Vt )
-    ft.std <- ft * sqrt ( Vt )
+    raw.Val <- al^2*mean.nl
+    raw.Vt <- (raw.Vas + raw.Val) / h2
+    std.as <- as / sqrt ( raw.Vt )
+    std.al <- al / sqrt ( raw.Vt )
+    std.Vas <- raw.Vas / raw.Vt
+    std.Val <- raw.Val / raw.Vt
+    
+    ## Val <- 2*al^2*mean.nl
+    ft <- ys / (4*Ne*C)
+    std.ft <- ys / (4*Ne*C*std.as)
+    deltas <- std.as*std.ft
+    std.Vg <- std.Vas + std.Val
+    norm.Va <- 1 - h2 + std.Vas
+    norm.sd <- sqrt(norm.Va)
+    ## as.std  <- as / sqrt( Vt )
+    ## al.std  <- al / sqrt( Vt )
+    ## ft.std <- ft * sqrt ( Vt )
 
     ## risk scale variances
-    Vos <- Vas*ft^2
-    Vol <- 2*deltal^2*mean.nl
+    Vos <- std.Vas*std.ft^2
+    Vol <- deltal^2*mean.nl
     Vrg <- Vos + Vol
 
     ## bulk stuff
-    prev <- as.numeric(pPoisConv(tstar,mean.nl,sqrt(Vas+Ve),alphal=al))
+    prev <- as.numeric(pPoisConv(tstar,mean.nl,norm.sd,alphal=std.al))
     my.range <- seq(qpois(1e-8,mean.nl),qpois(1-1e-8,mean.nl))
     ldens <- dpois(my.range,mean.nl) ## density on large effect liability
-    pdil <- pnorm(tstar, al*my.range,norm.sd,lower.tail=FALSE) ## prev among inds with i large effect alleles
+    pdil <- pnorm(tstar, std.al*my.range,norm.sd,lower.tail=FALSE) ## prev among inds with i large effect alleles
     pidl <- ldens*pdil/prev ## density on number of large effect alleles conditional on having disease
 
 
     ## does mut-sel balance actually hold??
-    mutl <- 2*Ll*al*u
-    muts <- 2*Ls*as*u*bs
+    mutl <- 2*Ll*std.al*u
+    muts <- 2*Ls*std.as*u*bs
     mutall <- muts+mutl
 
-    sell <- mean.nl*al*deltal*C
-    sels <- Vas*ft*C
+    sell <- mean.nl*std.al*deltal*C
+    sels <- std.Vas*std.ft*C
     selall <- sell+sels
     stopifnot(abs((mutall-selall)/(mutall+selall))<1e-8)
 
@@ -238,27 +297,25 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,last.tstar=NULL,r2
     tol <- 1e-5
     min.gl <- uniroot(
         function(X)
-            tol-(1-pPoisConv(X,mean.nl,norm.sd,alphal=al)),
+            tol-(1-pPoisConv(X,mean.nl,norm.sd,alphal=std.al)),
         interval=c(-10*tstar,10*tstar)
     )$root
     max.gl <- uniroot(
         function(X)
-            tol-pPoisConv(X,mean.nl,norm.sd,alphal=al),
+            tol-pPoisConv(X,mean.nl,norm.sd,alphal=std.al),
         interval=c(-10*tstar,10*tstar)
     )$root
     seq.li <- seq(min.gl,max.gl,length.out=1000)
-    li.dense <- sapply(seq.li,function(G) dPoisConv(G,mean.nl,norm.sd,alphal=al))
+    li.dense <- sapply(seq.li,function(G) dPoisConv(G,mean.nl,norm.sd,alphal=std.al))
 
 
 
 
 
-
+    ##recover()
     ## heritabilies on liability scale
-    h2s <- Vas/(Val+Vas+Ve)
-    h2l <- Val/(Val+Vas+Ve)
-    h2 <- (Vas+Val)/(Val+Vas+Ve)
-
+    h2s <- std.Vas/(std.Val+std.Vas+(1-h2))
+    h2l <- std.Val/(std.Val+std.Vas+(1-h2))
 
 
     ## liability scale h2 estimation via normal approx
@@ -272,33 +329,35 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,last.tstar=NULL,r2
     prs <- Vos/(Vos+Vol)
 
     ## naive estimates on liability scale
-    h2s.est <- h2os*risk.var/Vt*phit^-2
-    h2l.est <- h2ol*risk.var/Vt*phit^-2
-    h2all.est <- h2o*risk.var/Vt*phit^-2
+    h2s.est <- h2os*risk.var/phit^2
+    h2l.est <- h2ol*risk.var/phit^2
+    h2all.est <- h2o*risk.var/phit^2
+    
 
+    
     implied.al.norm <- deltal/phit
-    implied.al.true <- deltal/ft
+    implied.al.true <- deltal/std.ft
 
 
     ## other stuff
     #L <- Ll+Ls
 
-    meana <- (as*Ls + al*Ll)/L
+    meana <- (std.as*Ls + std.al*Ll)/L
     maxg <- 2*meana*L
-    bt <- (2*Ls*bs*as + 2*Ll*1*al)/(maxg)
+    bt <- (2*Ls*bs*std.as + 2*Ll*1*std.al)/maxg
 
     return(
         list(
             soln=soln,
             ft=ft,
-            ft.std=ft.std,
+            std.ft=std.ft,
             phit=phit,
             bs=bs,
             bt=bt,
             as=as,
             al=al,
-            as.std = as.std,
-            al.std = al.std,
+            std.as = std.as,
+            std.al = std.al,
             meana=meana,
             maxg=maxg,
             bt=bt,
@@ -317,10 +376,11 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,last.tstar=NULL,r2
             tstar=tstar,
             mean.nl=mean.nl,
             prev=prev,
-            Vas=Vas,
-            Val=Val,
-            Vg=Vg,
-            Ve=Ve,
+            single.norm.prev=single.norm.prev,
+            raw.Ve=(1-h2)*(as/std.as)^2,
+            std.Vas=std.Vas,
+            std.Val=std.Val,
+            std.Vg=std.Vg,
             norm.sd=norm.sd,
             Vos=Vos,
             Vol=Vol,
@@ -336,8 +396,8 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,last.tstar=NULL,r2
             pgs.est=h2s.est/h2all.est,
             implied.al.norm=implied.al.norm,
             implied.al.true=implied.al.true,
-            pgs=Vas/(Val+Vas),
-            pgl=Val/(Val+Vas),
+            pgs=std.Vas/(std.Val+std.Vas),
+            pgl=std.Val/(std.Val+std.Vas),
             Vos=Vos,
             Vol=Vol,
             pos=Vos/(Vos+Vol),
@@ -352,19 +412,22 @@ solveTwoEffect <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,last.tstar=NULL,r2
     )
 }
 
+
+
+
 makeOutput = function(soln) {
   output = numeric()
   output['as'] <- soln$as  ## small effect size
-  output['as.std'] <-
-    soln$as.std  ## standardized small effect size
-  output['al.std'] <-
-    soln$al.std  ## standardized large effect size
+  output['std.as'] <-
+    soln$std.as  ## standardized small effect size
+  output['std.al'] <-
+    soln$std.al  ## standardized large effect size
   output['phit'] <-
     soln$phit  ## normal equivalent standardized density
   output['ft'] <-
     soln$ft  ## raw density
-  output['ft.std'] <-
-    soln$ft.std  ## raw density
+  output['std.ft'] <-
+    soln$std.ft  ## raw density
   output['ys'] <-
     soln$ys  ## small scaled selection coefficient
   output['yl'] <-
@@ -384,8 +447,7 @@ makeOutput = function(soln) {
   output['Ne'] <- soln$Ne  ## population size
   output['u'] <- soln$u    ## mutation rate
   output['C'] <- soln$C    ## cost of disease
-  output['Ve'] <- soln$Ve  ## environmental variance
-  output['Vg'] <- soln$Vg  ## environmental variance
+  output['Ve'] <- soln$raw.Ve  ## environmental variance
   output['norm.sd'] <- soln$norm.sd  ## environmental variance
   output['h2s'] <-
     soln$h2s  ## small effect h2 on liability scale
@@ -419,340 +481,688 @@ makeOutput = function(soln) {
 
 
 
-source('scripts/solveSingleEffect.R')
+
+## solveTwoEffectFixed_bs <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,r2n=NULL,Ve=NULL,u,C,LL.soln=FALSE,var.ratio=NULL,equalize.observed.vars=FALSE){
+
+##     ## bs:  asymmetry for small effects
+##     ## Ne:  pop size
+##     ## Ls:  number of small effect loci
+##     ## Ll:  number of large effect loci
+##     ## as:  small effect size
+##     ## al:  large effect size
+##     ## r2n: ratio of Ve to Vas (small effect variance)
+##     ## u:   mutation rate
+##     ## T:   threshold position
+##     ## C:   cost
+##     ## h2l: ratio of large effect variance to total genetic variance (not currently used)
+
+##     ## bt <- bs
+
+##     if(recover.flag) recover()
 
 
-solveTwoEffectFixed_bs <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,r2n=NULL,Ve=NULL,u,C,LL.soln=FALSE,var.ratio=NULL,equalize.observed.vars=FALSE){
+##     if(LL.soln)
+##         stopifnot(!is.null(var.ratio))
 
-    ## bs:  asymmetry for small effects
-    ## Ne:  pop size
-    ## Ls:  number of small effect loci
-    ## Ll:  number of large effect loci
-    ## as:  small effect size
-    ## al:  large effect size
-    ## r2n: ratio of Ve to Vas (small effect variance)
-    ## u:   mutation rate
-    ## T:   threshold position
-    ## C:   cost
-    ## h2l: ratio of large effect variance to total genetic variance (not currently used)
+##     if((!is.null(r2n))&(!is.null(Ve))){
+##         stop('either r2n or Ve must be NULL')
+##     }
 
-    ## bt <- bs
+##     init.Ls <- Ls
+##     ## solve for ft
+##     ys <- log((1+bs)/(1-bs))
+##     ft <- ys*(4*Ne*C)^-1  #originally ys*(2*Ne*C)^-1
 
-    if(recover.flag) recover()
+##     ## get small effect additive genetic variance
+##     Vas <- 8*Ne*u*L.init*as^2*bs/ys  ## originally 4*Ne*u*Ls*as^2*bs/ys
+##     if(is.null(Ve))
+##         Ve <- Vas*(1-r2n)/r2n
+##     norm.sd <- sqrt(Vas+Ve)
 
-
-    if(LL.soln)
-        stopifnot(!is.null(var.ratio))
-
-    if((!is.null(r2n))&(!is.null(Ve))){
-        stop('either r2n or Ve must be NULL')
-    }
-
-    init.Ls <- Ls
-    ## solve for ft
-    ys <- log((1+bs)/(1-bs))
-    ft <- ys*(4*Ne*C)^-1  #originally ys*(2*Ne*C)^-1
-
-    ## get small effect additive genetic variance
-    Vas <- 8*Ne*u*L.init*as^2*bs/ys  ## originally 4*Ne*u*Ls*as^2*bs/ys
-    if(is.null(Ve))
-        Ve <- Vas*(1-r2n)/r2n
-    norm.sd <- sqrt(Vas+Ve)
-
-    ## initial guess for deltal
-    init.deltal <- 1##al*ft
-
-
-
-    ## compute selection coefficient
-    init.sl <- init.deltal*C
-    init.yl <- 4*Ne*init.sl  #originally 2*Ne*init.sl
-
-    if(init.yl<3)
-        warning('initial scaled selection coefficient is too small')
-
-
-    ## mean number of large effect alleles per individual
-    init.mean.nl <- 2*Ll*u/init.sl
-
-    ## solve for tstart conditional on initial guess of deltal
-
-    init.soln <- uniroot(
-        f=function(THR){
-            ftild <- dPoisConv(
-                t=THR,
-                lambda=init.mean.nl,
-                norm.sd=norm.sd,
-                alphal=al
-            )
-            ft-ftild
-        },
-        interval=c(0,12*norm.sd)
-    )
-    init.tstar <- init.soln$root
-    init.Ll <- Ll
-    init.L <- init.Ls + init.Ll
-    init.meana <- (as*init.Ls + al*init.Ll)/init.L
-    init.maxg <- 2*init.L*init.meana
-    init.bt <- (2*init.Ls*bs*as + 2*init.Ll*1*al)/(init.maxg)
-
-
-    ## get 2d solution
-    soln <- nleqslv(
-        x=c(0,init.tstar),
-        fn=function(X){
-            deltal <- 1/(1+exp(X[1]))
-            tstar <- X[2]
-            my.s <- deltal*C
-            my.y <- 4*Ne*my.s ## originally 2*Ne*my.s
-            mean.nl <- 2*Ll*u/my.s
-            my.range <- seq(qpois(1e-8,mean.nl),qpois(1-1e-8,mean.nl))
-            prot <- pPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=FALSE)
-            risk <- pPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=TRUE)
-            deltal.tild <- risk - prot
-            ft.tild <- dPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=FALSE)
-            Val <- 2*al*mean.nl
-            diff.one <- deltal-deltal.tild
-            diff.two <- ft-ft.tild
-            ##diff.three <- Val-Vas
-            ##diff.three <- 4*al^2*mean.nl - Vas*h2l/(1-h2l)
-            c(diff.one,diff.two)
-        },
-        control=list(scalex=c(1,1/init.tstar),maxit=400)
-    )
-    trans.deltal <- soln$x[1]
-    deltal <- 1/(1+exp(trans.deltal))
-    tstar <- soln$x[2]
-
-
-    if(LL.soln){
-
-        ## added the normal jitters because giving the solution as the initial condition led
-        ## it to somehow find other pathological solutions for some reason. Confused..
-        init.trans.deltal <- trans.deltal + rnorm(1,0,abs(trans.deltal)/1000)
-        new.init.tstar <- soln$x[2] + rnorm(1,0,tstar/1000)
-        init.Ll <- Ll + rnorm(1,0,Ll/1000)
-        init.Ls <- Ls
-        init.trans.bt <- log((1-init.bt)/init.bt)
-
-        j <- 1
-        ## get 4d solution
-        soln <- nleqslv(
-            x=c(init.trans.deltal,new.init.tstar,init.Ll,init.Ls),
-            fn=function(X){
-                ## recover()
-                j <- j+1
-                ## inputs
-                deltal <- 1/(1+exp(X[1]))
-                tstar <- X[2]
-                Ll <- X[3]
-                ##Ls <- L-Ll
-                ## bt <- 1/(1+exp(X[4]))
-                Ls <- X[4]
-                L  <- Ll + Ls
-
-                ## small effect stuff
-                ys <- log((1+bs)/(1-bs))
-                Vas <- 8*Ne*u*Ls*as^2*bs/ys # originall 4*Ne*u*Ls*as^2*bs/ys
-                if(is.null(Ve))
-                    Ve <- Vas*(1-r2n)/r2n
-                norm.sd <- sqrt(Vas + Ve)
-
-                ## large effect stuff
-                my.s <- deltal*C
-                my.y <- 4*Ne*my.s #originally 2*Ne*my.s
-                mean.nl <- 2*Ll*u/my.s
-                my.range <- seq(qpois(1e-8,mean.nl),qpois(1-1e-8,mean.nl))
-                prot <- pPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=FALSE)
-                risk <- pPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=TRUE)
-
-                ## global stuff
-                meana <- (as*Ls + al*Ll)/L
-                maxg <- 2*meana*L
-                prev <- as.numeric(pPoisConv(tstar,mean.nl,sqrt(Vas+Ve),alphal=al))
-                risk.var <- (prev*(1-prev))
-
-                ## differences
-                deltal.tild <- risk - prot
-                diff.one <- deltal-deltal.tild
-
-                ft.tild <- dPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=FALSE)
-                diff.two <- ft-ft.tild
-
-                if(equalize.observed.vars){
-                    Vol <- 2*deltal^2*mean.nl
-                    Vos <- Vas*ft^2
-                    diff.three <- (Vol-var.ratio*Vos)/risk.var
-                } else {
-                    Val <- 2*al^2*mean.nl
-                    diff.three <- Val-var.ratio*Vas
-                }
-
-                ##bt.tild <- (2*Ls*bs*as + 2*Ll*1*al)/(maxg)
-                ## diff.four <- bt - bt.tild
-
-                diff.four <- L*meana - Lmeana
-
-                return(c(diff.one,diff.two,diff.three,diff.four))
-            },
-            control=list(scalex=c(1,1/new.init.tstar,1/init.Ll,1/init.maxg),maxit=800,allowSingular=FALSE)
-        )
-        if(recover.flag) recover()
-        trans.deltal <- soln$x[1]
-        deltal <- 1/(1+exp(trans.deltal))
-        tstar <- soln$x[2]
-        Ll <- soln$x[3]
-        ##bs <- 1/(1+exp(soln$x[4]))
-        Ls <- soln$x[4]
-
-        ys <- log((1+bs)/(1-bs))
-        ft <- ys*(4*Ne*C)^-1 #originally ys*(2*Ne*C)^-1
-
-        ## get small effect additive genetic variance
-        Vas <- 8*Ne*u*Ls*as^2*bs/ys  #originally 4*Ne*u*Ls*as^2*bs/ys
-        if(is.null(Ve))
-            Ve <- Vas*(1-r2n)/r2n
-        norm.sd <- sqrt(Vas+Ve)
-
-    }
-
-    L <- Ls+Ll
-    deltas <- as*ft
-    mean.nl <- 2*Ll*u/(deltal*C)
-    Val <- 2*al^2*mean.nl
-    Vt <- Vas + Ve + Val
-
-
-    ## risk scale variances
-    Vos <- Vas*ft^2
-    Vol <- 2*deltal^2*mean.nl
-    Vrg <- Vos + Vol
-
-    ## bulk stuff
-    prev <- as.numeric(pPoisConv(tstar,mean.nl,sqrt(Vas+Ve),alphal=al))
-    my.range <- seq(qpois(1e-8,mean.nl),qpois(1-1e-8,mean.nl))
-    ldens <- dpois(my.range,mean.nl) ## density on large effect liability
-    pdil <- pnorm(tstar, al*my.range,norm.sd,lower.tail=FALSE) ## prev among inds with i large effect alleles
-    pidl <- ldens*pdil/prev ## density on number of large effect alleles conditional on having disease
-
-
-    ## does mut-sel balance actually hold??
-    mutl <- 2*Ll*al*u
-    muts <- 2*Ls*as*u*bs
-    mutall <- muts+mutl
-
-    sell <- mean.nl*al*deltal*C
-    sels <- Vas*ft*C
-    selall <- sell+sels
-    stopifnot(abs((mutall-selall)/(mutall+selall))<1e-8)
-
-
-    tol <- 1e-5
-    min.gl <- uniroot(
-        function(X)
-            tol-(1-pPoisConv(X,mean.nl,norm.sd,alphal=al)),
-        interval=c(-10*tstar,10*tstar)
-    )$root
-    max.gl <- uniroot(
-        function(X)
-            tol-pPoisConv(X,mean.nl,norm.sd,alphal=al),
-        interval=c(-10*tstar,10*tstar)
-    )$root
-    seq.li <- seq(min.gl,max.gl,length.out=1000)
-    li.dense <- sapply(seq.li,function(G) dPoisConv(G,mean.nl,norm.sd,alphal=al))
-
-    ## heritabilies on liability scale
-    h2s <- Vas/(Val+Vas/r2n)
-    h2l <- Val/(Val+Vas/r2n)
-    h2 <- (Vas+Val)/(Val+Vas/r2n)
+##     ## initial guess for deltal
+##     init.deltal <- 1##al*ft
 
 
 
-    ## liability scale h2 estimation via normal approx
-    phit <- dnorm(qnorm(1-prev))
-    risk.var <- (prev*(1-prev))
+##     ## compute selection coefficient
+##     init.sl <- init.deltal*C
+##     init.yl <- 4*Ne*init.sl  #originally 2*Ne*init.sl
 
-    ## observed scale
-    h2os <- Vos/risk.var
-    h2ol <- Vol/risk.var
-    h2o <- Vrg/risk.var
-    prs <- Vos/(Vos+Vol)
-
-    ## naive estimates on liability scale
-    h2s.est <- h2os*risk.var/Vt*phit^-2
-    h2l.est <- h2ol*risk.var/Vt*phit^-2
-    h2all.est <- h2o*risk.var/Vt*phit^-2
-
-    implied.al.norm <- deltal/phit
-    implied.al.true <- deltal/ft
+##     if(init.yl<3)
+##         warning('initial scaled selection coefficient is too small')
 
 
-    ## other stuff
-    #L <- Ll+Ls
+##     ## mean number of large effect alleles per individual
+##     init.mean.nl <- 2*Ll*u/init.sl
 
-    meana <- (as*Ls + al*Ll)/L
-    maxg <- 2*meana*L
-    bt <- (2*Ls*bs*as + 2*Ll*1*al)/(maxg)
+##     ## solve for tstart conditional on initial guess of deltal
 
-    return(
-        list(
-            soln=soln,
-            ft=ft,
-            phit=phit,
-            bs=bs,
-            bt=bt,
-            as=as,
-            al=al,
-            meana=meana,
-            maxg=maxg,
-            bt=bt,
-            my.range=my.range,
-            deltas=deltas,
-            deltal=deltal,
-            ss=deltas*C,
-            sl=deltal*C,
-            ys=4*Ne*deltas*C,  #originally 2*Ne*deltas*C
-            yl=4*Ne*deltal*C,  #originally 2*Ne*deltal*C
-            Ne=Ne,
-            u=u,
-            C=C,
-            ors=(prev+deltas)/prev*(1-prev)/(1-prev-deltas),
-            orl=(prev+deltal)/prev*(1-prev)/(1-prev-deltal),
-            tstar=tstar,
-            mean.nl=mean.nl,
-            prev=prev,
-            Vas=Vas,
-            Ve=Ve,
-            Val=Val,
-            Vos=Vos,
-            Vol=Vol,
-            h2s=h2s,
-            h2l=h2l,
-            h2=h2,
-            h2os=h2os,
-            h2ol=h2ol,
-            h2o=h2o,
-            h2s.est=h2s.est, ## small effect h2 you would infer by naive application of ltm methods
-            h2l.est=h2l.est, ## large effect h2 you would infer by naive application of ltm methods
-            h2all.est=h2all.est, ## total h2 you would infer by naive application of ltm methods
-            pgs.est=h2s.est/h2all.est,
-            implied.al.norm=implied.al.norm,
-            implied.al.true=implied.al.true,
-            pgs=Vas/(Val+Vas),
-            pgl=Val/(Val+Vas),
-            Vos=Vos,
-            Vol=Vol,
-            pos=Vos/(Vos+Vol),
-            pol=Vol/(Vos+Vol),
-            ldens=ldens,
-            pdil=pdil,
-            pidl=pidl,
-            Ls=Ls,
-            Ll=Ll,
-            li.dense=li.dense
-        )
-    )
-}
+##     init.soln <- uniroot(
+##         f=function(THR){
+##             ftild <- dPoisConv(
+##                 t=THR,
+##                 lambda=init.mean.nl,
+##                 norm.sd=norm.sd,
+##                 alphal=al
+##             )
+##             ft-ftild
+##         },
+##         interval=c(0,12*norm.sd)
+##     )
+##     init.tstar <- init.soln$root
+##     init.Ll <- Ll
+##     init.L <- init.Ls + init.Ll
+##     init.meana <- (as*init.Ls + al*init.Ll)/init.L
+##     init.maxg <- 2*init.L*init.meana
+##     init.bt <- (2*init.Ls*bs*as + 2*init.Ll*1*al)/(init.maxg)
 
 
+##     ## get 2d solution
+##     soln <- nleqslv(
+##         x=c(0,init.tstar),
+##         fn=function(X){
+##             deltal <- 1/(1+exp(X[1]))
+##             tstar <- X[2]
+##             my.s <- deltal*C
+##             my.y <- 4*Ne*my.s ## originally 2*Ne*my.s
+##             mean.nl <- 2*Ll*u/my.s
+##             my.range <- seq(qpois(1e-8,mean.nl),qpois(1-1e-8,mean.nl))
+##             prot <- pPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=FALSE)
+##             risk <- pPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=TRUE)
+##             deltal.tild <- risk - prot
+##             ft.tild <- dPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=FALSE)
+##             Val <- 2*al*mean.nl
+##             diff.one <- deltal-deltal.tild
+##             diff.two <- ft-ft.tild
+##             ##diff.three <- Val-Vas
+##             ##diff.three <- 4*al^2*mean.nl - Vas*h2l/(1-h2l)
+##             c(diff.one,diff.two)
+##         },
+##         control=list(scalex=c(1,1/init.tstar),maxit=400)
+##     )
+##     trans.deltal <- soln$x[1]
+##     deltal <- 1/(1+exp(trans.deltal))
+##     tstar <- soln$x[2]
 
+
+##     if(LL.soln){
+
+##         ## added the normal jitters because giving the solution as the initial condition led
+##         ## it to somehow find other pathological solutions for some reason. Confused..
+##         init.trans.deltal <- trans.deltal + rnorm(1,0,abs(trans.deltal)/1000)
+##         new.init.tstar <- soln$x[2] + rnorm(1,0,tstar/1000)
+##         init.Ll <- Ll + rnorm(1,0,Ll/1000)
+##         init.Ls <- Ls
+##         init.trans.bt <- log((1-init.bt)/init.bt)
+
+##         j <- 1
+##         ## get 4d solution
+##         soln <- nleqslv(
+##             x=c(init.trans.deltal,new.init.tstar,init.Ll,init.Ls),
+##             fn=function(X){
+##                 ## recover()
+##                 j <- j+1
+##                 ## inputs
+##                 deltal <- 1/(1+exp(X[1]))
+##                 tstar <- X[2]
+##                 Ll <- X[3]
+##                 ##Ls <- L-Ll
+##                 ## bt <- 1/(1+exp(X[4]))
+##                 Ls <- X[4]
+##                 L  <- Ll + Ls
+
+##                 ## small effect stuff
+##                 ys <- log((1+bs)/(1-bs))
+##                 Vas <- 8*Ne*u*Ls*as^2*bs/ys # originall 4*Ne*u*Ls*as^2*bs/ys
+##                 if(is.null(Ve))
+##                     Ve <- Vas*(1-r2n)/r2n
+##                 norm.sd <- sqrt(Vas + Ve)
+
+##                 ## large effect stuff
+##                 my.s <- deltal*C
+##                 my.y <- 4*Ne*my.s #originally 2*Ne*my.s
+##                 mean.nl <- 2*Ll*u/my.s
+##                 my.range <- seq(qpois(1e-8,mean.nl),qpois(1-1e-8,mean.nl))
+##                 prot <- pPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=FALSE)
+##                 risk <- pPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=TRUE)
+
+##                 ## global stuff
+##                 meana <- (as*Ls + al*Ll)/L
+##                 maxg <- 2*meana*L
+##                 prev <- as.numeric(pPoisConv(tstar,mean.nl,sqrt(Vas+Ve),alphal=al))
+##                 risk.var <- (prev*(1-prev))
+
+##                 ## differences
+##                 deltal.tild <- risk - prot
+##                 diff.one <- deltal-deltal.tild
+
+##                 ft.tild <- dPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=FALSE)
+##                 diff.two <- ft-ft.tild
+
+##                 if(equalize.observed.vars){
+##                     Vol <- 2*deltal^2*mean.nl
+##                     Vos <- Vas*ft^2
+##                     diff.three <- (Vol-var.ratio*Vos)/risk.var
+##                 } else {
+##                     Val <- 2*al^2*mean.nl
+##                     diff.three <- Val-var.ratio*Vas
+##                 }
+
+##                 ##bt.tild <- (2*Ls*bs*as + 2*Ll*1*al)/(maxg)
+##                 ## diff.four <- bt - bt.tild
+
+##                 diff.four <- L*meana - Lmeana
+
+##                 return(c(diff.one,diff.two,diff.three,diff.four))
+##             },
+##             control=list(scalex=c(1,1/new.init.tstar,1/init.Ll,1/init.maxg),maxit=800,allowSingular=FALSE)
+##         )
+##         if(recover.flag) recover()
+##         trans.deltal <- soln$x[1]
+##         deltal <- 1/(1+exp(trans.deltal))
+##         tstar <- soln$x[2]
+##         Ll <- soln$x[3]
+##         ##bs <- 1/(1+exp(soln$x[4]))
+##         Ls <- soln$x[4]
+
+##         ys <- log((1+bs)/(1-bs))
+##         ft <- ys*(4*Ne*C)^-1 #originally ys*(2*Ne*C)^-1
+
+##         ## get small effect additive genetic variance
+##         Vas <- 8*Ne*u*Ls*as^2*bs/ys  #originally 4*Ne*u*Ls*as^2*bs/ys
+##         if(is.null(Ve))
+##             Ve <- Vas*(1-r2n)/r2n
+##         norm.sd <- sqrt(Vas+Ve)
+
+##     }
+
+##     L <- Ls+Ll
+##     deltas <- as*ft
+##     mean.nl <- 2*Ll*u/(deltal*C)
+##     Val <- 2*al^2*mean.nl
+##     Vt <- Vas + Ve + Val
+
+
+##     ## risk scale variances
+##     Vos <- Vas*ft^2
+##     Vol <- 2*deltal^2*mean.nl
+##     Vrg <- Vos + Vol
+
+##     ## bulk stuff
+##     prev <- as.numeric(pPoisConv(tstar,mean.nl,sqrt(Vas+Ve),alphal=al))
+##     my.range <- seq(qpois(1e-8,mean.nl),qpois(1-1e-8,mean.nl))
+##     ldens <- dpois(my.range,mean.nl) ## density on large effect liability
+##     pdil <- pnorm(tstar, al*my.range,norm.sd,lower.tail=FALSE) ## prev among inds with i large effect alleles
+##     pidl <- ldens*pdil/prev ## density on number of large effect alleles conditional on having disease
+
+
+##     ## does mut-sel balance actually hold??
+##     mutl <- 2*Ll*al*u
+##     muts <- 2*Ls*as*u*bs
+##     mutall <- muts+mutl
+
+##     sell <- mean.nl*al*deltal*C
+##     sels <- Vas*ft*C
+##     selall <- sell+sels
+##     stopifnot(abs((mutall-selall)/(mutall+selall))<1e-8)
+
+
+##     tol <- 1e-5
+##     min.gl <- uniroot(
+##         function(X)
+##             tol-(1-pPoisConv(X,mean.nl,norm.sd,alphal=al)),
+##         interval=c(-10*tstar,10*tstar)
+##     )$root
+##     max.gl <- uniroot(
+##         function(X)
+##             tol-pPoisConv(X,mean.nl,norm.sd,alphal=al),
+##         interval=c(-10*tstar,10*tstar)
+##     )$root
+##     seq.li <- seq(min.gl,max.gl,length.out=1000)
+##     li.dense <- sapply(seq.li,function(G) dPoisConv(G,mean.nl,norm.sd,alphal=al))
+
+##     ## heritabilies on liability scale
+##     h2s <- Vas/(Val+Vas/r2n)
+##     h2l <- Val/(Val+Vas/r2n)
+##     h2 <- (Vas+Val)/(Val+Vas/r2n)
+
+
+
+##     ## liability scale h2 estimation via normal approx
+##     phit <- dnorm(qnorm(1-prev))
+##     risk.var <- (prev*(1-prev))
+
+##     ## observed scale
+##     h2os <- Vos/risk.var
+##     h2ol <- Vol/risk.var
+##     h2o <- Vrg/risk.var
+##     prs <- Vos/(Vos+Vol)
+
+##     ## naive estimates on liability scale
+##     h2s.est <- h2os*risk.var/Vt*phit^-2
+##     h2l.est <- h2ol*risk.var/Vt*phit^-2
+##     h2all.est <- h2o*risk.var/Vt*phit^-2
+
+##     implied.al.norm <- deltal/phit
+##     implied.al.true <- deltal/ft
+
+
+##     ## other stuff
+##     #L <- Ll+Ls
+
+##     meana <- (as*Ls + al*Ll)/L
+##     maxg <- 2*meana*L
+##     bt <- (2*Ls*bs*as + 2*Ll*1*al)/(maxg)
+
+##     return(
+##         list(
+##             soln=soln,
+##             ft=ft,
+##             phit=phit,
+##             bs=bs,
+##             bt=bt,
+##             as=as,
+##             al=al,
+##             meana=meana,
+##             maxg=maxg,
+##             bt=bt,
+##             my.range=my.range,
+##             deltas=deltas,
+##             deltal=deltal,
+##             ss=deltas*C,
+##             sl=deltal*C,
+##             ys=4*Ne*deltas*C,  #originally 2*Ne*deltas*C
+##             yl=4*Ne*deltal*C,  #originally 2*Ne*deltal*C
+##             Ne=Ne,
+##             u=u,
+##             C=C,
+##             ors=(prev+deltas)/prev*(1-prev)/(1-prev-deltas),
+##             orl=(prev+deltal)/prev*(1-prev)/(1-prev-deltal),
+##             tstar=tstar,
+##             mean.nl=mean.nl,
+##             prev=prev,
+##             Vas=Vas,
+##             Ve=Ve,
+##             Val=Val,
+##             Vos=Vos,
+##             Vol=Vol,
+##             h2s=h2s,
+##             h2l=h2l,
+##             h2=h2,
+##             h2os=h2os,
+##             h2ol=h2ol,
+##             h2o=h2o,
+##             h2s.est=h2s.est, ## small effect h2 you would infer by naive application of ltm methods
+##             h2l.est=h2l.est, ## large effect h2 you would infer by naive application of ltm methods
+##             h2all.est=h2all.est, ## total h2 you would infer by naive application of ltm methods
+##             pgs.est=h2s.est/h2all.est,
+##             implied.al.norm=implied.al.norm,
+##             implied.al.true=implied.al.true,
+##             pgs=Vas/(Val+Vas),
+##             pgl=Val/(Val+Vas),
+##             Vos=Vos,
+##             Vol=Vol,
+##             pos=Vos/(Vos+Vol),
+##             pol=Vol/(Vos+Vol),
+##             ldens=ldens,
+##             pdil=pdil,
+##             pidl=pidl,
+##             Ls=Ls,
+##             Ll=Ll,
+##             li.dense=li.dense
+##         )
+##     )
+## }
+
+
+
+## solveTwoEffectOld <- function(bs,bt,Ne,Ls,Ll,as,al,Lmeana,L.init,last.tstar=NULL,r2n=NULL,Ve=NULL,u,C,LL.soln=FALSE,var.ratio=NULL,equalize.observed.vars=FALSE){
+
+##     ## bs:  asymmetry for small effects
+##     ## Ne:  pop size
+##     ## Ls:  number of small effect loci
+##     ## Ll:  number of large effect loci
+##     ## as:  small effect size
+##     ## al:  large effect size
+##     ## r2n: ratio of Ve to Vas (small effect variance)
+##     ## u:   mutation rate
+##     ## T:   threshold position
+##     ## C:   cost
+##     ## h2l: ratio of large effect variance to total genetic variance (not currently used)
+
+##     ## bt <- bs
+
+##     if(recover.flag) recover()
+
+
+##     if(LL.soln)
+##         stopifnot(!is.null(var.ratio))
+
+##     if((!is.null(r2n))&(!is.null(Ve))){
+##         stop('either r2n or Ve must be NULL')
+##     }
+
+
+##     ## solve for ft
+##     ys <- log((1+bs)/(1-bs))
+##     ft <- ys*(4*Ne*C)^-1  #originally ys*(2*Ne*C)^-1
+
+##     ## get small effect additive genetic variance
+##     Vas <- 8*Ne*u*L.init*as^2*bs/ys  ## originally 4*Ne*u*Ls*as^2*bs/ys
+##     if(is.null(Ve))
+##         Ve <- Vas*(1-r2n)/r2n
+##     norm.sd <- sqrt(Vas+Ve)
+
+##     ## initial guess for deltal
+##     init.deltal <- 1##al*ft
+
+
+
+##     ## compute selection coefficient
+##     init.sl <- init.deltal*C
+##     init.yl <- 4*Ne*init.sl  #originally 2*Ne*init.sl
+
+##     if(init.yl<3)
+##         warning('initial scaled selection coefficient is too small')
+
+
+##     ## mean number of large effect alleles per individual
+##     init.mean.nl <- 2*Ll*u/init.sl
+
+##     ## solve for tstart conditional on initial guess of deltal
+
+##     init.soln <- uniroot(
+##         f=function(THR){
+##             ftild <- dPoisConv(
+##                 t=THR,
+##                 lambda=init.mean.nl,
+##                 norm.sd=norm.sd,
+##                 alphal=al
+##             )
+##             ft-ftild
+##         },
+##         interval=c(0,12*norm.sd)
+##     )
+##     init.tstar <- init.soln$root
+
+
+##     init.Ll <- Ll
+
+
+##     ## get 2d solution
+##     soln <- nleqslv(
+##         x=c(0,init.tstar),
+##         fn=function(X){
+##             deltal <- 1/(1+exp(X[1]))
+##             tstar <- X[2]
+
+##             my.s <- deltal*C
+##             my.y <- 4*Ne*my.s ## originally 2*Ne*my.s
+##             mean.nl <- 2*Ll*u/my.s
+##             my.range <- seq(qpois(1e-8,mean.nl),qpois(1-1e-8,mean.nl))
+##             prot <- pPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=FALSE)
+##             risk <- pPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=TRUE)
+##             deltal.tild <- risk - prot
+##             ft.tild <- dPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=FALSE)
+##             Val <- 2*al*mean.nl
+##             diff.one <- deltal-deltal.tild
+##             diff.two <- ft-ft.tild
+##             ##diff.three <- Val-Vas
+##             ##diff.three <- 4*al^2*mean.nl - Vas*h2l/(1-h2l)
+##             c(diff.one,diff.two)
+##         },
+##         control=list(scalex=c(1,1/init.tstar),maxit=400)
+##     )
+##     trans.deltal <- soln$x[1]
+##     deltal <- 1/(1+exp(trans.deltal))
+##     tstar <- soln$x[2]
+
+    
+    
+##     if(LL.soln){
+
+##         ## added the normal jitters because giving the solution as the initial condition led
+##         ## it to somehow find other pathological solutions for some reason. Confused..
+##         init.trans.deltal <- trans.deltal + rnorm(1,0,abs(trans.deltal)/1000)
+##         if(!is.null(last.tstar)){
+##           new.init.tstar <- last.tstar - abs(rnorm(1,0,tstar/1000))
+##         } else{
+##           new.init.tstar <- soln$x[2] + rnorm(1,0,tstar/1000)
+##         }  
+##         init.Ll <- Ll + rnorm(1,0,Ll/1000)
+##         init.Ls <- Ls
+##         init.trans.bs <- log((1-bs)/bs)
+
+
+##         j <- 1
+##         ## get 4d solution
+##         soln <- nleqslv(
+##             x=c(init.trans.deltal,new.init.tstar,init.Ll,init.trans.bs,init.Ls),
+##             fn=function(X){
+##                 #recover()
+##                 j <- j+1
+##                 ## inputs
+##                 deltal <- 1/(1+exp(X[1]))
+##                 tstar <- X[2]
+##                 Ll <- X[3]
+##                 ##Ls <- L-Ll
+##                 bs <- 1/(1+exp(X[4]))
+##                 Ls <- X[5]
+##                 L  <- Ll + Ls
+
+##                 ## small effect stuff
+##                 ys <- log((1+bs)/(1-bs))
+##                 Vas <- 8*Ne*u*Ls*as^2*bs/ys # originall 4*Ne*u*Ls*as^2*bs/ys
+##                 if(is.null(Ve))
+##                     Ve <- Vas*(1-r2n)/r2n
+##                 norm.sd <- sqrt(Vas + Ve)
+
+##                 ## large effect stuff
+##                 my.s <- deltal*C
+##                 my.y <- 4*Ne*my.s #originally 2*Ne*my.s
+##                 mean.nl <- 2*Ll*u/my.s
+##                 my.range <- seq(qpois(1e-8,mean.nl),qpois(1-1e-8,mean.nl))
+##                 prot <- pPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=FALSE)
+##                 risk <- pPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=TRUE)
+
+##                 ## global stuff
+##                 meana <- (as*Ls + al*Ll)/L
+##                 maxg <- 2*meana*L
+##                 prev <- as.numeric(pPoisConv(tstar,mean.nl,sqrt(Vas+Ve),alphal=al))
+##                 risk.var <- (prev*(1-prev))
+
+##                 ## differences
+##                 deltal.tild <- risk - prot
+##                 diff.one <- deltal-deltal.tild
+
+##                 ft.tild <- dPoisConv(tstar,mean.nl,norm.sd,alphal=al,risk.allele=FALSE)
+##                 diff.two <- ft-ft.tild
+
+##                 if(equalize.observed.vars){
+##                     Vol <- 2*deltal^2*mean.nl
+##                     Vos <- Vas*ft^2
+##                     diff.three <- (Vol-var.ratio*Vos)/risk.var
+##                 } else {
+##                     Val <- 2*al^2*mean.nl
+##                     diff.three <- Val-var.ratio*Vas
+##                 }
+
+##                 bt.tild <- (2*Ls*bs*as + 2*Ll*1*al)/(maxg)
+##                 diff.four <- bt - bt.tild
+
+##                 diff.five <- L*meana - Lmeana
+
+##                 return(c(diff.one,diff.two,diff.three,diff.four,diff.five))
+##             },
+##             control=list(scalex=c(1,1/new.init.tstar,1/init.Ll,1,1/init.Ls),maxit=800,allowSingular=FALSE)
+##         )
+##         if(recover.flag) recover()
+##         trans.deltal <- soln$x[1]
+##         deltal <- 1/(1+exp(trans.deltal))
+##         tstar <- soln$x[2]
+##         Ll <- soln$x[3]
+##         bs <- 1/(1+exp(soln$x[4]))
+##         Ls <- soln$x[5]
+
+##         ys <- log((1+bs)/(1-bs))
+##         ft <- ys*(4*Ne*C)^-1 #originally ys*(2*Ne*C)^-1
+        
+##         ## get small effect additive genetic variance
+##         Vas <- 8*Ne*u*Ls*as^2*bs/ys  #originally 4*Ne*u*Ls*as^2*bs/ys
+##         if(is.null(Ve))
+##             Ve <- Vas*(1-r2n)/r2n
+##         norm.sd <- sqrt(Vas+Ve)
+
+##     }
+
+##     L <- Ls+Ll
+##     meana <- (as*Ls + al*Ll)/L
+##     deltas <- as*ft
+##     mean.nl <- 2*Ll*u/(deltal*C)
+##     Val <- 2*al^2*mean.nl
+##     Vg <- Vas + Val
+##     Vt <- Vg + Ve
+##     as.std  <- as / sqrt( Vt )
+##     al.std  <- al / sqrt( Vt )
+##     ft.std <- ft * sqrt ( Vt )
+
+##     ## risk scale variances
+##     Vos <- Vas*ft^2
+##     Vol <- 2*deltal^2*mean.nl
+##     Vrg <- Vos + Vol
+
+##     ## bulk stuff
+##     prev <- as.numeric(pPoisConv(tstar,mean.nl,sqrt(Vas+Ve),alphal=al))
+##     my.range <- seq(qpois(1e-8,mean.nl),qpois(1-1e-8,mean.nl))
+##     ldens <- dpois(my.range,mean.nl) ## density on large effect liability
+##     pdil <- pnorm(tstar, al*my.range,norm.sd,lower.tail=FALSE) ## prev among inds with i large effect alleles
+##     pidl <- ldens*pdil/prev ## density on number of large effect alleles conditional on having disease
+
+
+##     ## does mut-sel balance actually hold??
+##     mutl <- 2*Ll*al*u
+##     muts <- 2*Ls*as*u*bs
+##     mutall <- muts+mutl
+
+##     sell <- mean.nl*al*deltal*C
+##     sels <- Vas*ft*C
+##     selall <- sell+sels
+##     stopifnot(abs((mutall-selall)/(mutall+selall))<1e-8)
+
+
+##     tol <- 1e-5
+##     min.gl <- uniroot(
+##         function(X)
+##             tol-(1-pPoisConv(X,mean.nl,norm.sd,alphal=al)),
+##         interval=c(-10*tstar,10*tstar)
+##     )$root
+##     max.gl <- uniroot(
+##         function(X)
+##             tol-pPoisConv(X,mean.nl,norm.sd,alphal=al),
+##         interval=c(-10*tstar,10*tstar)
+##     )$root
+##     seq.li <- seq(min.gl,max.gl,length.out=1000)
+##     li.dense <- sapply(seq.li,function(G) dPoisConv(G,mean.nl,norm.sd,alphal=al))
+
+
+
+
+
+
+##     ## heritabilies on liability scale
+##     h2s <- Vas/(Val+Vas+Ve)
+##     h2l <- Val/(Val+Vas+Ve)
+##     h2 <- (Vas+Val)/(Val+Vas+Ve)
+
+
+
+##     ## liability scale h2 estimation via normal approx
+##     phit <- dnorm(qnorm(1-prev))
+##     risk.var <- (prev*(1-prev))
+
+##     ## observed scale
+##     h2os <- Vos/risk.var
+##     h2ol <- Vol/risk.var
+##     h2o <- Vrg/risk.var
+##     prs <- Vos/(Vos+Vol)
+
+##     ## naive estimates on liability scale
+##     h2s.est <- h2os*risk.var/Vt*phit^-2
+##     h2l.est <- h2ol*risk.var/Vt*phit^-2
+##     h2all.est <- h2o*risk.var/Vt*phit^-2
+
+##     implied.al.norm <- deltal/phit
+##     implied.al.true <- deltal/ft
+
+
+##     ## other stuff
+##     #L <- Ll+Ls
+
+##     meana <- (as*Ls + al*Ll)/L
+##     maxg <- 2*meana*L
+##     bt <- (2*Ls*bs*as + 2*Ll*1*al)/(maxg)
+
+##     return(
+##         list(
+##             soln=soln,
+##             ft=ft,
+##             ft.std=ft.std,
+##             phit=phit,
+##             bs=bs,
+##             bt=bt,
+##             as=as,
+##             al=al,
+##             as.std = as.std,
+##             al.std = al.std,
+##             meana=meana,
+##             maxg=maxg,
+##             bt=bt,
+##             my.range=my.range,
+##             deltas=deltas,
+##             deltal=deltal,
+##             ss=deltas*C,
+##             sl=deltal*C,
+##             ys=4*Ne*deltas*C,  #originally 2*Ne*deltas*C
+##             yl=4*Ne*deltal*C,  #originally 2*Ne*deltal*C
+##             Ne=Ne,
+##             u=u,
+##             C=C,
+##             ors=(prev+deltas)/prev*(1-prev)/(1-prev-deltas),
+##             orl=(prev+deltal)/prev*(1-prev)/(1-prev-deltal),
+##             tstar=tstar,
+##             mean.nl=mean.nl,
+##             prev=prev,
+##             Vas=Vas,
+##             Val=Val,
+##             Vg=Vg,
+##             Ve=Ve,
+##             norm.sd=norm.sd,
+##             Vos=Vos,
+##             Vol=Vol,
+##             h2s=h2s,
+##             h2l=h2l,
+##             h2=h2,
+##             h2os=h2os,
+##             h2ol=h2ol,
+##             h2o=h2o,
+##             h2s.est=h2s.est, ## small effect h2 you would infer by naive application of ltm methods
+##             h2l.est=h2l.est, ## large effect h2 you would infer by naive application of ltm methods
+##             h2all.est=h2all.est, ## total h2 you would infer by naive application of ltm methods
+##             pgs.est=h2s.est/h2all.est,
+##             implied.al.norm=implied.al.norm,
+##             implied.al.true=implied.al.true,
+##             pgs=Vas/(Val+Vas),
+##             pgl=Val/(Val+Vas),
+##             Vos=Vos,
+##             Vol=Vol,
+##             pos=Vos/(Vos+Vol),
+##             pol=Vol/(Vos+Vol),
+##             ldens=ldens,
+##             pdil=pdil,
+##             pidl=pidl,
+##             Ls=Ls,
+##             Ll=Ll,
+##             li.dense=li.dense
+##         )
+##     )
+## }
