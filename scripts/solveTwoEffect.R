@@ -1,5 +1,145 @@
 source('scripts/solveSingleEffect.R')
 
+fourPoissonDiffs <- function(X,as=as,al=al,bt=bt,equalize.observed.vars=equalize.observed.vars){
+  ## inputs
+  my.deltal <- 1/(1+exp(X[1]))
+  my.tstar <- X[2]
+  my.Ll <- X[3]
+  ##Ls <- L-Ll
+  my.bs <- 1/(1+exp(X[4]))
+  my.Ls <- L - my.Ll
+  ##my.L  <- my.Ll + my.Ls
+  
+  ## unscaled small effect stuff
+  my.ys <- log((1+my.bs)/(1-my.bs))
+  my.raw.Vas <- 8*Ne*u*my.Ls*as^2*my.bs/my.ys # originall 4*Ne*u*Ls*as^2*bs/ys
+  
+  
+  ## raw large effect stuff
+  my.s <- my.deltal*C
+  my.y <- 4*Ne*my.s #originally 2*Ne*my.s
+  my.mean.nl <- 2*my.Ll*u/my.s
+  my.raw.Val <- al^2*my.mean.nl
+  
+  ## get total variance in original units
+  my.raw.Vt <- (my.raw.Vas + my.raw.Val) / h2
+  
+  ## standardized effects
+  my.std.as <- as / sqrt ( my.raw.Vt )
+  my.std.al <- al / sqrt ( my.raw.Vt )
+  
+  ## standardize variances
+  my.std.Vas <- my.raw.Vas / my.raw.Vt
+  my.std.Val <- my.raw.Val / my.raw.Vt
+  my.std.norm.sd <- sqrt(1 - h2 + my.std.Vas)
+  
+  ## standardized thr dens
+  my.ft <- my.ys/(4*Ne*C*my.std.as)
+  
+  my.range <- seq(qpois(1e-8,my.mean.nl),qpois(1-1e-8,my.mean.nl))
+  my.prot <- pPoisConv(my.tstar,my.mean.nl,my.std.norm.sd,alphal=my.std.al,risk.allele=FALSE)
+  my.risk <- pPoisConv(my.tstar,my.mean.nl,my.std.norm.sd,alphal=my.std.al,risk.allele=TRUE)
+  
+  ## global stuff
+  my.meana <- (my.std.as*my.Ls + my.std.al*my.Ll)/L
+  my.maxg <- 2*my.meana*L
+  my.prev <- as.numeric(pPoisConv(my.tstar,my.mean.nl,my.std.norm.sd,alphal=my.std.al))
+  my.risk.var <- (my.prev*(1-my.prev))
+  
+  ## differences
+  my.deltal.tild <- my.risk - my.prot
+  diff.one <- my.deltal - my.deltal.tild
+  
+  my.ft.tild <- dPoisConv(my.tstar,my.mean.nl,my.std.norm.sd,alphal=my.std.al,risk.allele=FALSE)
+  diff.two <- my.ft-my.ft.tild
+  
+  if(equalize.observed.vars){
+    my.Vol <- my.deltal^2*my.mean.nl
+    my.Vos <- my.std.Vas*my.ft^2
+    diff.three <- (my.Vol-var.ratio*my.Vos)/my.risk.var
+  } else {
+    diff.three <- my.std.Val-var.ratio*my.std.Vas
+  }
+  
+  bt.tild <- (2*my.Ls*my.bs*my.std.as + 2*my.Ll*1*my.std.al)/(my.maxg)
+  diff.four <- bt - bt.tild
+  
+  ##diff.five <- my.L*my.meana - Lmeana
+  
+  return(c(diff.one,diff.two,diff.three,diff.four))
+}
+
+fourNormalDiffs <- function(X,as=as,al=al,bt=bt,equalize.observed.vars=equalize.observed.vars){
+  ## inputs
+  my.deltal <- 1/(1+exp(X[1]))
+  my.tstar <- X[2]
+  my.Ll <- X[3]
+  ##Ls <- L-Ll
+  my.bs <- 1/(1+exp(X[4]))
+  my.Ls <- L - my.Ll
+  ##my.L  <- my.Ll + my.Ls
+  
+  ## unscaled small effect stuff
+  my.ys <- log((1+my.bs)/(1-my.bs))
+  my.raw.Vas <- 8*Ne*u*my.Ls*as^2*my.bs/my.ys # originall 4*Ne*u*Ls*as^2*bs/ys
+  
+  
+  ## raw large effect stuff
+  my.s <- my.deltal*C
+  my.y <- 4*Ne*my.s #originally 2*Ne*my.s
+  my.mean.nl <- 2*my.Ll*u/my.s
+  my.raw.Val <- al^2*my.mean.nl
+  
+  ## get total variance in original units
+  my.raw.Vt <- (my.raw.Vas + my.raw.Val) / h2
+  
+  ## standardized effects
+  my.std.as <- as / sqrt ( my.raw.Vt )
+  my.std.al <- al / sqrt ( my.raw.Vt )
+  
+  ## standardize variances
+  my.std.Vas <- my.raw.Vas / my.raw.Vt
+  my.std.Val <- my.raw.Val / my.raw.Vt
+  my.std.norm.sd <- sqrt(1 - h2 + my.std.Vas)
+  
+  ## standardized thr dens
+  my.ft <- my.ys/(4*Ne*C*my.std.as)
+  
+  ##my.range <- seq(qpois(1e-8,my.mean.nl),qpois(1-1e-8,my.mean.nl))
+  my.prot <- 1-pnorm(my.tstar,0,1)
+  my.risk <- 1-pnorm(my.tstar-my.std.al,0,1)
+  
+  ## global stuff
+  my.meana <- (my.std.as*my.Ls + my.std.al*my.Ll)/L
+  my.maxg <- 2*my.meana*L
+  my.prev <- 1-pnorm(my.tstar,0,1)
+  my.risk.var <- (my.prev*(1-my.prev))
+  
+  ## differences
+  my.deltal.tild <- my.risk - my.prot
+  diff.one <- my.deltal - my.deltal.tild
+  
+  my.ft.tild <- dnorm(my.tstar,0,1)
+  diff.two <- my.ft-my.ft.tild
+  
+  if(equalize.observed.vars){
+    my.Vol <- my.deltal^2*my.mean.nl
+    my.Vos <- my.std.Vas*my.ft^2
+    diff.three <- (my.Vol-var.ratio*my.Vos)/my.risk.var
+  } else {
+    diff.three <- my.std.Val-var.ratio*my.std.Vas
+  }
+  
+  bt.tild <- (2*my.Ls*my.bs*my.std.as + 2*my.Ll*1*my.std.al)/(my.maxg)
+  diff.four <- bt - bt.tild
+  
+  ##diff.five <- my.L*my.meana - Lmeana
+  
+  return(c(diff.one,diff.two,diff.three,diff.four))
+}
+
+
+
 solveTwoEffect <- function(bt,bs=bt,Ne,as,al,L,Ll,last.tstar=NULL,h2=NULL,Ve=NULL,u,C,LL.soln=FALSE,var.ratio=NULL,equalize.observed.vars=FALSE){
 
     ## bs:  asymmetry for small effects
@@ -13,11 +153,6 @@ solveTwoEffect <- function(bt,bs=bt,Ne,as,al,L,Ll,last.tstar=NULL,h2=NULL,Ve=NUL
     ## T:   threshold position
     ## C:   cost
     ## h2l: ratio of large effect variance to total genetic variance (not currently used)
-
-    ## bt <- bs
-
-    if(recover.flag) recover()
-
 
     if(LL.soln)
         stopifnot(!is.null(var.ratio))
@@ -145,7 +280,7 @@ solveTwoEffect <- function(bt,bs=bt,Ne,as,al,L,Ll,last.tstar=NULL,h2=NULL,Ve=NUL
     tstar <- soln$x[2]
 
     
-    
+    if(recover.flag) recover()
     if(LL.soln){
 
         ## added the normal jitters because giving the solution as the initial condition led
@@ -162,83 +297,13 @@ solveTwoEffect <- function(bt,bs=bt,Ne,as,al,L,Ll,last.tstar=NULL,h2=NULL,Ve=NUL
         init.trans.bs <- log((1-bs)/bs)
 
 
-        j <- 1
-        ## get 4d solution
+        recover()
+        ## get 4d Poisson convolution solution
         soln <- nleqslv(
             x=c(init.trans.deltal,new.init.tstar,init.Ll,init.trans.bs),
-            fn=function(X){
-                #recover()
-                j <- j+1
-                ## inputs
-                my.deltal <- 1/(1+exp(X[1]))
-                my.tstar <- X[2]
-                my.Ll <- X[3]
-                ##Ls <- L-Ll
-                my.bs <- 1/(1+exp(X[4]))
-                my.Ls <- L - my.Ll
-                ##my.L  <- my.Ll + my.Ls
-                
-                ## unscaled small effect stuff
-                my.ys <- log((1+bs)/(1-bs))
-                my.raw.Vas <- 8*Ne*u*my.Ls*as^2*my.bs/my.ys # originall 4*Ne*u*Ls*as^2*bs/ys
-                
-                
-                ## raw large effect stuff
-                my.s <- my.deltal*C
-                my.y <- 4*Ne*my.s #originally 2*Ne*my.s
-                my.mean.nl <- 2*my.Ll*u/my.s
-                my.raw.Val <- al^2*my.mean.nl
-
-                ## get total variance in original units
-                my.raw.Vt <- (my.raw.Vas + my.raw.Val) / h2
-
-                ## standardized effects
-                my.std.as <- as / sqrt ( my.raw.Vt )
-                my.std.al <- al / sqrt ( my.raw.Vt )
-
-                ## standardize variances
-                my.std.Vas <- my.raw.Vas / my.raw.Vt
-                my.std.Val <- my.raw.Val / my.raw.Vt
-                my.std.norm.sd <- sqrt(1 - h2 + my.std.Vas)
-
-                ## standardized thr dens
-                my.ft <- my.ys/(4*Ne*C*my.std.as)
-                
-                my.range <- seq(qpois(1e-8,my.mean.nl),qpois(1-1e-8,my.mean.nl))
-                my.prot <- pPoisConv(my.tstar,my.mean.nl,my.std.norm.sd,alphal=my.std.al,risk.allele=FALSE)
-                my.risk <- pPoisConv(my.tstar,my.mean.nl,my.std.norm.sd,alphal=my.std.al,risk.allele=TRUE)
-                
-                ## global stuff
-                my.meana <- (my.std.as*my.Ls + my.std.al*my.Ll)/L
-                my.maxg <- 2*my.meana*L
-                my.prev <- as.numeric(pPoisConv(my.tstar,my.mean.nl,my.std.norm.sd,alphal=my.std.al))
-                my.risk.var <- (my.prev*(1-my.prev))
-
-                ## differences
-                my.deltal.tild <- my.risk - my.prot
-                diff.one <- my.deltal - my.deltal.tild
-
-                my.ft.tild <- dPoisConv(my.tstar,my.mean.nl,my.std.norm.sd,alphal=my.std.al,risk.allele=FALSE)
-                diff.two <- my.ft-my.ft.tild
-
-                if(equalize.observed.vars){
-                    my.Vol <- my.deltal^2*my.mean.nl
-                    my.Vos <- my.std.Vas*my.ft^2
-                    diff.three <- (my.Vol-var.ratio*my.Vos)/my.risk.var
-                } else {
-                    diff.three <- my.std.Val-var.ratio*my.std.Vas
-                }
-
-                bt.tild <- (2*my.Ls*my.bs*my.std.as + 2*my.Ll*1*my.std.al)/(my.maxg)
-                diff.four <- bt - bt.tild
-
-                ##diff.five <- my.L*my.meana - Lmeana
-
-                return(c(diff.one,diff.two,diff.three,diff.four))
-            },
+            fn=function(X) fourPoissonDiffs(X,as,al,bt,equalize.observed.vars),
             control=list(scalex=c(1,1/new.init.tstar,1/init.Ll,1),maxit=800,allowSingular=FALSE)
         )
-        if(recover.flag) recover()
         trans.deltal <- soln$x[1]
         deltal <- 1/(1+exp(trans.deltal))
         tstar <- soln$x[2]
@@ -246,6 +311,28 @@ solveTwoEffect <- function(bt,bs=bt,Ne,as,al,L,Ll,last.tstar=NULL,h2=NULL,Ve=NUL
         bs <- 1/(1+exp(soln$x[4]))
         Ls <- L - Ll
         ys <- log((1+bs)/(1-bs))
+        
+        
+        ## get 4d Normal solution
+        soln <- nleqslv(
+          x=c(init.trans.deltal,new.init.tstar,init.Ll,init.trans.bs),
+          fn=function(X) fourNormalDiffs(X,as,al,bt,equalize.observed.vars),
+          control=list(scalex=c(1,1/new.init.tstar,1/init.Ll,1),maxit=800,allowSingular=FALSE)
+        )
+        multi.norm.trans.deltal <- soln$x[1]
+        multi.norm.deltal <- 1/(1+exp(trans.deltal))
+        multi.norm.tstar <- soln$x[2]
+        multi.norm.Ll <- soln$x[3]
+        multi.norm.bs <- 1/(1+exp(soln$x[4]))
+        multi.norm.prev <- 1-pnorm(multi.norm.tstar,0,1)
+        
+        multi.norm.Ls <- L - multi.norm.Ll
+        multi.norm.ys <- log((1+multi.norm.bs)/(1-multi.norm.bs))
+        multi.norm.Vas <- 8*Ne*u*multi.norm.Ls*as^2*multi.norm.bs/multi.norm.ys
+        multi.norm.mean.nl <- 2*multi.norm.Ll*u/(multi.norm.deltal*C)
+        multi.norm.Val <- al^2*multi.norm.mean.nl
+        multi.norm.Vt <- (multi.norm.Vas + multi.norm.Val) / h2
+        
     }
 
     ##    L <- Ls+Ll
