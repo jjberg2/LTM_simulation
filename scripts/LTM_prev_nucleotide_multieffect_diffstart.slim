@@ -180,8 +180,8 @@ fitness(NULL){
 			// the new substitution was a small effect minus fix 			
 			if ((subs[newsubs-1] == "A")){
 				minus_pos = sim.substitutions[newsubs-1].position;
-				fixedSmallGenLi = fixedSmallGenLi - 2*betaL;
-				fixedGenLi = fixedGenLi - 2 * betaL;
+				fixedSmallGenLi = fixedSmallGenLi - 2*betaS;
+				fixedGenLi = fixedGenLi - 2 * betaS;
 				old_fixedPos = sim.getValue("SfixedPos");
 				new_fixedPos = old_fixedPos[which(old_fixedPos !=minus_pos)];
 				sim.setValue("SfixedPos", new_fixedPos);

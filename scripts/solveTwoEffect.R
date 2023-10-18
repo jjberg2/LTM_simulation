@@ -1,13 +1,15 @@
 source('scripts/solveSingleEffect.R')
 
-fourPoissonDiffs <- function(X,as=as,al=al,bt=bt,equalize.observed.vars=equalize.observed.vars){
+fourPoissonDiffs <- function(X,as=as,al=al,bt=bt,L=L,var.ratio=var.ratio,equalize.observed.vars=equalize.observed.vars){
   ## inputs
   my.deltal <- 1/(1+exp(X[1]))
   my.tstar <- X[2]
-  my.Ll <- X[3]
+  my.gs <- 1/(1+exp(X[3]))  
+  my.Ll <- L*(1-my.gs)
+  my.Ls <- L*my.gs
   ##Ls <- L-Ll
   my.bs <- 1/(1+exp(X[4]))
-  my.Ls <- L - my.Ll
+  
   ##my.L  <- my.Ll + my.Ls
   
   ## unscaled small effect stuff
@@ -69,11 +71,14 @@ fourPoissonDiffs <- function(X,as=as,al=al,bt=bt,equalize.observed.vars=equalize
   return(c(diff.one,diff.two,diff.three,diff.four))
 }
 
-fourNormalDiffs <- function(X,as=as,al=al,bt=bt,equalize.observed.vars=equalize.observed.vars){
-  ## inputs
+fourNormalDiffs <- function(X,as=as,al=al,bt=bt,L=L,var.ratio=var.ratio,equalize.observed.vars=equalize.observed.vars){
+    ## inputs
   my.deltal <- 1/(1+exp(X[1]))
   my.tstar <- X[2]
-  my.Ll <- X[3]
+  my.gs <- 1/(1+exp(X[3]))  
+  my.Ll <- L*(1-my.gs)
+  my.Ls <- L*my.gs
+    
   ##Ls <- L-Ll
   my.bs <- 1/(1+exp(X[4]))
   my.Ls <- L - my.Ll
@@ -87,12 +92,12 @@ fourNormalDiffs <- function(X,as=as,al=al,bt=bt,equalize.observed.vars=equalize.
   ## raw large effect stuff
   my.s <- my.deltal*C
   my.y <- 4*Ne*my.s #originally 2*Ne*my.s
-  my.mean.nl <- 2*my.Ll*u/my.s
-  my.raw.Val <- al^2*my.mean.nl
+  bal <- ifelse(my.y > 20, 1, (exp(my.y)-1)/(exp(my.y)+1))
+  my.raw.Val <- 2*al^2*my.Ll*u*bal/my.s
   
   ## get total variance in original units
   my.raw.Vt <- (my.raw.Vas + my.raw.Val) / h2
-  
+
   ## standardized effects
   my.std.as <- as / sqrt ( my.raw.Vt )
   my.std.al <- al / sqrt ( my.raw.Vt )
@@ -100,7 +105,7 @@ fourNormalDiffs <- function(X,as=as,al=al,bt=bt,equalize.observed.vars=equalize.
   ## standardize variances
   my.std.Vas <- my.raw.Vas / my.raw.Vt
   my.std.Val <- my.raw.Val / my.raw.Vt
-  my.std.norm.sd <- sqrt(1 - h2 + my.std.Vas)
+##  my.std.norm.sd <- sqrt(1 - h2 + my.std.Vas)
   
   ## standardized thr dens
   my.ft <- my.ys/(4*Ne*C*my.std.as)
@@ -123,7 +128,7 @@ fourNormalDiffs <- function(X,as=as,al=al,bt=bt,equalize.observed.vars=equalize.
   diff.two <- my.ft-my.ft.tild
   
   if(equalize.observed.vars){
-    my.Vol <- my.deltal^2*my.mean.nl
+    my.Vol <- 2*my.deltal^2*my.Ll*u*bal/my.s
     my.Vos <- my.std.Vas*my.ft^2
     diff.three <- (my.Vol-var.ratio*my.Vos)/my.risk.var
   } else {
@@ -140,7 +145,7 @@ fourNormalDiffs <- function(X,as=as,al=al,bt=bt,equalize.observed.vars=equalize.
 
 
 
-solveTwoEffect <- function(bt,bs=bt,Ne,as,al,L,Ll,last.tstar=NULL,h2=NULL,Ve=NULL,u,C,LL.soln=FALSE,var.ratio=NULL,equalize.observed.vars=FALSE){
+solveTwoEffect <- function(bt,bs=bt,Ne,as,al,L,gs,last.tstar=NULL,h2=NULL,Ve=NULL,u,C,LL.soln=FALSE,var.ratio=NULL,equalize.observed.vars=FALSE){
 
     ## bs:  asymmetry for small effects
     ## Ne:  pop size
@@ -154,6 +159,8 @@ solveTwoEffect <- function(bt,bs=bt,Ne,as,al,L,Ll,last.tstar=NULL,h2=NULL,Ve=NUL
     ## C:   cost
     ## h2l: ratio of large effect variance to total genetic variance (not currently used)
 
+    if(recover.flag) recover()
+    
     if(LL.soln)
         stopifnot(!is.null(var.ratio))
 
@@ -163,7 +170,8 @@ solveTwoEffect <- function(bt,bs=bt,Ne,as,al,L,Ll,last.tstar=NULL,h2=NULL,Ve=NUL
 
 
     ## transformed params
-    Ls <- L - Ll
+    Ls <- L*gs
+    Ll <- L*(1-gs)
     
     ## single effect solution
     single.norm.y <- log((1+bt/(1-bt)))
@@ -175,77 +183,55 @@ solveTwoEffect <- function(bt,bs=bt,Ne,as,al,L,Ll,last.tstar=NULL,h2=NULL,Ve=NUL
         norm.Vt <- single.norm.Vg + Ve
     }
     std.dev.tot <- sqrt ( norm.Vt )
-    single.norm.a.std <- 1 / std.dev.tot
-    single.norm.dens <- 2*L*u*my.bt*single.norm.a.std / (h2*C)
+    single.norm.as.std <- 1 / std.dev.tot
+    single.norm.dens <- 2*L*u*my.bt*single.norm.as.std / (h2*C)
     single.norm.std.thr <- dnorminv(single.norm.dens)
     single.norm.prev <- 1-pnorm(single.norm.std.thr)
 
 
-    init.as.std <- single.norm.a.std
-    init.al.std <- init.as.std * al
-
-    init.deltas <- init.as.std * single.norm.dens
+    init.al.std <- single.norm.as.std * al
+    init.deltas <- single.norm.as.std * single.norm.dens
     init.deltal <- pnorm(single.norm.std.thr) - pnorm(single.norm.std.thr - init.al.std)
     
-    
-    ## ## solve for initial guess of ft
-    ## ys <- log((1+bs)/(1-bs))
-    ## ft <- ys*(4*Ne*C)^-1  #originally ys*(2*Ne*C)^-1
-
-    ## ## get small effect additive genetic variance
-    ## Vas <- 8*Ne*u*L*as^2*bs/ys  ## originally 4*Ne*u*Ls*as^2*bs/ys
-    ## if(is.null(Ve))
-    ##     Ve <- Vas*(1-r2n)/r2n
-    ## norm.sd <- sqrt(Vas+Ve)
-
-    ## initial guess for deltal
-    ## init.deltal <- 1##al*ft
-
-
     ## compute selection coefficient
     init.sl <- init.deltal*C
     init.yl <- 4*Ne*init.sl  #originally 2*Ne*init.sl
-    
-    
     if(init.yl<3)
         warning('initial scaled selection coefficient is too small')
-
-    
-    
-
     ## mean number of large effect alleles per individual
     init.mean.nl <- 2*Ll*u/init.sl
 
-    init.Vas <- 8*Ne*u*Ls*init.as.std^2*bs/single.norm.y  
+    init.Vas <- 8*Ne*u*Ls*single.norm.as.std^2*bs/single.norm.y  
     init.Val <- init.al.std^2*init.mean.nl
-
 
     ## rescale to achieve desired heritability
     init.Vt <- (init.Vas + init.Val) / h2
-    sec.as.std <- init.as.std / sqrt( init.Vt )
+    sec.as.std <- single.norm.as.std / sqrt( init.Vt )
     sec.al.std <- init.al.std / sqrt( init.Vt )
     sec.Vas <- 8*Ne*u*Ls*sec.as.std^2*bs/single.norm.y  
     sec.Val <- sec.al.std^2*init.mean.nl
     sec.norm.sd <- sqrt ( 1 - sec.Val )
     sec.deltal <- pnorm(single.norm.std.thr) - pnorm(single.norm.std.thr - sec.al.std)
-    
-    
+    sec.sl <- sec.deltal*C
+    sec.mean.nl <- 2*Ll*u/sec.sl
+    sec.norm.dens <- log((1+bs)/(1-bs))/(4*Ne*C)*sqrt(init.Vt)
+    sec.tstar <- dnorminv(sec.norm.dens)
+
+    my.seq <- seq(0,12,length.out=100)
+    this.min <- my.seq[min(which(sapply(my.seq,function(X)dPoisConv(X,sec.mean.nl,sec.norm.sd,sec.al.std)) > single.norm.dens))]
     init.soln <- uniroot(
         f=function(THR){
             ftild <- dPoisConv(
                 t=THR,
-                lambda=init.mean.nl,
+                lambda=sec.mean.nl,
                 norm.sd=sec.norm.sd,
                 alphal=sec.al.std
             )
             single.norm.dens-ftild
         },
-        interval=c(0,12*sec.norm.sd)
+        interval=c(this.min,12*sec.norm.sd)
     )
     init.tstar <- init.soln$root
-
-
-    init.Ll <- Ll
 
 
     ## get 2d solution
@@ -257,7 +243,7 @@ solveTwoEffect <- function(bt,bs=bt,Ne,as,al,L,Ll,last.tstar=NULL,h2=NULL,Ve=NUL
             my.tstar <- X[2]
 
             my.s <- my.deltal*C
-            my.y <- 4*Ne*my.s ## originally 2*Ne*my.s
+            ## my.y <- 4*Ne*my.s ## originally 2*Ne*my.s
             my.mean.nl <- 2*Ll*u/my.s
             my.Val <- sec.al.std^2*my.mean.nl
             my.norm.sd <- sqrt ( 1 - my.Val )
@@ -266,21 +252,18 @@ solveTwoEffect <- function(bt,bs=bt,Ne,as,al,L,Ll,last.tstar=NULL,h2=NULL,Ve=NUL
             my.risk <- pPoisConv(my.tstar,my.mean.nl,my.norm.sd,alphal=sec.al.std,risk.allele=TRUE)
             my.deltal.tild <- my.risk - my.prot
             ft.tild <- dPoisConv(my.tstar,my.mean.nl,my.norm.sd,alphal=sec.al.std,risk.allele=FALSE)
-            ##Val <- 2*sec.al.std^2*my.mean.nl
             diff.one <- my.deltal-my.deltal.tild
             diff.two <- single.norm.dens-ft.tild
-            ##diff.three <- Val-Vas
-            ##diff.three <- 4*al^2*my.mean.nl - Vas*h2l/(1-h2l)
             c(diff.one,diff.two)
         },
         control=list(scalex=c(1,1),maxit=400)
     )
     trans.deltal <- soln$x[1]
     deltal <- 1/(1+exp(trans.deltal))
-    tstar <- soln$x[2]
-
+    new.init.tstar <- soln$x[2]
     
-    if(recover.flag) recover()
+    
+    
     if(LL.soln){
 
         ## added the normal jitters because giving the solution as the initial condition led
@@ -291,48 +274,53 @@ solveTwoEffect <- function(bt,bs=bt,Ne,as,al,L,Ll,last.tstar=NULL,h2=NULL,Ve=NUL
         ## } else{
         ##   new.init.tstar <- soln$x[2] + rnorm(1,0,tstar/1000)
         ## }
-        new.init.tstar <- tstar
         init.Ll <- Ll## + rnorm(1,0,Ll/1000)
         init.Ls <- Ls
+        init.trans.gs <- log((1-gs)/gs)
         init.trans.bs <- log((1-bs)/bs)
 
 
-        recover()
         ## get 4d Poisson convolution solution
         soln <- nleqslv(
-            x=c(init.trans.deltal,new.init.tstar,init.Ll,init.trans.bs),
-            fn=function(X) fourPoissonDiffs(X,as,al,bt,equalize.observed.vars),
-            control=list(scalex=c(1,1/new.init.tstar,1/init.Ll,1),maxit=800,allowSingular=FALSE)
+            x=c(init.trans.deltal,new.init.tstar,init.trans.gs,init.trans.bs),
+            fn=function(X) fourPoissonDiffs(X,as,al,bt,L,var.ratio,equalize.observed.vars),
+            control=list(scalex=c(1,1/new.init.tstar,1,1),maxit=800,allowSingular=FALSE)
         )
         trans.deltal <- soln$x[1]
         deltal <- 1/(1+exp(trans.deltal))
         tstar <- soln$x[2]
-        Ll <- soln$x[3]
-        bs <- 1/(1+exp(soln$x[4]))
-        Ls <- L - Ll
+        trans.gs <- soln$x[3]
+        gs <- 1/(1+exp(trans.gs))
+        Ls <- L*gs
+        Ll <- L*(1-gs)
+        trans.bs <- soln$x[4]
+        bs <- 1/(1+exp(trans.bs))
         ys <- log((1+bs)/(1-bs))
         
-        
-        ## get 4d Normal solution
-        soln <- nleqslv(
-          x=c(init.trans.deltal,new.init.tstar,init.Ll,init.trans.bs),
-          fn=function(X) fourNormalDiffs(X,as,al,bt,equalize.observed.vars),
-          control=list(scalex=c(1,1/new.init.tstar,1/init.Ll,1),maxit=800,allowSingular=FALSE)
-        )
-        multi.norm.trans.deltal <- soln$x[1]
-        multi.norm.deltal <- 1/(1+exp(trans.deltal))
-        multi.norm.tstar <- soln$x[2]
-        multi.norm.Ll <- soln$x[3]
-        multi.norm.bs <- 1/(1+exp(soln$x[4]))
-        multi.norm.prev <- 1-pnorm(multi.norm.tstar,0,1)
-        
-        multi.norm.Ls <- L - multi.norm.Ll
-        multi.norm.ys <- log((1+multi.norm.bs)/(1-multi.norm.bs))
-        multi.norm.Vas <- 8*Ne*u*multi.norm.Ls*as^2*multi.norm.bs/multi.norm.ys
-        multi.norm.mean.nl <- 2*multi.norm.Ll*u/(multi.norm.deltal*C)
-        multi.norm.Val <- al^2*multi.norm.mean.nl
-        multi.norm.Vt <- (multi.norm.Vas + multi.norm.Val) / h2
-        
+        if(TRUE){
+            ## get 4d Normal solution
+            soln <- nleqslv(
+                x=c(trans.deltal,tstar,trans.gs,trans.bs),
+                fn=function(X) fourNormalDiffs(X,as,al,bt,L,var.ratio,equalize.observed.vars),
+                control=list(scalex=c(1,1/new.init.tstar,1,1),maxit=800,allowSingular=FALSE)
+            )
+            multi.norm.trans.deltal <- soln$x[1]
+            multi.norm.deltal <- 1/(1+exp(trans.deltal))
+            multi.norm.tstar <- soln$x[2]
+            multi.norm.trans.gs <- soln$x[3]
+            multi.norm.gs <- 1/(1+exp(multi.norm.trans.gs))
+            multi.norm.Ls <- L*multi.norm.gs
+            multi.norm.Ll <- L*(1-multi.norm.gs)
+            multi.norm.bs <- 1/(1+exp(soln$x[4]))
+            multi.norm.prev <- 1-pnorm(multi.norm.tstar,0,1)
+            
+            
+            multi.norm.ys <- log((1+multi.norm.bs)/(1-multi.norm.bs))
+            multi.norm.Vas <- 8*Ne*u*multi.norm.Ls*as^2*multi.norm.bs/multi.norm.ys
+            multi.norm.mean.nl <- 2*multi.norm.Ll*u/(multi.norm.deltal*C)
+            multi.norm.Val <- al^2*multi.norm.mean.nl
+            multi.norm.Vt <- (multi.norm.Vas + multi.norm.Val) / h2
+        }
     }
 
     ##    L <- Ls+Ll
@@ -390,7 +378,7 @@ solveTwoEffect <- function(bt,bs=bt,Ne,as,al,L,Ll,last.tstar=NULL,h2=NULL,Ve=NUL
     max.gl <- uniroot(
         function(X)
             tol-pPoisConv(X,mean.nl,norm.sd,alphal=std.al),
-        interval=c(-10*tstar,10*tstar)
+        interval=c(0,12*tstar)
     )$root
     seq.li <- seq(min.gl,max.gl,length.out=1000)
     li.dense <- sapply(seq.li,function(G) dPoisConv(G,mean.nl,norm.sd,alphal=std.al))
@@ -492,6 +480,7 @@ solveTwoEffect <- function(bt,bs=bt,Ne,as,al,L,Ll,last.tstar=NULL,h2=NULL,Ve=NUL
             ldens=ldens,
             pdil=pdil,
             pidl=pidl,
+            gs=gs,
             Ls=Ls,
             Ll=Ll,
             li.dense=li.dense
@@ -505,6 +494,7 @@ solveTwoEffect <- function(bt,bs=bt,Ne,as,al,L,Ll,last.tstar=NULL,h2=NULL,Ve=NUL
 makeOutput = function(soln) {
   output = numeric()
   output['as'] <- soln$as  ## small effect size
+  output['as'] <- soln$al  ## small effect size
   output['std.as'] <-
     soln$std.as  ## standardized small effect size
   output['std.al'] <-
@@ -520,6 +510,7 @@ makeOutput = function(soln) {
   output['yl'] <-
     soln$yl  ## large scaled selection coefficient
   output['Ls'] <- soln$Ls  ## numer of small effect loci
+  output['gs'] <- soln$gs  ## fraction of small effect loci
   output['bs'] <- soln$bs  ## b for small effect loci
   output['rhos'] <-
     1 / 2 - output['bs'] / 2  ## rho for small effect loci
