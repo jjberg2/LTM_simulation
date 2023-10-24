@@ -111,7 +111,7 @@ fourNormalDiffs <-
            equalize.observed.vars = equalize.observed.vars) {
     ## inputs
     my.deltal <- 1 / (1 + exp(X[1]))
-    my.tstar <- X[2]
+    my.tstar <- X[2]^2
     my.gs <- 1 / (1 + exp(X[3]))
     my.Ll <- L * (1 - my.gs)
     my.Ls <- L * my.gs
@@ -209,9 +209,6 @@ solveTwoEffect <-
     ## C:   cost
     ## h2l: ratio of large effect variance to total genetic variance (not currently used)
     
-    if (recover.flag)
-      recover()
-    
     ## transformed params
     Ls <- L * gs
     Ll <- L * (1 - gs)
@@ -260,11 +257,13 @@ solveTwoEffect <-
     sec.tstar <- dnorminv(sec.norm.dens)
     sec.prev <- 1 - pnorm(sec.tstar)
     
-    my.seq <- seq(0, 12, length.out = 100)
-    this.diff <-
-      sapply(my.seq, function(X)
-        dPoisConv(X, sec.mean.nl, sec.norm.sd, sec.al.std)) > single.norm.dens
-    this.min <- my.seq[min(which(this.diff))]
+    my.seq <- seq(0, 12*sec.tstar, length.out = 1000)
+    pois.dens.seq <- sapply(my.seq, function(X)
+      dPoisConv(X, sec.mean.nl, sec.norm.sd, sec.al.std))
+    single.norm.dens - dPoisConv(12*sec.tstar, sec.mean.nl, sec.norm.sd, sec.al.std)
+    this.diff <- single.norm.dens - pois.dens.seq
+    this.tf <- this.diff < 0
+    this.min <- my.seq[min(which(this.tf))]
     
     init.soln <- uniroot(
       f = function(THR) {
@@ -276,7 +275,7 @@ solveTwoEffect <-
         )
         single.norm.dens - ftild
       },
-      interval = c(this.min, 12 * sec.norm.sd)
+      interval = c(this.min, 100 * sec.norm.sd)
     )
     init.tstar <- init.soln$root
     
@@ -366,7 +365,7 @@ solveTwoEffect <-
       if (TRUE) {
         ## get 4d Normal solution
         soln <- nleqslv(
-          x = c(trans.deltal, 3, trans.gs, trans.bs),
+          x = c(trans.deltal, sqrt(tstar), trans.gs, trans.bs),
           fn = function(X)
             fourNormalDiffs(X, as, al, bt, L, h2, C, var.ratio, equalize.observed.vars),
           control = list(
@@ -376,7 +375,7 @@ solveTwoEffect <-
         )
         multi.norm.trans.deltal <- soln$x[1]
         multi.norm.deltal <- 1 / (1 + exp(trans.deltal))
-        multi.norm.tstar <- soln$x[2]
+        multi.norm.tstar <- soln$x[2]^2
         multi.norm.trans.gs <- soln$x[3]
         multi.norm.gs <- 1 / (1 + exp(multi.norm.trans.gs))
         multi.norm.Ls <- L * multi.norm.gs
@@ -417,9 +416,6 @@ solveTwoEffect <-
     std.Vg <- std.Vas + std.Val
     norm.Va <- 1 - h2 + std.Vas
     norm.sd <- sqrt(norm.Va)
-    ## as.std  <- as / sqrt( Vt )
-    ## al.std  <- al / sqrt( Vt )
-    ## ft.std <- ft * sqrt ( Vt )
     
     ## risk scale variances
     Vos <- std.Vas * std.ft ^ 2
@@ -449,7 +445,7 @@ solveTwoEffect <-
     stopifnot(abs((mutall - selall) / (mutall + selall)) < 1e-8)
     
     
-    tol <- 1e-5
+    tol <- 1e-4
     min.gl <- uniroot(function(X)
       tol - (1 - pPoisConv(X, mean.nl, norm.sd, alphal = std.al)),
       interval = c(-10 * tstar, 10 * tstar))$root
@@ -464,10 +460,6 @@ solveTwoEffect <-
         dPoisConv(G, mean.nl, norm.sd, alphal = std.al))
     
     
-    
-    
-    
-    ##recover()
     ## heritabilies on liability scale
     h2s <- std.Vas / (std.Val + std.Vas + (1 - h2))
     h2l <- std.Val / (std.Val + std.Vas + (1 - h2))
@@ -500,6 +492,8 @@ solveTwoEffect <-
     meana <- (std.as * Ls + std.al * Ll) / L
     maxg <- 2 * meana * L
     bt <- (2 * Ls * bs * std.as + 2 * Ll * 1 * std.al) / maxg
+    
+    if (multi.norm.prev>0.5) recover()
     
     return(
       list(
@@ -570,7 +564,8 @@ solveTwoEffect <-
         gs = gs,
         Ls = Ls,
         Ll = Ll,
-        li.dense = li.dense
+        li.dense = li.dense,
+        var.ratio = var.ratio
       )
     )
   }
@@ -625,6 +620,12 @@ makeOutput = function(soln) {
     soln$h2ol  ## large effect h2 on observed scale
   output['pgl'] <-
     soln$pgl  ## large effect h2 on observed scale
+  output['h2s.est'] <-
+    soln$h2s.est  
+  output['h2l.est'] <-
+    soln$h2l.est  
+  output['h2all.est'] <-
+    soln$h2all.est  ## large effect h2 on observed scale
   output['prev'] <- soln$prev ## prevalence
   output['multi.norm.prev'] <- soln$multi.norm.prev ## prevalence
   output['deltas'] <- soln$deltas ## risk small effect
@@ -644,6 +645,8 @@ makeOutput = function(soln) {
     soln$tstar  ## threshold distance in standardized units
   output['multi.norm.tstar'] <-
     soln$multi.norm.tstar
+  output['var.ratio'] <-
+    soln$var.ratio
   return(output)
 }
 

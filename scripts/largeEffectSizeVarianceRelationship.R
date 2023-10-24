@@ -184,145 +184,80 @@ for (j in 1:length(my.costs)) {
 dev.off()
 
 
+#################################
+## how many sites do you need? ##
+#################################
 
-
-
-
-## ## second normal figure
-## four.costs <- seq(0.1, 1, length.out = 4)
-## init.prev = 0.001
-## thr = rep(qnorm(1 - init.prev),4)
-## ##thr <- dnorminv(dnorm(init.thr) / four.costs)
-## ##prevs <- 1 - pnorm(thr)
-## max.a = thr + max(thr)
-## min.a = rep(0.001, 4)
-## my.a = mapply(
-##   function(MAXA, MINA)
-##     seq(MINA, MAXA, length.out = 1000),
-##   MINA = min.a,
-##   MAXA = max.a,
-##   SIMPLIFY = FALSE
-## )
-## my.vars.four.costs001 = mapply(
-##   function(THR, A, COST)
-##     sigmaa(A, THR, N * COST),
-##   THR = thr,
-##   A = my.a,
-##   COST = four.costs,
-##   SIMPLIFY = FALSE
-## )
-
-
-## cex.lab = 1.4
-## pdf('figures/suppFigures/largeEffectSizeVarianceRelationship2.pdf',width=12,height=6)
-## par(mfrow=c(1,2))
-## op = par(mar=c(5,5,4,4)+0.1)
-## plot(
-##   NA,
-##   xlim = c(0,max(max.a)),
-##   ylim = c(0,0.12),
-##   type = 'l',
-##   xlab ='',
-##   ylab =''
-## )
-## j=1
-## for(i in 1:length(my.a)){
-##   lines(
-##     my.a[[i]],
-##     my.vars.four.costs001[[i]],
-##     lty = i
-##   )
-## }
-## mtext(
-##   text=expression(paste('Standardized effect size (', alpha[std] ,')',sep='')),
-##   side=1,
-##   line=3,
-##   cex=cex.lab
-## )
-## mtext(
-##   text = 'Liability scale contribution to variance',
-##   side = 2,
-##   line = 3.75,
-##   cex = cex.lab
-## )
-## mtext(
-##   text = expression(alpha ^ 2 * b(alpha) / (2 * N * delta[R](alpha) * C)),
-##   side = 2,
-##   line = 2,
-##   cex = cex.lab
-## )
-## mtext(
-##   text = "Prevalence = 0.001",
-##   side = 3,
-##   line = 1,
-##   cex = cex.lab
-## )
-
-
-## par(op)
-## init.prev = 0.01
-## thr = rep(qnorm(1 - init.prev),4)
-## my.vars.four.costs01 = mapply(
-##   function(THR, A, COST)
-##     sigmaa(A, THR, N * COST),
-##   THR = thr,
-##   A = my.a,
-##   COST = four.costs,
-##   SIMPLIFY = FALSE
-## )
-## plot(
-##   NA,
-##   xlim = c(0,max(max.a)),
-##   ylim = c(0,0.12),
-##   type = 'l',
-##   xlab ='',
-##   ylab =''
-## )
-## j=1
-## for(i in 1:length(my.a)){
-##   lines(
-##     my.a[[i]],
-##     my.vars.four.costs01[[i]],
-##     lty = i
-##   )
-## }
-## mtext(
-##   text=expression(paste('Standardized effect size (', alpha[std] ,')',sep='')),
-##   side=1,
-##   line=3,
-##   cex=cex.lab
-## )
-## mtext(
-##   text = 'Liability scale contribution to variance',
-##   side = 2,
-##   line = 3.75,
-##   cex = cex.lab
-## )
-## mtext(
-##   text = expression(alpha ^ 2 * b(alpha) / (2 * N * delta[R](alpha) * C)),
-##   side = 2,
-##   line = 2,
-##   cex = cex.lab
-## )
-## text(
-##   x = 0.8,
-##   y = 0.12,
-##   labels = 'Fitness cost'
-## )
-## legend(
-##   x = -0.1,
-##   y = 0.12,
-##   legend = four.costs,
-##   lty = 1:4,
-##   bty = 'n'
-## )
-## mtext(
-##   text = "Prevalence = 0.01",
-##   side = 3,
-##   line = 1,
-##   cex = cex.lab
-## )
-## dev.off()
+##my.costs <- c(1, 2 / 3, 1 / 3)
+i = 1
+Ne = 3000
+my.ratios <- lapply(thr,
+       function(THR) {
+         tmp.bt <- 0.9
+         min.y <- log((1+tmp.bt)/(1-tmp.bt))
+         min.del <- min.y / (4 * Ne)
+         my.prev <- 1-pnorm(THR)
+         min.a <- uniroot(
+           f = function(A)
+             normDel(A, THR) - min.del ,
+           interval = c(0, 5)
+         )$root
+         max.a <- qnorm(0.99) - qnorm(my.prev)
+         these.as <- seq(min.a, max.a, length.out = 1000)
+         these.dels <- normDel(these.as, THR)
+         delsq.ratio <- min.del ^ 2 / these.dels ^ 2
+         asq.ratio <- these.as ^ 2 / min.a ^ 2
+         bgamma.ratio <-
+           bgamma(4 * Ne * these.dels) / bgamma(4 * Ne * min.del)
+         h2l.ratio <- delsq.ratio * asq.ratio * bgamma.ratio
+         list(these.dels,h2l.ratio,these.as,delsq.ratio,asq.ratio,bgamma.ratio)
+       }
+)
+my.dels <- lapply(my.ratios,function(X)X[[1]])
+my.h2ratios <- lapply(my.ratios,function(X)X[[2]])
+my.as <- lapply(my.ratios,function(X)X[[3]])
+par(mfrow=c(1,2))
+plot(
+  NA,
+  xlim = c(0, 1),
+  ylim = c(0, 1.2),
+  type = 'l',
+  xlab = 'PAR of large effect allele',
+  ylab = 'Relative contribution to liability scale h2',
+  bty = 'n'
+)
+for(j in 1:length(my.dels)){
+lines(my.dels[[j]],
+      my.h2ratios[[j]],
+      lty = 1,
+      lwd = 2,
+      col = four.cols[j])
+}
+legend(
+  'topright',
+  bty = 'n',
+  lty = 1 ,
+  lwd = 2,
+  col = four.cols,
+  legend = prevs,
+  title = 'Prevalence'
+)
+plot(
+  NA,
+  xlim = c(0, max(unlist(my.as))),
+  ylim = c(0, 1.2),
+  type = 'l',
+  xlab = 'Standardized liability effect of large effect alleles',
+  ylab = 'Relative contribution to liability scale h2',
+  bty = 'n'
+)
+for(j in 1:length(my.dels)){
+  lines(my.as[[j]],
+        my.h2ratios[[j]],
+        lty = 1,
+        lwd = 2,
+        col = four.cols[j])
+}
 
 
 
@@ -330,6 +265,9 @@ dev.off()
 
 
 
+
+
+## how does Poisson shape change things?
 sigmaa2 = function(a,del,nc){
   a^2 * bgamma(4*nc*del) / (2*nc*del)
 }

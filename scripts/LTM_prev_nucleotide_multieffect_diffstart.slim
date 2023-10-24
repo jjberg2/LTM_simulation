@@ -317,7 +317,7 @@ fitness(NULL){
 				num = sum((x-meanx)*(risk - mean(risk)));
 				denom = sum( (x-meanx)^2 );
 				smallRiskEffect[i] = num/denom;
-				smallSiteVar[i] = denom/(N-1);
+				smallSiteVar[i] = denom/(Ls-1);
 				smallRiskFreq[i]=meanx/2;
 				smallRiskVarPerSite[i] = smallRiskEffect[i]^2*smallSiteVar[i];
 				if (small_muts[i].nucleotide == "A") {
@@ -364,7 +364,7 @@ fitness(NULL){
 				num = sum((x-meanx)*(risk - mean(risk)));
 				denom = sum( (x-meanx)^2 );
 				largeRiskEffect[i] = num/denom;
-				largeSiteVar[i] = denom/(N-1);
+				largeSiteVar[i] = denom/(Ll-1);
 				largeRiskFreq[i]=meanx/2;
 				largeRiskVarPerSite[i] = largeRiskEffect[i]^2*largeSiteVar[i];
 				if (large_muts[i].nucleotide == "C") {
