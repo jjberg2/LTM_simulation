@@ -270,8 +270,8 @@ solveTwoEffect2D <- function(bt,
                              equalize.observed.vars = FALSE) {
     ## bs:  asymmetry for small effects
     ## Ne:  pop size
-    ## Ls:  number of small effect loci
-    ## Ll:  number of large effect loci
+    ## L:  number of sites
+    ## gs: fraction of sites that have small effects
     ## as:  small effect size
     ## al:  large effect size
     ## r2n: ratio of Ve to Vas (small effect variance)
