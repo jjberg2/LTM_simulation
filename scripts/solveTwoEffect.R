@@ -41,7 +41,7 @@ twoPoissonDiffs <- function(
 
     
     ## standardized quantities
-    std.ft <- my.ys * sqrt ( my.raw.Vt ) / ( 4*Ne*cost)
+    std.ft <- my.ys * sqrt ( my.raw.Vt ) / ( 4*Ne*Bval*cost)
     std.as <- as / sqrt( my.raw.Vt )
     std.al <- al / sqrt( my.raw.Vt )
     h2as <- my.raw.Vas / my.raw.Vt
@@ -286,8 +286,10 @@ solveTwoEffect2D <- function(bt,
 
     ## single effect solution
     single.norm.y <- log((1 + bt) / (1 - bt))
-    ## sel.Bval <- tanh(single.norm.y*Bval) / tanh(single.norm.y)
-    single.norm.ft <- 1 / (4 * Ne * C) * single.norm.y
+
+    single.norm.ft.noBGS <- 1 / (4 * Ne * C) * single.norm.y
+    single.norm.ft.wBGS <- 1 / (4 * Ne * Bval * C) * single.norm.y
+
     single.norm.Vg.noBGS <- 8 * Ne * L * u * bt / single.norm.y
     single.norm.Vg.wBGS <- 8 * Ne * Bval * L * u * bt / single.norm.y
 
@@ -309,8 +311,8 @@ solveTwoEffect2D <- function(bt,
     single.norm.as.std.noBGS <- 1 / std.dev.tot.noBGS
     single.norm.as.std.wBGS <- 1 / std.dev.tot.wBGS
 
-    single.norm.dens.noBGS <- 2 * L * u * bt * single.norm.as.std.noBGS / (h2.noBGS * C)
-    single.norm.dens.wBGS <- 2 * L * u * bt * single.norm.as.std.wBGS / (h2.wBGS * C)
+    single.norm.dens.noBGS <- single.norm.ft.noBGS * std.dev.tot.noBGS## 2 * L * u * bt * single.norm.as.std.noBGS / (h2.noBGS * C)
+    single.norm.dens.wBGS <- single.norm.ft.wBGS * std.dev.tot.wBGS  ## 2 * L * u * bt * single.norm.as.std.wBGS / (h2.wBGS * C)
 
     single.norm.tstar.noBGS <- dnorminv(single.norm.dens.noBGS)
     single.norm.tstar.wBGS <- dnorminv(single.norm.dens.wBGS)
@@ -323,59 +325,6 @@ solveTwoEffect2D <- function(bt,
     
     init.al.std <- single.norm.as.std.noBGS * al
     init.deltal <- pnorm(single.norm.tstar.noBGS) - pnorm(single.norm.tstar.noBGS - init.al.std)
-    ##init.deltas <- single.norm.as.std.noBGS * single.norm.dens.noBGS
-    ## init.sl <- init.deltal * C
-    ## init.yl <- 4 * Ne * init.sl
-    ## init.mean.nl <- 2 * Ll * u / init.sl
-    ## init.Vas <- 8 * Ne * u * Ls * single.norm.as.std.noBGS^2 * bs / single.norm.y
-    ## init.Val <- init.al.std ^ 2 * init.mean.nl
-    ## if(is.null(Ve)){
-    ##     init.Vt <- (init.Vas + init.Val) / h2
-    ## } else {
-    ##     init.Vt <- init.Vas + init.Val + Ve
-    ## }
-    
-
-
-    ## sec.as.std <- single.norm.as.std.noBGS / sqrt(init.Vt)
-    ## sec.al.std <- init.al.std / sqrt(init.Vt)
-    ## sec.Vas <- 8 * Ne * u * Ls * sec.as.std ^ 2 * bs / single.norm.y
-    ## sec.Val <- sec.al.std ^ 2 * init.mean.nl
-    ## sec.norm.sd <- sqrt (1 - sec.Val)
-    ## sec.deltal <-
-    ##     pnorm(single.norm.std.thr.noBGS) - pnorm(single.norm.std.thr.noBGS - sec.al.std)
-    ## sec.sl <- sec.deltal * C
-    ## sec.yl <- 4 * Ne * sec.sl
-    ## sec.mean.nl <- 2 * Ll * u / sec.sl
-    ## sec.norm.dens <-
-    ##     log((1 + bs) / (1 - bs)) / (4 * Ne * C) * sqrt(init.Vt)
-    ## sec.tstar <- dnorminv(sec.norm.dens)
-    ## sec.prev <- 1 - pnorm(sec.tstar)
-    
-    ## my.seq <- seq(0, 12*sec.tstar, length.out = 1000)
-    ## pois.dens.seq <- sapply(my.seq, function(X)
-    ##     dPoisConv(X, sec.mean.nl, sec.norm.sd, sec.al.std))
-    ## single.norm.dens.noBGS - dPoisConv(12*sec.tstar, sec.mean.nl, sec.norm.sd, sec.al.std)
-    ## this.diff <- single.norm.dens.noBGS - pois.dens.seq
-    ## this.tf <- this.diff < 0
-    ## this.min <- my.seq[min(which(this.tf))]
-    
-    ## init.soln <- uniroot(
-    ##     f = function(THR) {
-    ##         ftild <- dPoisConv(
-    ##             t = THR,
-    ##             lambda = sec.mean.nl,
-    ##             norm.sd = sec.norm.sd,
-    ##             alphal = sec.al.std
-    ##         )
-    ##         single.norm.dens.noBGS - ftild
-    ##     },
-    ##     interval = c(this.min, 100 * sec.norm.sd)
-    ## )
-    ## init.tstar <- init.soln$root
-    
-
-    recover()
     
     ## get 2d solution
     soln.noBGS <- nleqslv(
@@ -398,17 +347,13 @@ solveTwoEffect2D <- function(bt,
     )
     trans.deltal.noBGS <- soln.noBGS$x[1]
     deltal.noBGS <- 1 / (1 + exp(trans.deltal.noBGS))
-    raw.ft.noBGS <- 1 / (4*Ne*C) * ys
-    deltas.noBGS <- 1 / (4*Ne) * ys
     tstar.noBGS <- soln.noBGS$x[2]
+    ys <- log((1 + bs) / (1 - bs))
+    raw.ft.noBGS <- 1 / (4*Ne*C) * ys
     mean.nl.noBGS <- 2 * Ll * u / (deltal.noBGS*C)
     raw.Val.noBGS <- al^2 * mean.nl.noBGS
-    ys <- log((1 + bs) / (1 - bs))
     raw.Vas.noBGS <- 8 * Ne * u * Ls * as ^ 2 * bs / ys
     raw.Va.noBGS <- raw.Vas.noBGS + raw.Val.noBGS
-    
-
-    
     
 
     soln.wBGS <- nleqslv(
@@ -438,7 +383,7 @@ solveTwoEffect2D <- function(bt,
     raw.Va.wBGS <- raw.Vas.wBGS + raw.Val.wBGS
     raw.Vt.wBGS <- raw.Va.wBGS + Ve
     raw.ft.wBGS <- 1 / (4*Ne*Bval*C) * ys
-    std.ft.wBGS <- as / 
+    ## std.ft.wBGS <- as / 
     
     large.effect.reduction <- deltal.noBGS / deltal.wBGS
     
@@ -624,13 +569,7 @@ solveTwoEffect <-
       Ll <- L * (1 - gs)
       trans.bs <- soln$x[4]
       bs <- 1 / (1 + exp(trans.bs))
-      ys <- log((1 + bs) / (1 - bs))
-
-      if(FALSE){
-          my.x <- c(6.785109,5.466704,-2.197225,1.386294)
-          fourPoissonDiffs(my.x,as=1,al=8,bt=0.4,L=1e5,h2=0.5,C=0.2,var.ratio=2,equalize.observed.vars=TRUE)
-      }
-      
+      ys <- log((1 + bs) / (1 - bs))      
       
       if (TRUE) {
         ## get 4d Normal solution
