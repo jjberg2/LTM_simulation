@@ -5,7 +5,6 @@ twoPoissonDiffs <- function(
                             as = as,
                             al = al,
                             bs = bs,
-                            gs = gs,
                             h2 = h2,
                             Ve = NULL,
                             Bval = Bval,
