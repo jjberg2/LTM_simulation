@@ -68,11 +68,6 @@ for (l in seq_along(my.bt)) {
 }
 
 
-
-
-
-
-
 save(solns, file = 'solutions/twoEffectPrevalenceSolutions_solutions.Robj')
 save(output, file = 'solutions/twoEffectPrevalenceSolutions_output.Robj')
 save(output.for.sims, file = 'solutions/twoEffectPrevalenceSolutions_outputForSims.Robj')

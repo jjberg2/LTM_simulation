@@ -258,15 +258,11 @@ solveTwoEffect2D <- function(bt,
                              al,
                              L,
                              gs,
-                             last.tstar = NULL,
                              h2 = NULL,
                              Ve = NULL,
                              u,
                              C,
-                             Bval=1,
-                             LL.soln = FALSE,
-                             var.ratio = NULL,
-                             equalize.observed.vars = FALSE) {
+                             Bval=1) {
     ## bs:  asymmetry for small effects
     ## Ne:  pop size
     ## L:  number of sites
@@ -279,6 +275,8 @@ solveTwoEffect2D <- function(bt,
     ## C:   cost
     ## h2l: ratio of large effect variance to total genetic variance (not currently used)
 
+    if(recover.flag) recover()
+  
     ## transformed params
     Ls <- L * gs
     Ll <- L * (1 - gs)
@@ -333,7 +331,6 @@ solveTwoEffect2D <- function(bt,
                              as = as,
                              al = al,
                              bs = bs,
-                             gs = gs,
                              h2 = h2,
                              Ve = NULL,
                              Bval = 1,
@@ -353,6 +350,24 @@ solveTwoEffect2D <- function(bt,
     raw.Val.noBGS <- al^2 * mean.nl.noBGS
     raw.Vas.noBGS <- 8 * Ne * u * Ls * as ^ 2 * bs / ys
     raw.Va.noBGS <- raw.Vas.noBGS + raw.Val.noBGS
+    raw.Ve.noBGS <- raw.Va.noBGS * (1-h2) / h2
+    raw.Vt.noBGS <- raw.Va.noBGS + raw.Ve.noBGS
+    std.ft.noBGS <- raw.ft.noBGS * sqrt( raw.Vt.noBGS )
+    norm.sd.noBGS <- 1 - raw.Val.noBGS / raw.Vt.noBGS
+    std.al.noBGS <- al / sqrt(norm.sd.noBGS)
+    pgal.noBGS <- raw.Val.noBGS / raw.Va.noBGS
+    prev.noBGS <- pPoisConv(
+      tstar.noBGS,
+      mean.nl.noBGS,
+      norm.sd.noBGS,
+      alphal = std.al.noBGS,
+      risk.allele = FALSE
+    )
+    raw.Vas.obs.noBGS <- raw.Vas.noBGS * std.ft.noBGS^2
+    raw.Val.obs.noBGS <- deltal.noBGS^2 * mean.nl.noBGS
+    yl.noBGS <-4*Ne*deltal.noBGS*C
+    raw.Va.obs.noBGS <- raw.Vas.obs.noBGS + raw.Val.obs.noBGS
+    pgal.obs.noBGS <- raw.Val.obs.noBGS / raw.Va.obs.noBGS
     
 
     soln.wBGS <- nleqslv(
@@ -362,9 +377,8 @@ solveTwoEffect2D <- function(bt,
                              as = as,
                              al = al,
                              bs = bs,
-                             gs = gs,
                              h2 = NULL,
-                             Ve = Ve,
+                             Ve = raw.Ve.noBGS,
                              Bval = Bval,
                              cost=C,
                              Ls = Ls,
@@ -380,13 +394,28 @@ solveTwoEffect2D <- function(bt,
     raw.Val.wBGS <- al^2 * mean.nl.wBGS
     raw.Vas.wBGS <- 8 * Ne * Bval * u * Ls * as ^ 2 * bs / ys
     raw.Va.wBGS <- raw.Vas.wBGS + raw.Val.wBGS
-    raw.Vt.wBGS <- raw.Va.wBGS + Ve
-    raw.ft.wBGS <- 1 / (4*Ne*Bval*C) * ys
-    ## std.ft.wBGS <- as / 
+    raw.Ve.wBGS <- raw.Va.wBGS * (1-h2) / h2
+    raw.Vt.wBGS <- raw.Va.wBGS + raw.Ve.wBGS
+    norm.sd.wBGS <- 1 - raw.Val.wBGS / raw.Vt.wBGS
+    std.al.wBGS <- al / sqrt(norm.sd.wBGS)
+    pgal.wBGS <- raw.Val.wBGS / raw.Va.wBGS
+    prev.wBGS <- pPoisConv(
+      tstar.wBGS,
+      mean.nl.wBGS,
+      norm.sd.wBGS,
+      alphal = std.al.wBGS,
+      risk.allele = FALSE
+    )
     
+
     large.effect.reduction <- deltal.noBGS / deltal.wBGS
     
-    return(large.effect.reduction)
+    return(c(large.effect.reduction = large.effect.reduction,
+                pgal.noBGS = pgal.noBGS,
+                deltal.noBGS=deltal.noBGS,
+                prev.noBGS=prev.noBGS,
+                pgal.obs.noBGS=pgal.obs.noBGS,
+                yl.noBGS=yl.noBGS))
 }
 
 solveTwoEffect <-

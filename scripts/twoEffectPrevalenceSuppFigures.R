@@ -41,6 +41,9 @@ for (l in seq_along(my.bt)) {
   }
 }
 
+
+## X: PAR
+## Y: Prevalence
 my.pch = c(21, 22)
 my.cols = met.brewer('Isfahan2', length(var.ratio))
 pdf(
@@ -130,7 +133,8 @@ dev.off()
 
 
 
-
+## X: PAR
+## Y: small a_std
 my.pch = c(21, 22)
 my.cols = met.brewer('Isfahan2', length(var.ratio))
 pdf(
@@ -216,6 +220,8 @@ dev.off()
 
 
 
+## X: PAR
+## Y: std ft
 my.pch = c(21, 22)
 my.cols = met.brewer('Isfahan2', length(var.ratio))
 pdf(
