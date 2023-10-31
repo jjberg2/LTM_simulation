@@ -21,12 +21,14 @@ my.prevs <- list()
 my.multi.norm.prevs <- list()
 my.std.as <- list()
 my.std.fts <- list()
+my.bs <- list()
 for (l in seq_along(my.bt)) {
   my.multi.norm.prevs[[l]] <- list()
   my.prevs[[l]] <- list()
   my.deltals[[l]] <- list()
   my.std.as[[l]] <- list()
   my.std.fts[[l]] <- list()
+  my.bs[[l]] <- list()
   for (k in seq_along(h2)) {
     my.deltals[[l]][[k]] <- sapply(output[[l]][[k]], function(X)
       X$deltal)
@@ -38,6 +40,8 @@ for (l in seq_along(my.bt)) {
       X$std.as)
     my.std.fts[[l]][[k]] <- sapply(output[[l]][[k]], function(X)
       X$std.ft)
+    my.bs[[l]][[k]] <- sapply(output[[l]][[k]], function(X)
+      X$bs)
   }
 }
 
@@ -131,6 +135,52 @@ for (ll in seq_along(my.bt)) {
 dev.off()
 
 
+
+
+## X: PAR
+## Y: bs
+my.pch = c(21, 22)
+my.cols = met.brewer('Isfahan2', length(var.ratio))
+pdf(
+  'figures/suppFigures/twoEffectPrevalence.pdf',
+  width = 12,
+  height = 6
+)
+par(mfrow = c(1, 2))
+for (ll in seq_along(my.bs)) {
+  plot(
+    NA,
+    xlim = c(0, 1),
+    ylim = c(0, max(unlist(my.bs[[ll]]))),
+    ylab = "Asymmetry of small effects",
+    xlab = "PAR of large effect alleles",
+    main = paste('b_s = ', my.bt[ll], sep = '')
+  )
+  if (FALSE & ll == 1) {
+    legend(
+      'bottomright',
+      col = my.cols,
+      lty = 1 ,
+      lwd = 2,
+      legend = round(var.ratio,2),
+      bty = 'n'
+    )
+  }
+  for (kk in seq_along(h2)) {
+    for (jj in seq_along(var.ratio)) {
+      ##plot.als <- output[[ll]][[kk]][[jj]][, 'al']
+      plot.these <- 1:min(which(my.deltals[[ll]][[kk]][, jj] > (1-max(my.prevs[[ll]][[kk]][, jj])-0.01)))
+      lines(
+        my.deltals[[ll]][[kk]][plot.these, jj],
+        my.bs[[ll]][[kk]][plot.these, jj],
+        col = my.cols[jj],
+        lty = kk,
+        lwd = 2
+      )
+    }
+  }
+}
+dev.off()
 
 
 ## X: PAR

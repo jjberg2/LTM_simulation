@@ -365,7 +365,7 @@ solveTwoEffect2D <- function(bt,
     )
     raw.Vas.obs.noBGS <- raw.Vas.noBGS * std.ft.noBGS^2
     raw.Val.obs.noBGS <- deltal.noBGS^2 * mean.nl.noBGS
-    yl.noBGS <-4*Ne*deltal.noBGS*C
+    yl.noBGS <- 4*Ne*deltal.noBGS*C
     raw.Va.obs.noBGS <- raw.Vas.obs.noBGS + raw.Val.obs.noBGS
     pgal.obs.noBGS <- raw.Val.obs.noBGS / raw.Va.obs.noBGS
     
@@ -394,7 +394,7 @@ solveTwoEffect2D <- function(bt,
     raw.Val.wBGS <- al^2 * mean.nl.wBGS
     raw.Vas.wBGS <- 8 * Ne * Bval * u * Ls * as ^ 2 * bs / ys
     raw.Va.wBGS <- raw.Vas.wBGS + raw.Val.wBGS
-    raw.Ve.wBGS <- raw.Va.wBGS * (1-h2) / h2
+    raw.Ve.wBGS <- raw.Ve.noBGS
     raw.Vt.wBGS <- raw.Va.wBGS + raw.Ve.wBGS
     norm.sd.wBGS <- 1 - raw.Val.wBGS / raw.Vt.wBGS
     std.al.wBGS <- al / sqrt(norm.sd.wBGS)
@@ -474,8 +474,7 @@ solveTwoEffect <-
     init.sl <- init.deltal * C
     init.yl <- 4 * Ne * init.sl
     init.mean.nl <- 2 * Ll * u / init.sl
-    init.Vas <-
-      8 * Ne * u * Ls * single.norm.as.std^2 * bs / single.norm.y
+    init.Vas <- 8 * Ne * u * Ls * single.norm.as.std^2 * bs / single.norm.y
     init.Val <- init.al.std ^ 2 * init.mean.nl
     init.Vt <- (init.Vas + init.Val) / h2
     
@@ -570,7 +569,6 @@ solveTwoEffect <-
       init.trans.gs <- log((1 - gs) / gs)
       init.trans.bs <- log((1 - bs) / bs)
       
-      recover()
       ## get 4d Poisson convolution solution
       soln <- nleqslv(
         x = c(
