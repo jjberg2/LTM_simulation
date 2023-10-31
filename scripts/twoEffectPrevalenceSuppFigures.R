@@ -293,8 +293,8 @@ for (ll in seq_along(my.bt)) {
     NA,
     xlim = c(0, 1),
     ylim = c(0, max(unlist(my.std.fts[[ll]]))),
-    ylab = "Disease prevalence",
-    xlab = "PAR of large effect alleles",
+    ylab = "Standardized threshold density",
+    xlab = "Risk effect of large effect alleles",
     main = paste('b_T = ', my.bt[ll], sep = '')
   )
   
