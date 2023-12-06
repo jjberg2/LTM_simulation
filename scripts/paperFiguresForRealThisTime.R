@@ -50,7 +50,7 @@ op4 <- par(mar=c(3,3,1,4))
 prev <- 0.01
 t.pos <- qnorm(1-prev,mean=0,sd=1)
 
-my.risks <- exp(seq ( log(1e-4) , log(1-1e-6) , length.out = 1e5 ))
+my.risks <- exp(seq ( log(1e-9) , log(1-1e-6) , length.out = 1e7 ))
 
 my.g <- qnorm(my.risks , mean = t.pos , sd = sqrt ( 1 - h2 ))
 
@@ -61,7 +61,8 @@ dgdr <- 1 / dnorm ( qnorm (my.risks, t.pos , sd = sqrt ( 1 -h2 )) , 0, h2 )
 
 pr <- pg / dgdr
 
-plot.risks <- 
+plot.risks <- c(0,my.risks,0)
+plot.pr <- c(0,pr,0)
 
 plot(
     NA,
@@ -70,11 +71,19 @@ plot(
     ylim = c(0,0.5)
 )
 polygon(
-    x = my.risks ,
-    y = pr,
-    col = this.col
+    x = plot.risks ,
+    y = plot.pr,
+    col = adjustcolor(this.col,alpha.f=0.05),
+    border = NA
 )
-
+polygon(
+    x = plot.risks ,
+    y = plot.pr,
+    col = adjustcolor(this.col,alpha.f=0.4),
+    border = NA,
+    density = 60 ,
+    angle = 315
+)
 
 dev.off()
 
