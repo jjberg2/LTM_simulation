@@ -1,95 +1,256 @@
+rm(list = ls())
 library('wesanderson')
 
-gammabt = function(bt) log((1+bt)/(1-bt))
-balpha = function(a) (exp(a)-1)/(exp(a)+1)
-my.q = 1e-6
-d0fa = function(a) a*(exp(a)-1)/(exp(a)+1)
-d1fa = function(a) (2*a*exp(a) + exp(2*a) - 1) / ((1 + exp(a))^2)
-d2fa = function(a) - 2*exp(a)*(a*(exp(a)-1) - 2*(1 + exp(a) ) ) / ((1 + exp(a))^3)
+dnorminv = function(y)
+  sqrt(-2 * log(sqrt(2 * pi) * y))
+gammabt = function(bt)
+  log((1 + bt) / (1 - bt))
+balpha = function(a)
+  ifelse(a < 100, (exp(a) - 1) / (exp(a) + 1), 1)
+my.q = 1e-7
+d0fa = function(a)
+  a * (exp(a) - 1) / (exp(a) + 1)
+d1fa = function(a)
+  (2 * a * exp(a) + exp(2 * a) - 1) / ((1 + exp(a)) ^ 2)
+d2fa = function(a)
+  - 8 * exp(2*a) * (a * (exp(2*a) - 1) - exp(a) - 1 ) / ((1 + exp(2*a)) ^
+                                                            3)
 
-bt.diff = function(my.mean,my.sd,my.bt){
-  my.shape = my.mean^2/my.sd^2
-  my.rate = my.mean / my.sd^2
+
+bt.diff = function(my.mean, my.sd, my.bt) {
+  my.shape = my.mean ^ 2 / my.sd ^ 2
+  my.rate = my.mean / my.sd ^ 2
   ## qgamma(my.q,my.shape,my.rate)
   ## balpha(my.mean)
-  my.bt-(1/my.mean)*integrate(function(a) dgamma(a,my.shape,my.rate)*a*balpha(a),lower = qgamma(my.q,my.shape,my.rate),upper=qgamma(1-my.q,my.shape,my.rate))$value
+  myFunc <- function(a)
+    dgamma(a, my.shape, my.rate) * a * balpha(a)
+  my.bt - (1 / my.mean) * integrate(
+    myFunc,
+    lower = qgamma(my.q, my.shape, my.rate),
+    upper = qgamma(1 - my.q, my.shape, my.rate)
+  )$value
+}
+
+bt.diff2 = function(my.mean, my.cv, my.bt) {
+  my.shape = 1 / my.cv ^ 2
+  my.rate = 1 / (my.cv ^ 2 * my.mean)
+  my.lower = qgamma(my.q, my.shape, my.rate)
+  my.upper = qgamma(1 - my.q, my.shape, my.rate)
+  ## balpha(my.mean)
+  myFunc <- function(a)
+    dgamma(a, my.shape, my.rate) * a * balpha(a)
+  my.bt - (1 / my.mean) * integrate(myFunc, lower = my.lower, upper = my.upper)$value
 }
 
 
 
 
+my.bts = seq(1e-3, 0.999, length.out = 1000)
+my.cvs = c(1e-1, 0.3, 1, 2, 3)
+
+se.gammas = log((1 + my.bts) / (1 - my.bts))
 
 
-my.bts = seq(1e-3,0.99,length.out=1000)
-my.sds = c(1e-2,1e-1,0.5,0.8)
-my.lowers = c(1e-6,4e-6,1e-4,1e-4)
-
-se.gammas = log((1+my.bts)/(1-my.bts))
-se.vars = 2*se.gammas*my.bts
-this.gamma = tail(se.gammas,1)
-tail.sd = tail(my.sds,1)
-this.shape = this.gamma^2/tail.sd^2
-this.rate = this.gamma / tail.sd^2
-
-
-
+Ne = 1e4
+U = 0.2
+h2 = 1 / 2
+cost = 1 / 2
 tmp = list()
 my.gammas = list()
-for ( j in 1:length(my.sds)){
+new.vars = list()
+fold.var.change = list()
+new.astd = list()
+new.std.dens = list()
+new.prev = list()
+fold.prev.change = list()
+fold.gamma.change = list()
+se.vars = 8 * Ne * U * my.bts / se.gammas
+se.astd = sqrt (h2 / se.vars)
+se.std.dens = U * my.bts * se.astd / (h2 * cost)
+se.prev = 1 - pnorm(dnorminv(se.std.dens))
+for (j in 1:length(my.cvs)) {
   tmp[[j]] = list()
-  my.gammas[[j]] = numeric()
-  for ( i in 1:length(my.bts)){
-    tmp[[j]][[i]] = uniroot(function(X) bt.diff(X,my.sd = my.sds[j],my.bts[i]),lower=my.lowers[j],upper=12)
+  my.gammas[[j]] = rep(NA, length(my.bts))
+  new.vars[[j]] = rep(NA, length(my.bts))
+  new.astd[[j]] = rep(NA, length(my.bts))
+  new.std.dens[[j]] = rep(NA, length(my.bts))
+  new.prev[[j]] = rep(NA, length(my.bts))
+  fold.gamma.change[[j]] = rep(NA, length(my.bts))
+  fold.var.change[[j]] = rep(NA, length(my.bts))
+  fold.prev.change[[j]] = rep(NA, length(my.bts))
+  for (i in 1:length(my.bts)) {
+    my.lower = 0.1 * se.gammas[i]
+    my.upper =  1000 * se.gammas[i]
+    ## bt.diff2(my.lower,my.cv = my.cvs[j],my.bts[i])
+    ## bt.diff2(my.upper,my.cv = my.cvs[j],my.bts[i])
+    tmp[[j]][[i]] = uniroot(
+      function(X)
+        bt.diff2(X, my.cv = my.cvs[j], my.bts[i]),
+      lower = my.lower,
+      upper = my.upper
+    )
+    #tmp[[j]][[i]] = uniroot(function(X) bt.diff(X,my.sd = my.sds[j],my.bts[i]),lower=my.lowers[j],upper=12)
+    if (tmp[[j]][[i]]$root < 0.002)
+      next
     my.gammas[[j]][i] = tmp[[j]][[i]]$root
+    new.vars[[j]][i] = 8 * Ne * U * my.bts[i] / my.gammas[[j]][i]
+    fold.var.change[[j]][i] = new.vars[[j]][i] / se.vars[i]
+    new.astd[[j]][i] = sqrt (h2 / new.vars[[j]][i])
+    new.std.dens[[j]][i] = U * my.bts[i] * new.astd[[j]][i] / (h2 * cost)
+    new.prev[[j]][i] = 1 - pnorm(dnorminv(new.std.dens[[j]][i]))
+    fold.gamma.change[[j]][i] = new.vars[[j]][i] / se.vars[i]
+    fold.prev.change[[j]][i] = new.prev[[j]][i] / se.prev[i]
   }
 }
 
-qgamma(my.q,this.shape,this.rate)
-qgamma(1-my.q,this.shape,this.rate)
 
-
-my.vars = list()
-normed.vars = list()
-for ( j in 1:length(my.sds)){
-  my.vars[[j]] = numeric()
-  normed.vars[[j]] = numeric()
-  for ( i in 1:length(my.bts)){
-    this.shape = my.gammas[[j]][i]^2 / my.sds[j]^2
-    this.rate = my.gammas[[j]][i] / my.sds[j]^2
-    my.vars[[j]][i] = integrate(
-      f = function(a){
-        dgamma(a,this.shape,this.rate)*2*a*balpha(a)
-      },
-      lower = qgamma(my.q,this.shape,this.rate),
-      upper = qgamma(1-my.q,this.shape,this.rate),
-      rel.tol = .Machine$double.eps^0.5
-    )$value
-  }
-  normed.vars[[j]] = my.vars[[j]]/se.vars
+{
+  this.j <- 5
+  this.i <- 990
+  this.mean <- my.gammas[[this.j]][[this.i]]
+  this.cv <- my.cvs[this.j]
+  
+  this.shape = 1 / this.cv ^ 2
+  this.rate = 1 / (this.cv ^ 2 * this.mean)
+  
+  a <- seq(0, 6, length.out = 10000)
+  par(mfrow = c(2, 3))
+  plot(NA,
+       xlim = c(0, 6),
+       ylim = c(0, 2))
+  lines(a,
+        a * balpha(a),
+        col = 'red',
+        lty = 1,
+        lwd = 3)
+  lines(
+    a,
+    dgamma(a, this.shape, this.rate),
+    lty = 1,
+    lwd = 3,
+    col = 'black'
+  )
+  abline(h = 0, lty = 3)
+  
+  plot(NA,
+       xlim = c(0, 6),
+       ylim = c(0, 2))
+  lines(a,
+        d1fa(a),
+        col = 'red',
+        lty = 1,
+        lwd = 3)
+  lines(
+    a,
+    dgamma(a, this.shape, this.rate),
+    lty = 1,
+    lwd = 3,
+    col = 'black'
+  )
+  abline(h = 0, lty = 3)
+  
+  plot(NA,
+       xlim = c(0, 6),
+       ylim = c(0, 2))
+  lines(a,
+        d2fa(a),
+        col = 'red',
+        lty = 1,
+        lwd = 3)
+  lines(
+    a,
+    dgamma(a, this.shape, this.rate),
+    lty = 1,
+    lwd = 3,
+    col = 'black'
+  )
+  abline(h = 0, lty = 3)
+  
+  plot(NA,
+       xlim = c(0, 6),
+       ylim = c(0, 1))
+  lines(a,
+        a * balpha(a),
+        col = 'red',
+        lty = 1,
+        lwd = 3)
+  lines(
+    a,
+    pgamma(a, this.shape, this.rate),
+    lty = 1,
+    lwd = 3,
+    col = 'black'
+  )
+  abline(h = 0, lty = 3)
+  abline(h = 1, lty = 3)
+  
+  plot(NA,
+       xlim = c(0, 6),
+       ylim = c(0, 1))
+  lines(a,
+        d1fa(a),
+        col = 'red',
+        lty = 1,
+        lwd = 3)
+  lines(
+    a,
+    pgamma(a, this.shape, this.rate),
+    lty = 1,
+    lwd = 3,
+    col = 'black'
+  )
+  abline(h = 0, lty = 3)
+  abline(h = 1, lty = 3)
+  
+  plot(NA,
+       xlim = c(0, 6),
+       ylim = c(0, 1))
+  lines(a,
+        d2fa(a),
+        col = 'red',
+        lty = 1,
+        lwd = 3)
+  lines(
+    a,
+    pgamma(a, this.shape, this.rate),
+    lty = 1,
+    lwd = 3,
+    col = 'black'
+  )
+  abline(h = 0, lty = 3)
+  abline(h = 1, lty = 3)
+  
+  
 }
+
 
 gamma.inflect = uniroot(d2fa,interval=c(2,4))$root
 bt.inflect = uniroot(function(x) gamma.inflect - log((1+x)/(1-x)),lower=0,upper=1)$root
 
-cex.axis = 1.5
-cex.lab = 1.4
+cex.axis = 1.9
+cex.lab = 1.7
 
 pdf('figures/suppFigures/meanGammaVsbT_distn.pdf',width=20,height=15)
-par(mfrow=c(2,2))
-
+par(mfrow=c(2,3))
+op = par(mar=c(5,6,4,1)+0.1)
 ## 1
 plot(
   x = my.bts,
   y = se.gammas,
   type = 'l' ,
-  xlab = 'Mutational Asymmetry (b_T)',
-  ylab = 'Mean Population Scaled Selection Coefficient',
+  xlab = '',
+  ylab = '',
   cex.axis = cex.axis,
-  cex.lab = cex.lab
+  cex.lab = cex.lab,
+  ylim = c(0,8),
+  lwd = 2, 
+  lty = 1
 )
+mtext(side=2,text='Mean Population Scaled Selection Coefficient',cex=cex.lab,line=3.3)
+mtext(side=1,text='Mutational Asymmetry (b_T)',cex=cex.lab,line=3)
 my.cols <- wes_palette('Zissou1',length(my.gammas))
 for ( j in 1:length(my.gammas) ){
-  plot.these = my.gammas[[j]] > 0.002
+  plot.these = !is.na(my.gammas[[j]]) & my.gammas[[j]] < 10
   lines(
     x = my.bts[plot.these],
     y = my.gammas[[j]][plot.these],
@@ -98,70 +259,74 @@ for ( j in 1:length(my.gammas) ){
     col = my.cols[j]
   )
 }
-text(
-  x = 0.1,
-  y = 5.25,
-  labels = "Standard deviation of"
-)
-text(
-  x = 0.1,
-  y = 5.1,
-  labels = "effect size distribution"
-)
 legend(
   x = 0.05,
-  y=5,
-  legend = my.sds,
-  col = my.cols,
-  lty = 2,
-  lwd = 3,
-  bty = 'n'
+  y=7,
+  legend = c(0,my.cvs),
+  col = c('black',my.cols),
+  lty = c(1,rep(2,length(my.cvs))),
+  lwd = c(2,rep(3,length(my.cvs))),
+  bty = 'n',
+  title = 'Effect dist\'n coef. of var.',
+  cex = cex.lab + 0.4
 )
 abline(v = bt.inflect, lty = 2 , lwd = 2)
+par(op)
 
 
 ## 2
+op = par(mar=c(5,6,4,1)+0.1)
+y.max <- max(unlist(new.vars),na.rm=T)
 plot(
   x = my.bts,
-  y = 2*gammabt(my.bts)*my.bts,
+  y = se.vars ,
   type = 'l' ,
-  xlab = 'Mutational Asymmetry (b_T)',
-  ylab = 'Genetic Variance',
+  xlab = '',
+  ylab = '',
   cex.axis = cex.axis,
-  cex.lab = cex.lab
+  cex.lab = cex.lab,
+  ylim = c(0,y.max),
+  lwd = 2
 )
+mtext(side=2,text='Genetic Variance',cex=cex.lab,line=3.3)
+mtext(side=1,text='Mutational Asymmetry (b_T)',cex=cex.lab,line=3)
 my.cols <- wes_palette('Zissou1',length(my.gammas))
 for ( j in 1:length(my.gammas) ){
-  plot.these = my.gammas[[j]] > 0.002
+  plot.these = !is.na(my.gammas[[j]]) & my.gammas[[j]] < 10
   lines(
     x = my.bts[plot.these],
-    y = my.vars[[j]][plot.these],
+    y = new.vars[[j]][plot.these],
     lty = 2,
     lwd = 3,
     col = my.cols[j]
   )
 }
 abline(v = bt.inflect, lty = 2 , lwd = 2)
+par(op)
 
 
 
 ## 3
+my.ymax = 0.006
 plot(
-  NA,
+  my.bts,
+  se.prev,
   xlim = c(0,1),
-  ylim = c(0,1.05),
+  ylim = c(0,my.ymax),
   type = 'l' ,
-  xlab = 'Mutational Asymmetry (b_T)',
-  ylab = 'Fold change in genetic variance relative to single effect model',
+  xlab = '',
+  ylab = '',
   cex.axis = cex.axis,
   cex.lab = cex.lab
 )
+mtext(side=2,text='Prevalence',cex=cex.lab,line=3.3)
+mtext(side=1,text='Mutational Asymmetry (b_T)',cex=cex.lab,line=3)
 my.cols <- wes_palette('Zissou1',length(my.gammas))
 for ( j in 1:length(my.gammas) ){
-  plot.these = my.gammas[[j]] > 0.002
+  plot.these = !is.na(my.gammas[[j]]) & my.gammas[[j]] < 10
   lines(
     x = my.bts[plot.these],
-    y = normed.vars[[j]][plot.these],
+    y = new.prev[[j]][plot.these],
     lty = 2,
     lwd = 3,
     col = my.cols[j]
@@ -169,29 +334,100 @@ for ( j in 1:length(my.gammas) ){
 }
 abline(v = bt.inflect, lty = 2 , lwd = 2)
 
+
+
+op = par(mar=c(5,6,4,1)+0.1)
 ## 4
 plot(
   NA,
   xlim = c(0,1),
-  ylim = c(0,2),
+  ylim = c(0,10),
   type = 'l' ,
-  xlab = 'Mutational Asymmetry (b_T)',
-  ylab = 'Fold change in threshold density relative to single effect model',
+  xlab = '',
+  ylab = '',
   cex.axis = cex.axis,
   cex.lab = cex.lab
 )
+mtext(side=2,text='Fold change in mean scaled selection',cex=cex.lab,line=4.2)
+mtext(side=2,text='coefficient relative to single effect model',cex=cex.lab,line=2.4)
+mtext(side=1,text='Mutational Asymmetry (b_T)',cex=cex.lab,line=3)
 my.cols <- wes_palette('Zissou1',length(my.gammas))
+abline(h = 1, lty = 3 , lwd = 1)
 for ( j in 1:length(my.gammas) ){
-  plot.these = my.gammas[[j]] > 0.002
+  plot.these = !is.na(my.gammas[[j]]) & my.gammas[[j]] < 10
   lines(
     x = my.bts[plot.these],
-    y = normed.vars[[j]][plot.these]^(-1/2),
+    y = fold.gamma.change[[j]][plot.these],
     lty = 2,
     lwd = 3,
     col = my.cols[j]
   )
 }
 abline(v = bt.inflect, lty = 2 , lwd = 2)
+par(op)
+
+
+op = par(mar=c(5,6,4,1)+0.1)
+## 5
+plot(
+  NA,
+  xlim = c(0,1),
+  ylim = c(0,10),
+  type = 'l' ,
+  xlab = '',
+  ylab = '',
+  cex.axis = cex.axis,
+  cex.lab = cex.lab
+)
+mtext(side=2,text='Fold change in genetic variance',cex=cex.lab,line=4.3)
+mtext(side=2,text='relative to single effect model',cex=cex.lab,line=2.5)
+mtext(side=1,text='Mutational Asymmetry (b_T)',cex=cex.lab,line=3)
+my.cols <- wes_palette('Zissou1',length(my.gammas))
+abline(h = 1, lty = 3 , lwd = 1)
+for ( j in 1:length(my.gammas) ){
+  plot.these = !is.na(my.gammas[[j]]) & my.gammas[[j]] < 10
+  lines(
+    x = my.bts[plot.these],
+    y = fold.var.change[[j]][plot.these],
+    lty = 2,
+    lwd = 3,
+    col = my.cols[j]
+  )
+}
+abline(v = bt.inflect, lty = 2 , lwd = 2)
+par(op)
+
+
+
+op = par(mar=c(5,6,4,1)+0.1)
+## 6
+plot(
+  NA,
+  xlim = c(0,1),
+  ylim = c(0,1.5),
+  type = 'l' ,
+  xlab = '',
+  ylab = '',
+  cex.axis = cex.axis,
+  cex.lab = cex.lab
+)
+mtext(side=2,text='Fold change in prevalence',cex=cex.lab,line=4.3)
+mtext(side=2,text='relative to single effect model',cex=cex.lab,line=2.5)
+mtext(side=1,text='Mutational Asymmetry (b_T)',cex=cex.lab,line=3)
+abline(h = 1, lty = 3 , lwd = 1)
+my.cols <- wes_palette('Zissou1',length(my.gammas))
+for ( j in 1:length(my.gammas) ){
+  plot.these = !is.na(my.gammas[[j]]) & my.gammas[[j]] < 10
+  lines(
+    x = my.bts[plot.these],
+    y = fold.prev.change[[j]][plot.these],
+    lty = 2,
+    lwd = 3,
+    col = my.cols[j]
+  )
+}
+abline(v = bt.inflect, lty = 2 , lwd = 2)
+par(op)
 dev.off()
 
 

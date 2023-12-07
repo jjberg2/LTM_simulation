@@ -1,7 +1,7 @@
 rm(list=ls())
 library('MetBrewer')
 source('scripts/solveTwoEffect.R')
-re.sim <- F
+re.sim <- T
 if(re.sim) source('scripts/twoEffectPrevalenceSolutions.R')
 solns <- get(load(file='solutions/twoEffectPrevalenceSolutions_solutions.Robj'))
 output <- get(load(file='solutions/twoEffectPrevalenceSolutions_output.Robj'))
@@ -22,6 +22,7 @@ my.multi.norm.prevs <- list()
 my.std.as <- list()
 my.std.fts <- list()
 my.bs <- list()
+my.aly.sq.red <- list()
 for (l in seq_along(my.bt)) {
   my.multi.norm.prevs[[l]] <- list()
   my.prevs[[l]] <- list()
@@ -29,6 +30,7 @@ for (l in seq_along(my.bt)) {
   my.std.as[[l]] <- list()
   my.std.fts[[l]] <- list()
   my.bs[[l]] <- list()
+  my.aly.sq.red[[l]] <- list()
   for (k in seq_along(h2)) {
     my.deltals[[l]][[k]] <- sapply(output[[l]][[k]], function(X)
       X$deltal)
@@ -42,6 +44,8 @@ for (l in seq_along(my.bt)) {
       X$std.ft)
     my.bs[[l]][[k]] <- sapply(output[[l]][[k]], function(X)
       X$bs)
+    my.aly.sq.red[[l]][[k]] <- sapply(output[[l]][[k]], function(X)
+      X$aly.sq.red)
   }
 }
 
