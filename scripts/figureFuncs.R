@@ -23,7 +23,7 @@ makeEmptyFrame <- function(h2=0.5,my.mean=0,xlim=c(-2,3),n.points=1000,y.max=NUL
     ##     y=plot.y,
     ##     col=adjustcolor('forestgreen',alpha.f=0.4),
     ##     border=NA,
-    ##     density=60,
+    ##     density=120,
     ##     angle=315
     ## )
 }
@@ -51,7 +51,7 @@ makeGenLi <- function(h2=0.6,my.mean=0,xlim=c(-2,3),n.points=1000,y.max=NULL,y.m
             y=plot.y,
             col=adjustcolor(my.color,alpha.f=0.4),
             border=NA,
-            density=60,
+            density=120,
             angle=315
         )
     }
@@ -134,7 +134,7 @@ makeEnvRiskShading <- function(env.var=0.5,my.mean=0,xlim=c(-3,4),n.points=1000,
         y=plot.disease.y,
         col=adjustcolor(my.color,alpha.f=0.4),
         border=NA,
-        density=60,
+        density=120,
         angle=315
     )
     return(y.max)
@@ -166,7 +166,7 @@ makePhenLiNoThr <- function(phen.var=1,my.mean=0,xlim=c(-3,4),n.points=1000,y.ma
         y=plot.healthy.y,
         col=adjustcolor('blue',alpha.f=0.4),
         border=NA,
-        density=60,
+        density=120,
         angle=315
     )
 }
@@ -203,7 +203,7 @@ makePhenLi <- function(phen.var=1,my.mean=0,xlim=c(-3,4),n.points=1000,y.max=NUL
             y=plot.healthy.y,
             col=adjustcolor('blue',alpha.f=0.4),
             border=NA,
-            density=60,
+            density=120,
             angle=315
         )
     }
@@ -219,7 +219,7 @@ makePhenLi <- function(phen.var=1,my.mean=0,xlim=c(-3,4),n.points=1000,y.max=NUL
             y=plot.disease.y,
             col=adjustcolor('red',alpha.f=0.4),
             border=NA,
-            density=60,
+            density=120,
             angle=315
         )
     }
@@ -227,7 +227,7 @@ makePhenLi <- function(phen.var=1,my.mean=0,xlim=c(-3,4),n.points=1000,y.max=NUL
     
 }
 
-makePhenWEffect <- function(phen.var=1,prev=0.01,risk.effect=1/(40000*0.5),alpha=NULL,t.pos=NULL,my.mean=0,xlim=c(-3,4),n.points=1000,y.max=NULL,y.max.factor=1.1,return.stuff=FALSE,make.plot=TRUE,bty='n',yaxt='n',xaxt=NULL,draw.thresholds=TRUE){
+makePhenWEffect <- function(phen.var=1,prev=0.01,risk.effect=1/(40000*0.5),alpha=NULL,t.pos=NULL,my.mean=0,xlim=c(-3,4),n.points=1000,y.max=NULL,y.max.factor=1.1,return.stuff=FALSE,make.plot=TRUE,bty='n',yaxt='n',xaxt=NULL,draw.thresholds=TRUE,lwd=3){
     ## recover()
 
     if(is.null(t.pos))
@@ -269,7 +269,7 @@ makePhenWEffect <- function(phen.var=1,prev=0.01,risk.effect=1/(40000*0.5),alpha
             y=plot.healthy.y,
             col=adjustcolor('blue',alpha.f=0.4),
             border=NA,
-            density=60,
+            density=120,
             angle=315
         )
 
@@ -284,7 +284,7 @@ makePhenWEffect <- function(phen.var=1,prev=0.01,risk.effect=1/(40000*0.5),alpha
             y=plot.effect.y,
             col=rgb(1,0,1,0.4),
             border=NA,
-            density=60,
+            density=120,
             angle=0
         )
 
@@ -299,12 +299,12 @@ makePhenWEffect <- function(phen.var=1,prev=0.01,risk.effect=1/(40000*0.5),alpha
             y=plot.disease.y,
             col=rgb(1,0,0,0.4),
             border=NA,
-            density=60,
+            density=120,
             angle=90
         )
         if(draw.thresholds){
-            abline(v=t.pos)
-            abline(v=effect.pos,lty=2)
+            abline(v=t.pos,lwd=lwd)
+            abline(v=effect.pos,lty=2,lwd=lwd)
         }
     }
 
@@ -356,7 +356,7 @@ makePhenWDiploEffect <- function(phen.var=1,prev=0.01,t.pos=NULL,risk.effect=1/(
             y=plot.healthy.y,
             col=adjustcolor('blue',alpha.f=0.4),
             border=NA,
-            density=60,
+            density=120,
             angle=315
         )
 
@@ -371,7 +371,7 @@ makePhenWDiploEffect <- function(phen.var=1,prev=0.01,t.pos=NULL,risk.effect=1/(
             y=plot.hom.y,
             col=rgb(0.4,0,0.8,0.4),
             border=NA,
-            density=60,
+            density=120,
             angle=0
         )
         
@@ -386,7 +386,7 @@ makePhenWDiploEffect <- function(phen.var=1,prev=0.01,t.pos=NULL,risk.effect=1/(
             y=plot.het.y,
             col=rgb(0.8,0,0.4,0.4),
             border=NA,
-            density=60,
+            density=120,
             angle=90
         )
 
@@ -401,7 +401,7 @@ makePhenWDiploEffect <- function(phen.var=1,prev=0.01,t.pos=NULL,risk.effect=1/(
             y=plot.disease.y,
             col=rgb(1,0,0,0.4),
             border=NA,
-            density=60,
+            density=120,
             angle=45
         )
         abline(v=t.pos)
@@ -455,7 +455,7 @@ makePhenWHighlightHet <- function(phen.var=1,prev=0.01,t.pos=NULL,risk.effect=1/
         ##     y=plot.healthy.y,
         ##     col=adjustcolor('blue',alpha.f=0.4),
         ##     border=NA,
-        ##     density=60,
+        ##     density=120,
         ##     angle=315
         ## )
 
@@ -470,7 +470,7 @@ makePhenWHighlightHet <- function(phen.var=1,prev=0.01,t.pos=NULL,risk.effect=1/
         ##     y=plot.hom.y,
         ##     col=rgb(0.4,0,0.8,0.4),
         ##     border=NA,
-        ##     density=60,
+        ##     density=120,
         ##     angle=0
         ## )
         
@@ -485,7 +485,7 @@ makePhenWHighlightHet <- function(phen.var=1,prev=0.01,t.pos=NULL,risk.effect=1/
             y=plot.het.y,
             col=rgb(0.8,0,0.4,0.4),
             border=NA,
-            density=60,
+            density=120,
             angle=90
         )
 
@@ -500,7 +500,7 @@ makePhenWHighlightHet <- function(phen.var=1,prev=0.01,t.pos=NULL,risk.effect=1/
         ##     y=plot.disease.y,
         ##     col=rgb(1,0,0,0.4),
         ##     border=NA,
-        ##     density=60,
+        ##     density=120,
         ##     angle=45
         ## )
         abline(v=t.pos)
@@ -536,13 +536,14 @@ if(FALSE){
     alpha <- makePhenWEffect(xlim=c(-3,4),t.pos=t.pos,alpha=alpha,my.mean=0.2)
     dev.off()
 
-
+    t.pos <- qnorm(0.99)
+    alpha <- 0.01
     pdf('figures/simplePhenLiWithEffectShiftLeft.pdf',height=7,width=7)
-    makePhenWEffect(xlim=c(-3,4),y.max=y.max,prev=0.1,alpha=alpha)
+    makePhenWEffect(xlim=c(2,3),y.max=y.max,prev=0.1,alpha=alpha,t.pos=t.pos)
     dev.off()
 
     pdf('figures/simplePhenLiWithEffectShiftRight.pdf',height=7,width=7)
-    makePhenWEffect(xlim=c(-3,4),y.max=y.max,prev=0.001,alpha=alpha)
+    makePhenWEffect(xlim=c(-3,4),y.max=y.max,prev=0.01)
     dev.off()
 
 
