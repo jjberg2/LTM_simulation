@@ -140,11 +140,12 @@ dev.off()
 ##########################
 
 ## equilibrium bias figure
-
+{
 png('figures/paperFiguresForRealThisTime/AsymmetryFigure3.png', height = 10 , width = 22, units = 'cm', res = 500)
 op3 <- par(mar=c(3.3,3.3,2,0)+0.1)
-my.gamma <- 10^seq(-2,2,length.out=1000)
-bias <- (exp(my.gamma)-1)/(exp(my.gamma)+1)
+op4 <- options(scipen=400)
+my.gamma <- 10^seq(-3,3,length.out=1000)
+bias <- ifelse(my.gamma<700,(exp(my.gamma)-1)/(exp(my.gamma)+1),1)
 par(mfrow = c(1,2))
 plot(
     x = my.gamma ,
@@ -154,21 +155,36 @@ plot(
     bty = 'n' ,
     lwd = 2 ,
     xlab = '' ,
-    ylab = 'Fixation Asymmetry'
+    ylab = '',
+    xaxt = 'n' 
 )
-mtext(text='Population Scaled Selection Coefficient')
+mtext(text='Fixation Asymmetry', side = 2, line = 2)
+mtext(text='Population Scaled Selection Coefficient', side = 1, line = 2)
+axis(side = 1 , at = c(0.001,0.01,0.1,1,10,100,1000),labels = c('0.001','0.01','0.1','1','10','100','1000'))
 polygon(
-    x=c(1e1,1e1,1e2,1e2),
+    x=c(1e1,1e1,1e3,1e3),
     y=c(0,1,1,0),
     border=NA,
-    col='grey'
+    col=adjustcolor('grey',alpha.f=0.6)
 )
 polygon(
-    x=c(1e-1,1e-1,1e-2,1e-2),
+    x=c(1e-1,1e-1,1e-3,1e-3),
     y=c(0,1,1,0),
     border=NA,
-    col='grey'
+    col=adjustcolor('grey',alpha.f=0.6)
 )
+##mtext(text='Effectively',side = 3 , line = 1,at = 0.01)
+##mtext(text='neutral',side = 3 , line = 0,at = 0.01)
+text(labels='Effectively', x = 0.01, y=0.2)
+text(labels='neutral', x = 0.01, y=0.1)
+##mtext(text='Weakly',side = 3 , line = 1,at = 1)
+##mtext(text='selected',side = 3 , line = 0,at = 1)
+text(labels='Weakly', x = 0.4, y=0.9)
+text(labels='selected', x = 0.4, y=0.8)
+##mtext(text='Strongly',side = 3 , line = 1,at = 100)
+##mtext(text='selected',side = 3 , line = 0,at = 100)
+text(labels='Strongly', x = 100, y=0.9)
+text(labels='selected', x = 100, y=0.8)
 lines(
     x=my.gamma,
     y=bias,
@@ -183,17 +199,20 @@ plot(
     type='n',
     bty='n',
     lwd=2,
-    xlab='Relative Threshold Position',
-    ylab='Population Scaled Selection Coefficient'
+    xlab='',
+    ylab=''
 )
+mtext('Relative Threshold Position',side = 1 , line = 2)
+mtext('Population Scaled Selection Coefficient',side = 2 , line = 2)
 lines(
     x=bias,
     y=my.gamma,
     lwd=2
 )
 par(op3)
+options(op4)
 dev.off()
-
+}
 
 
 
