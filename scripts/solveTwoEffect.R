@@ -450,6 +450,7 @@ solveTwoEffect <-
     Ls <- L * gs
     Ll <- L * (1 - gs)
     
+    
     ## single effect solution
     single.norm.y <- log((1 + bt) / (1 - bt))
     single.norm.ft <- 1 / (4 * Ne * C) * single.norm.y
@@ -652,6 +653,12 @@ solveTwoEffect <-
     norm.Va <- 1 - h2 + std.Vas
     norm.sd <- sqrt(norm.Va)
     
+    ## natural small effect scale
+    linear.scale.ratio <-  ys / as
+    aly <- al * linear.scale.ratio
+    yl <- 4 * Ne * deltal * C
+    aly.sq.red <- aly^2 / yl^2
+    
     ## risk scale variances
     Vos <- std.Vas * std.ft ^ 2
     Vol <- deltal ^ 2 * mean.nl
@@ -750,10 +757,9 @@ solveTwoEffect <-
         deltal = deltal,
         ss = deltas * C,
         sl = deltal * C,
-        ys = 4 * Ne * deltas * C,
-        #originally 2*Ne*deltas*C
-        yl = 4 * Ne * deltal * C,
-        #originally 2*Ne*deltal*C
+        ys = ys,
+        yl = yl,
+        aly.sq.red = aly.sq.red,
         Ne = Ne,
         u = u,
         C = C,
@@ -826,6 +832,7 @@ makeOutput = function(soln) {
     soln$ys  ## small scaled selection coefficient
   output['yl'] <-
     soln$yl  ## large scaled selection coefficient
+  output['aly.sq.red'] <- soln$aly.sq.red  ## var reduction on liability scale
   output['Ls'] <- soln$Ls  ## numer of small effect loci
   output['gs'] <- soln$gs  ## fraction of small effect loci
   output['bs'] <- soln$bs  ## b for small effect loci
