@@ -141,12 +141,11 @@ dev.off()
 
 ## equilibrium bias figure
 {
-png('figures/paperFiguresForRealThisTime/AsymmetryFigure3.png', height = 10 , width = 22, units = 'cm', res = 500)
-op3 <- par(mar=c(3.3,3.3,2,0)+0.1)
+png('figures/paperFiguresForRealThisTime/AsymmetryFigure3.png', height = 10 , width = 11, units = 'cm', res = 500)
+op3 <- par(mar=c(3.3,3.3,2,0.4)+0.1)
 op4 <- options(scipen=400)
 my.gamma <- 10^seq(-3,3,length.out=1000)
 bias <- ifelse(my.gamma<700,(exp(my.gamma)-1)/(exp(my.gamma)+1),1)
-par(mfrow = c(1,2))
 plot(
     x = my.gamma ,
     y = bias ,
@@ -191,6 +190,16 @@ lines(
     lwd=2
 )
 
+
+par(op3)
+options(op4)
+dev.off()
+}
+
+
+
+png('figures/paperFiguresForRealThisTime/MeanEffectFigure4.png', height = 10 , width = 11, units = 'cm', res = 500)
+op4 <- par(mar=c(3.3,3.3,2,0.4)+0.1)
 my.gamma <- 10^seq(-2,1,length.out=1000)
 bias <- (exp(my.gamma)-1)/(exp(my.gamma)+1)
 plot(
@@ -202,18 +211,42 @@ plot(
     xlab='',
     ylab=''
 )
-mtext('Relative Threshold Position',side = 1 , line = 2)
-mtext('Population Scaled Selection Coefficient',side = 2 , line = 2)
+mtext(expression(paste('Relative threshold position, ', b[T] ,sep = '')),side = 1 , line = 2)
+mtext(expression(paste('Population scaled selection coefficient, ', gamma, '(a)', sep = '')),side = 2 , line = 2)
 lines(
     x=bias,
     y=my.gamma,
     lwd=2
 )
-par(op3)
-options(op4)
+par(op4)
 dev.off()
-}
 
 
 
+
+
+png('figures/paperFiguresForRealThisTime/SelectiveDeathsPer2NFigure5.png', height = 10 , width = 11, units = 'cm', res = 500)
+op4 <- par(mar=c(3.3,4.3,2,0.4)+0.1)
+my.gamma <- 10^seq(-2,log(6,10),length.out=1000)
+bias <- (exp(my.gamma)-1)/(exp(my.gamma)+1)
+plot(
+    x=my.gamma,
+    y=bias*my.gamma,
+    type='n',
+    bty='n',
+    lwd=2,
+    xlab='',
+    ylab=''
+)
+mtext('Selective deaths due to additive effects',side = 2 , line = 3 )
+mtext(expression(paste('per 2N carriers of the derived allele, b(a)', gamma, '(a)',sep = '')), side = 2 , line = 2)
+mtext(expression(paste('Population scaled selection coefficient, ', gamma, '(a)', sep = '')),side = 1 , line = 2)
+lines(
+    x=my.gamma,
+    y=bias*my.gamma,
+    lwd=2
+)
+abline(a = 0 , b = 1 , lty = 3 )
+par(op4)
+dev.off()
 
