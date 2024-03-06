@@ -15,7 +15,7 @@ twoPoissonDiffs <- function(
                             Ne=Ne
                             ) {
     ## recover()
-    my.deltal <- 1 / (1 + exp(X[1]))
+    my.deltal <- 1 / (2*Ne*cost) + 1 / (1 + exp(X[1]))
     my.tstar <- X[2]
     
     my.ys <- log((1 + bs) / (1 - bs))
@@ -322,40 +322,69 @@ solveTwoEffect2D <- function(bt,
     
     init.al.std <- single.norm.as.std.noBGS * al
     init.deltal <- pnorm(single.norm.tstar.noBGS) - pnorm(single.norm.tstar.noBGS - init.al.std)
-    
+
+    ## recover()
     ## get 2d solution
-    soln.noBGS <- nleqslv(
-        x = c(log((1 - init.deltal) / init.deltal), single.norm.tstar.noBGS),
-        fn = function(X) twoPoissonDiffs(
-                             X,
-                             as = as,
-                             al = al,
-                             bs = bs,
-                             h2 = h2,
-                             Ve = NULL,
-                             Bval = 1,
-                             cost=C,
-                             Ls = Ls,
-                             Ll=Ll,
-                             u=u,
-                             Ne=Ne), 
-        control = list(scalex = c(1, 1), maxit = 400)
-    )
+    if(is.null(Ve)){
+        soln.noBGS <- nleqslv(
+            x = c(log((1 - init.deltal) / init.deltal), single.norm.tstar.noBGS),
+            fn = function(X) twoPoissonDiffs(
+                                 X,
+                                 as = as,
+                                 al = al,
+                                 bs = bs,
+                                 h2 = h2,
+                                 Ve = NULL,
+                                 Bval = 1,
+                                 cost=C,
+                                 Ls = Ls,
+                                 Ll=Ll,
+                                 u=u,
+                                 Ne=Ne), 
+            control = list(scalex = c(1, 1), maxit = 400)
+        )
+    } else {
+        soln.noBGS <- nleqslv(
+            x = c(log((1 - init.deltal) / init.deltal), single.norm.tstar.noBGS),
+            fn = function(X) twoPoissonDiffs(
+                                 X,
+                                 as = as,
+                                 al = al,
+                                 bs = bs,
+                                 h2 = NULL,
+                                 Ve = Ve,
+                                 Bval = 1,
+                                 cost=C,
+                                 Ls = Ls,
+                                 Ll=Ll,
+                                 u=u,
+                                 Ne=Ne), 
+            control = list(scalex = c(1, 1), maxit = 400)
+        )
+    }
+        
     trans.deltal.noBGS <- soln.noBGS$x[1]
-    deltal.noBGS <- 1 / (1 + exp(trans.deltal.noBGS))
+    deltal.noBGS <- 1 / (2*Ne*C) + 1 / (1 + exp(trans.deltal.noBGS))
     tstar.noBGS <- soln.noBGS$x[2]
     ys <- log((1 + bs) / (1 - bs))
+    del.ws = 2*L*gs*u*bs*ys
     raw.ft.noBGS <- 1 / (4*Ne*C) * ys
     mean.nl.noBGS <- 2 * Ll * u / (deltal.noBGS*C)
     raw.Val.noBGS <- al^2 * mean.nl.noBGS
     raw.Vas.noBGS <- 8 * Ne * u * Ls * as ^ 2 * bs / ys
     raw.Va.noBGS <- raw.Vas.noBGS + raw.Val.noBGS
-    raw.Ve.noBGS <- raw.Va.noBGS * (1-h2) / h2
+    if(is.null(Ve)){
+        raw.Ve.noBGS <- raw.Va.noBGS * (1-h2) / h2
+    } else {
+        raw.Ve.noBGS <- Ve
+    }
     raw.Vt.noBGS <- raw.Va.noBGS + raw.Ve.noBGS
     std.ft.noBGS <- raw.ft.noBGS * sqrt( raw.Vt.noBGS )
+    std.al.noBGS <- al / sqrt( raw.Vt.noBGS )
     norm.sd.noBGS <- 1 - raw.Val.noBGS / raw.Vt.noBGS
-    std.al.noBGS <- al / sqrt(norm.sd.noBGS)
+    ## std.al.noBGS <- al / sqrt(norm.sd.noBGS)
     pgal.noBGS <- raw.Val.noBGS / raw.Va.noBGS
+    h2s.noBGS <- raw.Vas.noBGS / raw.Vt.noBGS
     prev.noBGS <- pPoisConv(
       tstar.noBGS,
       mean.nl.noBGS,
@@ -368,6 +397,7 @@ solveTwoEffect2D <- function(bt,
     yl.noBGS <- 4*Ne*deltal.noBGS*C
     raw.Va.obs.noBGS <- raw.Vas.obs.noBGS + raw.Val.obs.noBGS
     pgal.obs.noBGS <- raw.Val.obs.noBGS / raw.Va.obs.noBGS
+    naive.norm.prev.noBGS <- 1-pnorm(dnorminv(raw.ft.noBGS * sqrt(raw.Vt.noBGS)))
     
 
     soln.wBGS <- nleqslv(
@@ -388,7 +418,7 @@ solveTwoEffect2D <- function(bt,
         control = list(scalex = c(1, 1), maxit = 400)
     )
     trans.deltal.wBGS <- soln.wBGS$x[1]
-    deltal.wBGS <- 1 / (1 + exp(trans.deltal.wBGS))
+    deltal.wBGS <- 1 / (2*Ne*C) + 1 / (1 + exp(trans.deltal.wBGS))
     tstar.wBGS <- soln.wBGS$x[2]
     mean.nl.wBGS <- 2 * Ll * u / (deltal.wBGS*C)
     raw.Val.wBGS <- al^2 * mean.nl.wBGS
@@ -410,12 +440,18 @@ solveTwoEffect2D <- function(bt,
 
     large.effect.reduction <- deltal.noBGS / deltal.wBGS
     
-    return(c(large.effect.reduction = large.effect.reduction,
-                pgal.noBGS = pgal.noBGS,
-                deltal.noBGS=deltal.noBGS,
-                prev.noBGS=prev.noBGS,
-                pgal.obs.noBGS=pgal.obs.noBGS,
-                yl.noBGS=yl.noBGS))
+    return(
+        c(
+            large.effect.reduction = large.effect.reduction,
+            pgal.noBGS = pgal.noBGS,
+            deltal.noBGS = deltal.noBGS,
+            prev.noBGS = prev.noBGS,
+            pgal.obs.noBGS = pgal.obs.noBGS,
+            yl.noBGS = yl.noBGS,
+            h2s.noBGS = h2s.noBGS,
+            naive.norm.prev.noBGS = naive.norm.prev.noBGS
+        )
+    )
 }
 
 solveTwoEffect <-
@@ -493,7 +529,7 @@ solveTwoEffect <-
       log((1 + bs) / (1 - bs)) / (4 * Ne * C) * sqrt(init.Vt)
     sec.tstar <- dnorminv(sec.norm.dens)
     sec.prev <- 1 - pnorm(sec.tstar)
-    
+      
     my.seq <- seq(0, 12*sec.tstar, length.out = 1000)
     pois.dens.seq <- sapply(my.seq, function(X)
       dPoisConv(X, sec.mean.nl, sec.norm.sd, sec.al.std))

@@ -68,6 +68,7 @@ SolveNormal <- function(myTheta,myGamma,fitCost,Ne,L,h2,verbose.output=FALSE) {
 }
 
 pPoisConv <- function(t,lambda,norm.sd,alphal=1,risk.allele=FALSE){
+    ## recover()
     ## t = threshold position
     ## lambda = genetic mean
     ## norm.sd = standard deviation of normal component
