@@ -139,6 +139,88 @@ for (ll in seq_along(my.bt)) {
 dev.off()
 
 
+## X: PAR
+## Y: Aly Sq Red
+my.pch = c(21, 22)
+my.cols = met.brewer('Isfahan2', length(var.ratio))
+pdf(
+  'figures/suppFigures/twoEffectAlySqRed.pdf',
+  width = 12,
+  height = 6
+)
+
+par(mfrow = c(1, 2))
+for (ll in seq_along(my.bt)) {
+  norm.ft <-
+    1 / (4 * Ne * cost) * log((1 + my.bt[ll] / (1 - my.bt[ll])))
+  norm.Vg <-
+    8 * Ne * L * u * my.bt[ll] / log((1 + my.bt[ll] / (1 - my.bt[ll])))
+  norm.Vt <- norm.Vg / h2
+  norm.astd <- 1 / sqrt (norm.Vt)
+  norm.dens <- 2 * L * u * my.bt[ll] * norm.astd / (h2 * cost)
+  norm.prev <- 1 - pnorm(dnorminv(norm.dens))
+  plot(
+    NA,
+    xlim = c(0, 1),
+    ylim = c(0, max(unlist(my.aly.sq.red[[ll]]))),
+    ylab = "Disease prevalence",
+    xlab = "PAR of large effect alleles",
+    main = paste('b_T = ', my.bt[ll], sep = '')
+  )
+  
+  if (ll == 1) {
+    legend(
+      'bottomright',
+      col = my.cols,
+      lty = 1 ,
+      lwd = 2,
+      legend = round(var.ratio,2),
+      bty = 'n'
+    )
+    text(x = 0.94,
+         y = 0.00062,
+         labels = 'Variance')
+    text(x = 0.94,
+         y = 0.0005,
+         labels = 'Ratio')
+    legend(
+      x = 0.55,
+      y = 0.0005,
+      lty = 1:2 ,
+      lwd = 2,
+      legend = round(h2, 2),
+      bty = 'n'
+    )
+    legend(
+      x = 0.5,
+      y = 0.0005,
+      pch = my.pch, 
+      legend = c('',''),
+      bty = 'n'
+    )
+    text(x = 0.62,
+         y = 0.0005,
+         labels = 'Heritability')
+  }
+  for (kk in seq_along(h2)) {
+    for (jj in seq_along(var.ratio)) {
+      ##plot.als <- output[[ll]][[kk]][[jj]][, 'al']
+      plot.these <- 1:min(which(my.deltals[[ll]][[kk]][, jj] > (1-max(my.prevs[[ll]][[kk]][, jj])-0.01)))
+      lines(
+        my.deltals[[ll]][[kk]][plot.these, jj],
+        my.aly.sq.red[[ll]][[kk]][plot.these, jj],
+        col = my.cols[jj],
+        lty = kk,
+        lwd = 2
+      )
+    }
+  }
+}
+
+dev.off()
+
+
+
 
 
 ## X: PAR
@@ -146,7 +228,7 @@ dev.off()
 my.pch = c(21, 22)
 my.cols = met.brewer('Isfahan2', length(var.ratio))
 pdf(
-  'figures/suppFigures/twoEffectPrevalence.pdf',
+  'figures/suppFigures/twoEffectbs.pdf',
   width = 12,
   height = 6
 )

@@ -9,11 +9,11 @@ balpha = function(a)
   ifelse(a < 100, (exp(a) - 1) / (exp(a) + 1), 1)
 my.q = 1e-7
 d0fa = function(a)
-  a * (exp(a) - 1) / (exp(a) + 1)
+  a * (exp(2*a) - 1) / (exp(2*a) + 1)
 d1fa = function(a)
-  (2 * a * exp(a) + exp(2 * a) - 1) / ((1 + exp(a)) ^ 2)
+  (4 * a * exp(2*a) + exp(4 * a) - 1) / ((1 + exp(2*a)) ^ 2)
 d2fa = function(a)
-  - 8 * exp(2*a) * (a * (exp(2*a) - 1) - exp(a) - 1 ) / ((1 + exp(2*a)) ^
+  - 8 * exp(2*a) * (a * (exp(2*a) - 1) - exp(2*a) - 1 ) / ((1 + exp(2*a)) ^
                                                             3)
 
 
@@ -224,8 +224,8 @@ for (j in 1:length(my.cvs)) {
 }
 
 
-gamma.inflect = uniroot(d2fa,interval=c(2,4))$root
-bt.inflect = uniroot(function(x) gamma.inflect - log((1+x)/(1-x)),lower=0,upper=1)$root
+gamma.inflect = uniroot(d2fa,interval=c(1,2))$root
+bt.inflect = uniroot(function(x) gamma.inflect - 0.5*log((1+x)/(1-x)),lower=0,upper=1)$root
 
 cex.axis = 1.9
 cex.lab = 1.7
@@ -432,6 +432,31 @@ dev.off()
 
 
 if(FALSE){
+  
+  gamma.inflect = uniroot(d2fa,interval=c(1,2))$root
+  a <- seq(0,6,length.out=1000)
+  par(mfrow=c(1,3))  
+  plot(a,
+       d0fa(a),
+       type='l',
+       bty = 'n',
+       xlim = c(0,6)
+       )
+  abline(v = gamma.inflect, lty = 2)
+  plot(a,
+       d1fa(a),
+       type='l',
+       bty = 'n',
+       xlim = c(0,6)
+  )
+  abline(v = gamma.inflect, lty = 2)
+  plot(a,
+       d2fa(a),
+       type='l',
+       bty = 'n',
+       xlim = c(0,6)
+  )
+  abline(v = gamma.inflect, lty = 2)
   
   
 small.one = TRUE

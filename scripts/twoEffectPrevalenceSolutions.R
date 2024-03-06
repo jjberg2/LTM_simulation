@@ -10,7 +10,7 @@ cost <- 1 / 2
 my.bt <- seq(0.3, 0.9, length.out = 2)  ##c(0.6,0.6,0.8,0.8)
 h2 <- c(1 / 6, 5 / 6)
 ## ratio of large effect observed var to small effect
-var.ratio <- 1
+var.ratio <- 3
 as <- 1
 my.als <- exp(seq(log(10), log(300), length.out = 1000))
 theta <- 4 * Ne * u

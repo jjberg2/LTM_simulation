@@ -123,6 +123,211 @@ dev.off()
 
 
 
+
+#######################################################
+## Four panel variance figure with a_gamma on x axis ##
+#######################################################
+
+## bt = 0.6479407
+## bt*ay = 1
+
+
+rm(list = ls())
+library("MetBrewer")
+library('numDeriv')
+source('scripts/simpleVarFuncs.R')
+prevs = c(0.03, 0.01, 0.003, 0.001)
+my.cols = met.brewer('Hiroshige', length(prevs))
+thr = sapply(prevs, function(PREV)
+  qnorm(1 - PREV))
+phits = dnorm(thr)
+max.a = 5
+min.a = rep(0.001, 4)
+my.a = mapply(
+  function(MAXA, MINA)
+    seq(MINA, MAXA, length.out = 10000),
+  MINA = min.a,
+  MAXA = max.a,
+  SIMPLIFY = FALSE
+)
+Ne = 10000
+L = 1e7
+u = 1e-8
+U = 2*L*u
+h2 = 1/2
+aybt <- 1
+thetaU = 4*Ne*U
+this.cost <- 1/2
+## my.ay <- lapply(my.a,function(A) A*sqrt(thetaU / h2))
+my.ay <- mapply(function(A,PHIT) 4*Ne*this.cost*PHIT*A,
+                A = my.a,
+                PHIT = phits,
+                SIMPLIFY=FALSE)
+norm.del <- mapply(function(THR, A)
+  normDel(A, THR),
+  THR = thr,
+  A = my.a)
+li.vars <- mapply(function(THR, AS,AY)
+  sigmaa2(AS, AY, THR, Ne * this.cost),
+  THR = thr,
+  AS = my.a,
+  AY = my.ay)
+risk.vars <- mapply(function(THR, A)
+  sigmaRisk(A, THR, Ne * this.cost),
+  THR = thr,
+  A = my.a)
+small.ay.seq <- seq(0.01,2000,length.out=10000)
+small.approx.vars = sigmaaSmall2(small.ay.seq)
+plot.a <- do.call (cbind, my.a)
+plot.ay <- do.call (cbind, my.ay)
+my.cex <- 1.5
+pdf(
+  'figures/suppFigures/largeEffectSizeVarianceRelationship_ay.pdf',
+  width = 12,
+  height = 6
+)
+par(mfrow = c(1, 2),mar = c(5,4.5,4,1)+0.1)
+matplot(
+  x = plot.ay ,
+  y = li.vars,
+  xlim = c(0, 6),
+  ylim = c(0, 12),
+  type = 'l',
+  lty = 1 ,
+  lwd = 3 ,
+  col = my.cols,
+  xlab = '' ,
+  ylab = 'Liability variance',
+  cex.lab = my.cex,
+  cex.axis = my.cex
+)
+legend(
+  'topleft',
+  legend = prevs,
+  lty = 1,
+  lwd = 3,
+  col = my.cols,
+  bty = 'n',
+  title = "Prevalence",
+  cex = 1
+)
+legend(
+  x = -1/5, 
+  y = 9,
+  legend = 'Small effect approx',
+  lty = 2,
+  lwd = 3,
+  col = 'black',
+  bty = 'n',
+  cex = 1
+)
+mtext(
+  text = 'Liability effect size',
+  side = 1,
+  line = 2,
+  cex = my.cex
+)
+mtext(
+  text = '(Population scaled fitness units)',
+  side = 1, 
+  line = 3,
+  cex = my.cex
+)
+curve(
+  sigmaaSmall2,
+  from = 0 , 
+  to = 20,
+  type = 'l',
+  lty = 2 , 
+  lwd = 3 ,
+  col = 'black',
+  add = T
+)
+abline(
+  a = 0,
+  b = 2,
+  lty = 3 ,
+  lwd = 1)
+mtext('A', side = 3 , at = 0, cex = 3)
+matplot(
+  x = plot.ay ,
+  y = li.vars,
+  xlim = c(0, 1000),
+  ylim = c(0, 2000),
+  type = 'l',
+  lty = 1 ,
+  lwd = 3 ,
+  col = my.cols,
+  xlab = '' ,
+  ylab = 'Liability variance',
+  cex.lab = my.cex,
+  cex.axis = my.cex
+)
+mtext(
+  text = 'Liability effect size',
+  side = 1,
+  line = 2,
+  cex = my.cex
+)
+mtext(
+  text = '(Population scaled fitness units)',
+  side = 1, 
+  line = 3,
+  cex = my.cex
+)
+curve(
+  sigmaaSmall2,
+  from = 0 , 
+  to = 1000,
+  type = 'l',
+  lty = 2 , 
+  lwd = 3 ,
+  col = 'black',
+  add = T
+)
+abline(
+  a = 0,
+  b = 2,
+  lty = 3 ,
+  lwd = 1)
+mtext('B', side = 3 , at = 0, cex = 3)
+dev.off()
+
+
+
+
+mtext('C', side = 3 , at = 0, cex = 3)
+matplot(
+  x = plot.a ,
+  y = li.vars,
+  xlim = c(0, max(unlist(my.a))),
+  ylim = c(0, max(li.vars)),
+  type = 'l',
+  lty = 1 ,
+  lwd = 3 ,
+  col = my.cols,
+  xlab = 'Standardized liability scale effect size' ,
+  ylab = 'Liability scale variance',
+  cex.lab = my.cex,
+  cex.axis = my.cex
+)
+mtext('D', side = 3 , at = 0, cex = 3)
+dev.off()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 par(mfrow = c(1, 2))
 matplot(
   x = plot.a ,
@@ -254,12 +459,15 @@ my.ratios <- lapply(thr,
                       bgamma.ratio <-
                         bgamma(4 * Ne * these.dels) / bgamma(4 * Ne * min.del)
                       h2l.ratio <- delsq.ratio * asq.ratio
+                      phit <- dnorm(THR)
+                      new.h2l.ratio <- (these.as^2*phit^2) / these.dels ^ 2 
                       list(these.dels,
                            h2l.ratio,
                            these.as,
                            delsq.ratio,
                            asq.ratio,
-                           bgamma.ratio)
+                           bgamma.ratio,
+                           new.h2l.ratio)
                     })
 my.dels <- lapply(my.ratios, function(X)
   X[[1]])
@@ -269,7 +477,8 @@ my.as <- lapply(my.ratios, function(X)
   X[[3]])
 delsq.ratio <- lapply(my.ratios, function(X)
   X[[4]])
-
+new.h2.ratios <- lapply(my.ratios, function(X)
+  X[[7]])
 
 
 pdf(
@@ -348,11 +557,12 @@ par(mfrow = c(1, 2))
 plot(
   NA,
   xlim = c(0, 1),
-  ylim = c(0, 1),
+  ylim = c(1e-4, 1),
   type = 'l',
   xlab = 'Risk effect of large effect alleles',
   ylab = '',
-  bty = 'n'
+  bty = 'n',
+  log = 'y'
 )
 mtext('Relative contribution to liability scale variance',
       side = 2 ,
@@ -381,11 +591,12 @@ legend(
 plot(
   NA,
   xlim = c(0, max(unlist(my.as))),
-  ylim = c(0, 1),
+  ylim = c(1e-4, 1),
   type = 'l',
   xlab = 'Standardized liability effect of large effect alleles',
   ylab = '',
-  bty = 'n'
+  bty = 'n',
+  log = 'y'
 )
 mtext('Relative contribution to liability scale variance',
       side = 2 ,
@@ -403,7 +614,44 @@ for (j in 1:length(my.dels)) {
 dev.off()
 
 
-
+pdf(
+  'figures/suppFigures/largeEffectSizeRiskVsLiabilityVariance3.pdf',
+  width = 6,
+  height = 6
+)
+par(mfrow = c(1, 1))
+plot(
+  NA,
+  xlim = c(0, 1),
+  ylim = c(1e-4, 1),
+  type = 'l',
+  xlab = 'Risk effect of large effect alleles',
+  ylab = '',
+  bty = 'n',
+  log = 'y'
+)
+mtext('Relative contribution to liability scale variance',
+      side = 2 ,
+      line = 2.5)
+for (j in 1:length(my.dels)) {
+  lines(
+    my.dels[[j]],
+    new.h2.ratios[[j]],
+    lty = 1,
+    lwd = 3,
+    col = my.cols[j]
+  )
+}
+legend(
+  'topright',
+  bty = 'n',
+  lty = 1 ,
+  lwd = 2,
+  col = my.cols,
+  legend = prevs,
+  title = 'Prevalence'
+)
+dev.off()
 
 
 
@@ -596,6 +844,13 @@ for (i in 1:ncol(alt.vars)) {
     lwd = 2,
     lty = 2
   )
+}
+
+
+if(FALSE){
+  
+  
+  
 }
 
 
