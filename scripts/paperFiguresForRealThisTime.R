@@ -338,192 +338,267 @@ options(op4)
 dev.off()
 }
 
-###########################
-### Figure 4 var dist ###
-###########################
-{
-  library('wesanderson')
-  n <- 10000
-  my.x <- 1:(n-1)/n
-  my.gamma <- c(0.3,1,3,10)
-  ##my.var.specs <- sapply(my.gamma, function(G) 2*G*(exp(2*G) + 1) /  exp(2*G)* exp(-2*G*my.x))
-  my.var.specs <- sapply(my.gamma, function(G) (1-exp(-2*G*my.x)) / (1-exp(-2*G)) )
-  my.der.probs <- sapply(my.gamma, function(G) ( exp(2*G) - exp(2*G*my.x) ) / (exp(2*G) - 1 ) )
-  cex.lab = 1.3
-  cex.axis = 1.2
-  png(
-    'figures/paperFiguresForRealThisTime/SegAsymmetryFigure3.5.png',
-    height = 10 ,
-    width = 22,
-    units = 'cm',
-    res = 500
-  )
-  par(mfrow = c(1, 2))
-  op3 <- par(mar = c(3.3, 3.3, 2, 0.4) + 0.1)
-  my.cols <- wes_palette('GrandBudapest1', length(my.gamma))
-  plot(
-    NA,
-    xlim = c(0, 1),
-    ylim = c(0, 1),
-    bty = 'n',
-    ylab = '',
-    xlab = ''
-  )
-  mtext(
-    text = 'Proportion of Variance',
-    side = 2,
-    line = 2.1,
-    cex = cex.lab
-  )
-  mtext(
-    text = 'Frequency of Risk Increasing Allele',
-    side = 1,
-    line = 2.1,
-    cex = cex.lab
-  )
-  abline(a = 0 , b = 1 , lty = 2 )
-  matplot(
-    my.x,
-    my.var.specs,
-    type = 'l',
-    lty = 1 ,
-    lwd = 2 ,
-    add = TRUE,
-    col = my.cols
-  )
-  legend(
-    'bottomright',
-    legend = c(0,my.gamma) ,
-    col = c('black',my.cols),
-    lty = c(2,rep(1,times=length(my.cols)) ),
-    lwd = c(1,rep(2,times=length(my.cols)) ) ,
-    bty = 'n',
-    title = 'Scaled selection coefficient' ,
-    cex = 0.8
-  )
-  par(op3)
-  
-  op4 <- par(mar = c(3.3, 4.3, 2, 0.4) + 0.1)
-  plot(NA,
-       xlim = c(0, 1),
-       ylim = c(0, 1),
-       bty = 'n',
-       xlab = '',
-       ylab = '')
-  abline(a = 1 , b = -1 , lty = 2 )
-  matplot(
-    my.x,
-    my.der.probs,
-    type = 'l',
-    lty = 1 ,
-    lwd = 2 ,
-    add = TRUE,
-    col = my.cols
-  )
-  matplot(
-    my.x,
-    1-my.var.specs,
-    type = 'l',
-    lty = 2 ,
-    lwd = 1 ,
-    add = TRUE,
-    col = my.cols
-  )
-  mtext(
-    text = 'Probability risk increasing',
-    side = 2,
-    line = 3.1,
-    cex = cex.lab
-  )
-  mtext(
-    text = 'allele is derived',
-    side = 2,
-    line = 2.1,
-    cex = cex.lab
-  )
-  
-  mtext(
-    text = 'Frequency of risk increasing allele',
-    side = 1,
-    line = 2.1,
-    cex = cex.lab
-  )
-  par(op4)
-  dev.off()
-}
+
+
+png('figures/paperFiguresForRealThisTime/MeanEffectFigure4.png', height = 10 , width = 11, units = 'cm', res = 500)
+op4 <- par(mar=c(3.3,3.3,2,0.4)+0.1)
+my.gamma <- 10^seq(-2,1,length.out=1000)
+bias <- (exp(my.gamma)-1)/(exp(my.gamma)+1)
+plot(
+    x=bias,
+    y=my.gamma,
+    type='n',
+    bty='n',
+    lwd=2,
+    xlab='',
+    ylab=''
+)
+mtext(expression(paste('Relative threshold position, ', b[T] ,sep = '')),side = 1 , line = 2)
+mtext(expression(paste('Population scaled selection coefficient, ', gamma, '(a)', sep = '')),side = 2 , line = 2)
+lines(
+    x=bias,
+    y=my.gamma,
+    lwd=2
+)
+par(op4)
+dev.off()
+
+
+
+
+
+#########################################
+## Figure 4 liability variance scaling ##
+#########################################
+
+## bt = 0.6479407
+## bt*ay = 1
+
+
+rm(list = ls())
+library("MetBrewer")
+library('numDeriv')
+source('scripts/simpleVarFuncs.R')
+prevs = c(0.03, 0.01, 0.003, 0.001)
+my.cols = met.brewer('Hiroshige', length(prevs))
+thr = sapply(prevs, function(PREV)
+  qnorm(1 - PREV))
+phits = dnorm(thr)
+max.a = 5
+min.a = rep(0.001, 4)
+my.a = mapply(
+  function(MAXA, MINA)
+    seq(MINA, MAXA, length.out = 10000),
+  MINA = min.a,
+  MAXA = max.a,
+  SIMPLIFY = FALSE
+)
+Ne = 10000
+L = 1e7
+u = 1e-8
+U = 2*L*u
+h2 = 1/2
+aybt <- 1
+thetaU = 4*Ne*U
+this.cost <- 1/2
+## my.ay <- lapply(my.a,function(A) A*sqrt(thetaU / h2))
+my.ay <- mapply(function(A,PHIT) 2*Ne*this.cost*PHIT*A,
+                A = my.a,
+                PHIT = phits,
+                SIMPLIFY=FALSE)
+norm.del <- mapply(function(THR, A)
+  normDel(A, THR),
+  THR = thr,
+  A = my.a)
+li.vars <- mapply(function(THR, AS,AY)
+  sigmaa2(AS, AY, THR, Ne * this.cost),
+  THR = thr,
+  AS = my.a,
+  AY = my.ay)
+risk.vars <- mapply(function(THR, A)
+  sigmaRisk(A, THR, Ne * this.cost),
+  THR = thr,
+  A = my.a)
+small.ay.seq <- seq(0.01,2000,length.out=10000)
+small.approx.vars = sigmaaSmall2(small.ay.seq)
+plot.a <- do.call (cbind, my.a)
+plot.ay <- do.call (cbind, my.ay)
+my.cex <- 1.5
+png(
+    'figures/paperFiguresForRealThisTime/effectSizeVarianceRelationshipFigure4.png',
+    units = 'in',
+    res = 400,
+  width = 12,
+  height = 6
+)
+par(mfrow = c(1, 2),mar = c(5,4.5,4,1)+0.1)
+matplot(
+  x = plot.ay ,
+  y = li.vars,
+  xlim = c(0, 6),
+  ylim = c(0, 12),
+  type = 'l',
+  lty = 1 ,
+  lwd = 3 ,
+  col = my.cols,
+  xlab = '' ,
+  ylab = 'Liability variance',
+  cex.lab = my.cex,
+  cex.axis = my.cex
+)
+legend(
+  'topleft',
+  legend = prevs,
+  lty = 1,
+  lwd = 3,
+  col = my.cols,
+  bty = 'n',
+  title = "Prevalence",
+  cex = 1
+)
+legend(
+  x = -1/5, 
+  y = 9,
+  legend = c('Small effect approx','y = 2x'),
+  lty = c(2,3),
+  lwd = c(3,1),
+  col = 'black',
+  bty = 'n',
+  cex = 1
+)
+mtext(
+  text = 'Liability effect size',
+  side = 1,
+  line = 2,
+  cex = my.cex
+)
+mtext(
+  text = '(Population scaled fitness units)',
+  side = 1, 
+  line = 3,
+  cex = my.cex
+)
+curve(
+  sigmaaSmall2,
+  from = 0 , 
+  to = 20,
+  type = 'l',
+  lty = 2 , 
+  lwd = 3 ,
+  col = 'black',
+  add = T
+)
+abline(
+  a = 0,
+  b = 2,
+  lty = 3 ,
+  lwd = 1)
+mtext('A', side = 3 , at = 0, cex = 3)
+matplot(
+  x = plot.ay ,
+  y = li.vars,
+  xlim = c(0, 1000),
+  ylim = c(0, 2000),
+  type = 'l',
+  lty = 1 ,
+  lwd = 3 ,
+  col = my.cols,
+  xlab = '' ,
+  ylab = 'Liability variance',
+  cex.lab = my.cex,
+  cex.axis = my.cex
+)
+mtext(
+  text = 'Liability effect size',
+  side = 1,
+  line = 2,
+  cex = my.cex
+)
+mtext(
+  text = '(Population scaled fitness units)',
+  side = 1, 
+  line = 3,
+  cex = my.cex
+)
+curve(
+  sigmaaSmall2,
+  from = 0 , 
+  to = 1000,
+  type = 'l',
+  lty = 2 , 
+  lwd = 3 ,
+  col = 'black',
+  add = T
+)
+abline(
+  a = 0,
+  b = 2,
+  lty = 3 ,
+  lwd = 1)
+mtext('B', side = 3 , at = 0, cex = 3)
+dev.off()
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ########################################
-### Figure 6 mean scaled coefficient ###
+### Figure 4 mean scaled coefficient ###
 ########################################
 {
-  balpha = function(a,f=1)
-    ifelse(a < 100, (exp(2 * a * f) - 1) / (exp(2 * a * f) + 1), 1)
-  bt.diff2 = function(my.mean, my.cv, my.bt,my.q=1e-5) {
-    my.shape = 1 / my.cv ^ 2
-    my.rate = 1 / (my.cv ^ 2 * my.mean)
-    my.lower = qgamma(my.q, my.shape, my.rate)
-    my.upper = qgamma(1 - my.q, my.shape, my.rate)
-    myFunc <- function(a)
-      dgamma(a, my.shape, my.rate) * a * balpha(a)
-    my.bt - (1 / my.mean) * integrate(myFunc, lower = my.lower, upper = my.upper)$value
-  }
-  bt.diff3 = function(f,my.mean=1, my.cv, my.bt,my.q=1e-5) {
+  balpha = function(a)
+    ifelse(a < 100, (exp(2 * a) - 1) / (exp(2 * a) + 1), 1)
+  bt.diff2 = function(my.mean, my.cv, my.bt) {
     my.shape = 1 / my.cv ^ 2
     my.rate = 1 / (my.cv ^ 2 * my.mean)
     my.lower = qgamma(my.q, my.shape, my.rate)
     my.upper = qgamma(1 - my.q, my.shape, my.rate)
     ## balpha(my.mean)
     myFunc <- function(a)
-      dgamma(a, my.shape, my.rate) * a * balpha(a,f)
+      dgamma(a, my.shape, my.rate) * a * balpha(a)
     my.bt - (1 / my.mean) * integrate(myFunc, lower = my.lower, upper = my.upper)$value
   }
-  se.bts = seq(1e-3, 0.99999, length.out = 1000)
   my.bts = seq(1e-3, 0.999, length.out = 1000)
   my.cvs = sqrt(c(0.1, 1, 3, 10))
-  se.plot.gammas = 0.5 * log((1 + se.bts) / (1 - se.bts))
   se.gammas = 0.5 * log((1 + my.bts) / (1 - my.bts))
-  se.vars <- 1^2 * se.bts / se.gammas
   Ne = 1e4
   U = 0.2
   h2 = 1 / 2
   cost = 1 / 2
   tmp = list()
   my.gammas = list()
-  my.vars = list()
-  my.var.ratio = list()
   for (j in 1:length(my.cvs)) {
     tmp[[j]] = list()
     my.gammas[[j]] = rep(NA, length(my.bts))
-    my.vars[[j]] = rep(NA, length(my.bts))
-    my.var.ratio[[j]] = rep(NA, length(my.bts))
     for (i in 1:length(my.bts)) {
       my.lower = 0.01 * se.gammas[i]
       my.upper =  2000 * se.gammas[i]
       tmp[[j]][[i]] = uniroot(
         function(X)
           bt.diff2(X, my.cv = my.cvs[j], my.bts[i]),
-        #bt.diff3(X, my.mean = 1, my.cv = my.cvs[j], my.bts[i]),
         lower = my.lower,
         upper = my.upper
       )
       if (tmp[[j]][[i]]$root < 0.002)
         next
       my.gammas[[j]][i] = tmp[[j]][[i]]$root
-      my.vars[[j]][i] = integrate(
-        function(X)
-        (X / my.gammas[[j]][i])^2 * balpha(my.gammas[[j]][i]) / my.gammas[[j]][i] ,
-        lower = my.lower ,
-        upper = my.upper)$value
     }
-    my.var.ratio[[j]] <- se.vars / my.vars[[j]]
   }
   
   {
     cex.lab = 1.3
     cex.axis = 1.2
     png(
-      'figures/paperFiguresForRealThisTime/MeanCoefficientFigure6.png',
+      'figures/paperFiguresForRealThisTime/MeanCoefficientFigure4.png',
       height = 10 ,
       width = 22,
       units = 'cm',
@@ -533,35 +608,28 @@ dev.off()
     op = par(mar = c(3.6, 4.6, 1, 0.5) + 0.1)
     ## 1
     plot(
-      x = se.bts,
-      y = se.plot.gammas,
+      x = my.bts,
+      y = se.gammas,
       type = 'l' ,
       xlab = '',
       ylab = '',
       cex.axis = cex.axis,
       cex.lab = cex.lab,
-      ylim = c(0, 6),
+      ylim = c(0, 10),
       lwd = 2,
       lty = 1,
       bty = 'n'
     )
     mtext(
-      side = 3 ,
-      line = 0,
-      text = 'A',
-      cex = 1.2 ,
-      at=par("usr")[1]-0.1*diff(par("usr")[1:2])
-    )
-    mtext(
       side = 2,
-      text = 'Population scaled',
+      text = 'Mean population scaled',
       cex = cex.lab,
       line = 3.5
     )
     mtext(
       side = 2,
       text = expression(paste(
-        'selection coefficient, ', gamma(alpha), sep = ''
+        'selection coefficient, ', bar(gamma(alpha)), sep = ''
       )),
       cex = cex.lab,
       line = 1.9
@@ -574,29 +642,29 @@ dev.off()
       cex = cex.lab,
       line = 2.4
     )
-    # my.cols <- wes_palette('GrandBudapest1', length(my.gammas))
-    # for (j in 1:length(my.gammas)) {
-    #   plot.these = !is.na(my.gammas[[j]]) & my.gammas[[j]] < 10
-    #   lines(
-    #     x = my.bts[plot.these],
-    #     y = my.gammas[[j]][plot.these],
-    #     lty = 2,
-    #     lwd = 2,
-    #     col = my.cols[j]
-    #   )
-    # }
-    # legend(
-    #   'topleft',
-    #   legend = c(0, my.cvs ^ 2),
-    #   col = c('black', my.cols),
-    #   lty = c(1, rep(2, length(my.cvs))),
-    #   lwd = c(2, rep(2, length(my.cvs))),
-    #   bty = 'n',
-    #   title = expression(CV[alpha] ^ 2),
-    #   ##'Effect dist\'n coef. of var.',
-    #   cex = 1
-    # )
-    ##abline(v = bt.inflect, lty = 2 , lwd = 2)
+    my.cols <- wes_palette('GrandBudapest1', length(my.gammas))
+    for (j in 1:length(my.gammas)) {
+      plot.these = !is.na(my.gammas[[j]]) & my.gammas[[j]] < 10
+      lines(
+        x = my.bts[plot.these],
+        y = my.gammas[[j]][plot.these],
+        lty = 2,
+        lwd = 2,
+        col = my.cols[j]
+      )
+    }
+    legend(
+      'topleft',
+      legend = c(0, my.cvs ^ 2),
+      col = c('black', my.cols),
+      lty = c(1, rep(2, length(my.cvs))),
+      lwd = c(2, rep(2, length(my.cvs))),
+      bty = 'n',
+      title = expression(CV[alpha] ^ 2),
+      ##'Effect dist\'n coef. of var.',
+      cex = 1
+    )
+    abline(v = bt.inflect, lty = 2 , lwd = 2)
     par(op)
     
     
@@ -608,28 +676,10 @@ dev.off()
       cex.axis = cex.axis,
       cex.lab = cex.lab,
       xlim = c(0, 1),
-      ylim = c(0, 1.6),
+      ylim = c(0, 1.2),
       lwd = 2,
       lty = 1,
       bty = 'n'
-    )
-    mtext(
-      side = 3 ,
-      line = 0,
-      text = 'B',
-      cex = 1.2 ,
-      at=par("usr")[1]-0.1*diff(par("usr")[1:2])
-    )
-    legend(
-      'topleft',
-      legend = my.cvs^2,
-      col = my.cols,
-      lty = rep(2, length(my.cvs)),
-      lwd = rep(2, length(my.cvs)),
-      bty = 'n',
-      title = expression(CV[alpha] ^ 2),
-      ##'Effect dist\'n coef. of var.',
-      cex = 1
     )
     mtext(
       side = 2,
@@ -823,16 +873,3 @@ dev.off()
   }
   dev.off()
 }
-
-
-g <- seq(0.001,10,length.out=10000)
-my.b <- balpha(g)
-
-risk.var <- 0.5 * (my.b*g + 1 + (1-g)/my.b)
-
-
-plot(
-  my.b ,
-  
-)
-
