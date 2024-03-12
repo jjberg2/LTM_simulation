@@ -3,10 +3,10 @@ recover.flag <- FALSE
 
 
 ## main single effect params
-L <- 1e7
-Ne <- 1e3
-u <- 1e-8
-C <- 1
+L <- 1e5
+Ne <- 5e3
+u <- 1e-7
+C <- 1 / 2
 my.bt <- 0.8
 h2 <- 1/2
 
@@ -17,7 +17,9 @@ as <- 1
 my.als <- exp(seq(log(8),log(200),length.out=1000))
 theta <- 4*Ne*u
 last.Ll <- numeric()
-last.Ll[1] <- 90000
+last.gs <- numeric()
+## last.Ll[1] <- 90000
+last.gs[1] <- (L-90000)/L
 last.bs <- numeric()
 last.bs[1] <- 0.7
 
@@ -30,20 +32,20 @@ for( i in seq_along(my.als)){
     ##   last.tstar = tmp.output[[i-1]]['tstar']
     ## }
     solns[[i]] <- solveTwoEffect(
-        bs=last.bs[i],
-        bt=my.bt,
-        Ne=Ne,
-        as=as,
-        al=my.als[i],
-        L=L,
-        Ll=last.Ll[i],
-        last.tstar=NULL,
-        h2=h2,
-        u=u,
-        C=C,
-        LL.soln=TRUE,
-        var.ratio=var.ratio,
-        equalize.observed.vars=TRUE
+      bt=my.bt,  
+      bs=last.bs[i],
+      as=as,
+      al=my.als[i],
+      L=L,
+      gs=last.gs[i],
+      last.tstar=NULL,
+      h2=1/2,
+      Ne = Ne,
+      u = u,
+      C = C,
+      LL.soln = TRUE,
+      var.ratio = var.ratio,
+      equalize.observed.vars = TRUE
     )
     tmp.output[[i]] <- makeOutput(solns[[i]]) 
     last.Ll[i+1] <- tmp.output[[i]]['Ll']

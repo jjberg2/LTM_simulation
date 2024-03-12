@@ -1,5 +1,70 @@
 source('scripts/solveSingleEffect.R')
 
+
+twoNormalDiffs <- function(
+    X,
+    as = as,
+    al = al,
+    bs = bs,
+    h2 = h2,
+    Ve = NULL,
+    Bval = Bval,
+    cost=C,
+    Ls = Ls,
+    Ll=Ll,
+    u=u,
+    Ne=Ne
+) {
+  ## recover()
+  my.deltal <- 1 / (2*Ne*cost) + 1 / (1 + exp(X[1]))
+  my.tstar <- X[2]
+  
+  my.ys <- 0.5 * log((1 + bs) / (1 - bs))
+  my.raw.Vas <- 4 * Ne * Bval * u * Ls * as ^ 2 * bs / my.ys # originall 4*Ne*u*Ls*as^2*bs/ys
+  
+  my.sl <- as.vector(my.deltal * cost)
+  my.yl <- 2 * Ne * my.sl
+  my.raw.Val <- 4 * Ne * u * Ll * al ^ 2 / my.yl
+  ## my.mean.nl <- 2 * Ll * u / my.sl
+  ## my.raw.Val <- al^2 * my.mean.nl
+  my.raw.Va <- my.raw.Vas + my.raw.Val
+  
+  if(is.null(Ve)){
+    my.raw.Ve <- my.raw.Va * (1-h2)/h2
+  } else {
+    my.raw.Ve <- Ve
+  }
+  
+  my.raw.Vt <- my.raw.Vas + my.raw.Val + my.raw.Ve
+  
+  ## standardized quantities
+  std.ft <- my.ys * sqrt ( my.raw.Vt ) / ( 2*Ne*Bval*cost)
+  std.as <- as / sqrt( my.raw.Vt )
+  std.al <- al / sqrt( my.raw.Vt )
+  ## h2as <- my.raw.Vas / my.raw.Vt
+  ## h2al <- my.raw.Val / my.raw.Vt
+  ## my.norm.sd <- sqrt(1 - h2al)
+  ## my.range <- seq(qpois(1e-8, my.mean.nl), qpois(1 - 1e-8, my.mean.nl))
+  my.prot <- 1-pnorm(my.tstar)
+  my.risk <- 1-pnorm(my.tstar-std.al)
+  
+  # my.prot <- pPoisConv(my.tstar,
+  #                      my.mean.nl,
+  #                      my.norm.sd,
+  #                      alphal = std.al,
+  #                      risk.allele = FALSE)
+  # my.risk <- pPoisConv(my.tstar,
+  #                      my.mean.nl,
+  #                      my.norm.sd,
+  #                      alphal = std.al,
+  #                      risk.allele = TRUE)
+  my.deltal.tild <- my.risk - my.prot
+  ft.tild <- dnorm(my.tstar)
+  diff.one <- my.deltal - my.deltal.tild
+  diff.two <- std.ft - ft.tild
+  c(diff.one, diff.two)
+}
+
 twoPoissonDiffs <- function(
                             X,
                             as = as,
@@ -18,12 +83,10 @@ twoPoissonDiffs <- function(
     my.deltal <- 1 / (2*Ne*cost) + 1 / (1 + exp(X[1]))
     my.tstar <- X[2]
     
-    my.ys <- log((1 + bs) / (1 - bs))
-    my.raw.Vas <- 8 * Ne * Bval * u * Ls * as ^ 2 * bs / my.ys # originall 4*Ne*u*Ls*as^2*bs/ys
-    ##my.raw.Vas.noBGS <- 8 * Ne * u * Ls * as ^ 2 * bs / my.ys # originall 4*Ne*u*Ls*as^2*bs/ys
+    my.ys <- 0.5 * log((1 + bs) / (1 - bs))
+    my.raw.Vas <- 4 * Ne * Bval * u * Ls * as ^ 2 * bs / my.ys # originall 4*Ne*u*Ls*as^2*bs/ys
     
     my.sl <- my.deltal * cost
-    ## my.yl <- 4*Ne*my.s ## originally 2*Ne*my.s
     my.mean.nl <- 2 * Ll * u / my.sl
     my.raw.Val <- al^2 * my.mean.nl
 
@@ -37,10 +100,8 @@ twoPoissonDiffs <- function(
     
     my.raw.Vt <- my.raw.Vas + my.raw.Val + my.raw.Ve
 
-
-    
     ## standardized quantities
-    std.ft <- my.ys * sqrt ( my.raw.Vt ) / ( 4*Ne*Bval*cost)
+    std.ft <- my.ys * sqrt ( my.raw.Vt ) / ( 2*Ne*Bval*cost)
     std.as <- as / sqrt( my.raw.Vt )
     std.al <- al / sqrt( my.raw.Vt )
     h2as <- my.raw.Vas / my.raw.Vt
@@ -68,6 +129,133 @@ twoPoissonDiffs <- function(
     c(diff.one, diff.two)
 }
 
+twoNormalDiffsFixedDeltal <- function(
+    X,
+    as = as,
+    deltal = deltal,
+    bs = bs,
+    h2 = h2,
+    Ve = NULL,
+    Bval = Bval,
+    cost=C,
+    Ls = Ls,
+    Ll=Ll,
+    u=u,
+    Ne=Ne
+) {
+  ## recover()
+  my.al <- exp(X[1])
+  my.tstar <- X[2]
+  
+  my.ys <- 0.5 * log((1 + bs) / (1 - bs))
+  my.raw.Vas <- 4 * Ne * Bval * u * Ls * as ^ 2 * bs / my.ys # originall 4*Ne*u*Ls*as^2*bs/ys
+  
+  my.sl <- as.vector(deltal * cost)
+  my.yl <- 2 * Ne * my.sl
+  my.raw.Val <- 4 * Ne * u * Ll * my.al ^ 2 / my.yl
+  ## my.mean.nl <- 2 * Ll * u / my.sl
+  ## my.raw.Val <- al^2 * my.mean.nl
+  my.raw.Va <- my.raw.Vas + my.raw.Val
+  
+  if(is.null(Ve)){
+    my.raw.Ve <- my.raw.Va * (1-h2)/h2
+  } else {
+    my.raw.Ve <- Ve
+  }
+  
+  my.raw.Vt <- my.raw.Vas + my.raw.Val + my.raw.Ve
+  
+  ## standardized quantities
+  std.ft <- my.ys * sqrt ( my.raw.Vt ) / ( 2*Ne*Bval*cost)
+  std.as <- as / sqrt( my.raw.Vt )
+  std.al <- my.al / sqrt( my.raw.Vt )
+  ## h2as <- my.raw.Vas / my.raw.Vt
+  ## h2al <- my.raw.Val / my.raw.Vt
+  ## my.norm.sd <- sqrt(1 - h2al)
+  ## my.range <- seq(qpois(1e-8, my.mean.nl), qpois(1 - 1e-8, my.mean.nl))
+  my.prot <- 1-pnorm(my.tstar)
+  my.risk <- 1-pnorm(my.tstar-std.al)
+  
+  # my.prot <- pPoisConv(my.tstar,
+  #                      my.mean.nl,
+  #                      my.norm.sd,
+  #                      alphal = std.al,
+  #                      risk.allele = FALSE)
+  # my.risk <- pPoisConv(my.tstar,
+  #                      my.mean.nl,
+  #                      my.norm.sd,
+  #                      alphal = std.al,
+  #                      risk.allele = TRUE)
+  my.deltal.tild <- my.risk - my.prot
+  ft.tild <- dnorm(my.tstar)
+  diff.one <- deltal - my.deltal.tild
+  diff.two <- std.ft - ft.tild
+  c(diff.one, diff.two)
+}
+
+twoPoissonDiffsFixedDeltal <- function(
+    X,
+    as = as,
+    deltal = deltal,
+    bs = bs,
+    h2 = h2,
+    Ve = NULL,
+    Bval = Bval,
+    cost=C,
+    Ls = Ls,
+    Ll=Ll,
+    u=u,
+    Ne=Ne
+) {
+  ## recover()
+  my.al <- exp(X[1])
+  my.tstar <- X[2]
+  
+  my.ys <- 0.5 * log((1 + bs) / (1 - bs))
+  my.raw.Vas <- 4 * Ne * Bval * u * Ls * as ^ 2 * bs / my.ys # originall 4*Ne*u*Ls*as^2*bs/ys
+  
+  my.sl <- deltal * cost
+  my.mean.nl <- 2 * Ll * u / my.sl
+  my.raw.Val <- my.al^2 * my.mean.nl
+  
+  my.raw.Va <- my.raw.Vas + my.raw.Val
+  
+  if(is.null(Ve)){
+    my.raw.Ve <- my.raw.Va * (1-h2)/h2
+  } else {
+    my.raw.Ve <- Ve
+  }
+  
+  my.raw.Vt <- my.raw.Vas + my.raw.Val + my.raw.Ve
+  
+  ## standardized quantities
+  std.ft <- my.ys * sqrt ( my.raw.Vt ) / ( 2*Ne*Bval*cost)
+  std.as <- as / sqrt( my.raw.Vt )
+  std.al <- my.al / sqrt( my.raw.Vt )
+  h2as <- my.raw.Vas / my.raw.Vt
+  h2al <- my.raw.Val / my.raw.Vt
+  my.norm.sd <- sqrt(1 - h2al)
+  my.range <- seq(qpois(1e-8, my.mean.nl), qpois(1 - 1e-8, my.mean.nl))
+  my.prot <- pPoisConv(my.tstar,
+                       my.mean.nl,
+                       my.norm.sd,
+                       alphal = std.al,
+                       risk.allele = FALSE)
+  my.risk <- pPoisConv(my.tstar,
+                       my.mean.nl,
+                       my.norm.sd,
+                       alphal = std.al,
+                       risk.allele = TRUE)
+  my.deltal.tild <- my.risk - my.prot
+  ft.tild <- dPoisConv(my.tstar,
+                       my.mean.nl,
+                       my.norm.sd,
+                       alphal = std.al,
+                       risk.allele = FALSE)
+  diff.one <- deltal - my.deltal.tild
+  diff.two <- std.ft - ft.tild
+  c(diff.one, diff.two)
+}
 
 fourPoissonDiffs <-
     function(X,
@@ -262,7 +450,12 @@ solveTwoEffect2D <- function(bt,
                              Ve = NULL,
                              u,
                              C,
-                             Bval=1) {
+                             Bval=1,
+                             init.deltal=NULL,
+                             init.tstar=NULL,
+                             norm.deltal=NULL,
+                             norm.init.tstar=NULL
+                             ) {
     ## bs:  asymmetry for small effects
     ## Ne:  pop size
     ## L:  number of sites
@@ -275,59 +468,44 @@ solveTwoEffect2D <- function(bt,
     ## C:   cost
     ## h2l: ratio of large effect variance to total genetic variance (not currently used)
 
-    if(recover.flag) recover()
+    ## recover()
   
     ## transformed params
     Ls <- L * gs
     Ll <- L * (1 - gs)
 
-    ## single effect solution
-    single.norm.y <- log((1 + bt) / (1 - bt))
-
-    single.norm.ft.noBGS <- 1 / (4 * Ne * C) * single.norm.y
-    single.norm.ft.wBGS <- 1 / (4 * Ne * Bval * C) * single.norm.y
-
-    single.norm.Vg.noBGS <- 8 * Ne * L * u * bt / single.norm.y
-    single.norm.Vg.wBGS <- 8 * Ne * Bval * L * u * bt / single.norm.y
-
-    if(is.null(Ve)){
-        single.norm.Ve <- single.norm.Vg.noBGS*(1-h2)/h2
-    } else {
+    
+    if (is.null(init.deltal) | is.null(init.tstar)) {
+      ## single effect solution
+      single.norm.y <- 0.5 * log((1 + bt) / (1 - bt))
+      single.norm.ft <- 1 / (2 * Ne * C) * single.norm.y
+      single.norm.Vg <- 4 * Ne * L * u * bt / single.norm.y
+      if (is.null(Ve)) {
+        single.norm.Ve <- single.norm.Vg * (1 - h2) / h2
+      } else {
         single.norm.Ve <- Ve
+      }
+      norm.Vt <- single.norm.Vg + single.norm.Ve
+      h2 <- single.norm.Vg / norm.Vt
+      std.dev.tot <- sqrt (norm.Vt)
+      single.norm.as.std <- 1 / std.dev.tot
+      single.norm.dens <-
+        single.norm.ft * std.dev.tot## 2 * L * u * bt * single.norm.as.std / (h2 * C)
+      single.norm.tstar <- dnorminv(single.norm.dens)
+      single.norm.prev <- 1 - pnorm(single.norm.tstar)
+      init.al.std <- single.norm.as.std * al
+      
+      init.deltal <- norm.deltal <-
+        pnorm(single.norm.tstar) - pnorm(single.norm.tstar - init.al.std)
+      init.tstar <- norm.init.tstar <- single.norm.tstar
     }
     
-    norm.Vt.noBGS <- single.norm.Vg.noBGS + single.norm.Ve
-    norm.Vt.wBGS <- single.norm.Vg.wBGS + single.norm.Ve
-
-    h2.noBGS <- single.norm.Vg.noBGS / norm.Vt.noBGS
-    h2.wBGS <- single.norm.Vg.wBGS / norm.Vt.wBGS
-
-    std.dev.tot.noBGS <- sqrt ( norm.Vt.noBGS )
-    std.dev.tot.wBGS <- sqrt ( norm.Vt.wBGS )
-
-    single.norm.as.std.noBGS <- 1 / std.dev.tot.noBGS
-    single.norm.as.std.wBGS <- 1 / std.dev.tot.wBGS
-
-    single.norm.dens.noBGS <- single.norm.ft.noBGS * std.dev.tot.noBGS## 2 * L * u * bt * single.norm.as.std.noBGS / (h2.noBGS * C)
-    single.norm.dens.wBGS <- single.norm.ft.wBGS * std.dev.tot.wBGS  ## 2 * L * u * bt * single.norm.as.std.wBGS / (h2.wBGS * C)
-
-    single.norm.tstar.noBGS <- dnorminv(single.norm.dens.noBGS)
-    single.norm.tstar.wBGS <- dnorminv(single.norm.dens.wBGS)
-
-    single.norm.prev.noBGS <- 1 - pnorm(single.norm.tstar.noBGS)
-    single.norm.prev.wBGS <- 1 - pnorm(single.norm.tstar.wBGS)
-
-
-
     
-    init.al.std <- single.norm.as.std.noBGS * al
-    init.deltal <- pnorm(single.norm.tstar.noBGS) - pnorm(single.norm.tstar.noBGS - init.al.std)
-
-    ## recover()
+    if(recover.flag) recover()
     ## get 2d solution
     if(is.null(Ve)){
-        soln.noBGS <- nleqslv(
-            x = c(log((1 - init.deltal) / init.deltal), single.norm.tstar.noBGS),
+        soln <- nleqslv(
+            x = c(log((1 - init.deltal) / init.deltal), init.tstar),
             fn = function(X) twoPoissonDiffs(
                                  X,
                                  as = as,
@@ -344,8 +522,8 @@ solveTwoEffect2D <- function(bt,
             control = list(scalex = c(1, 1), maxit = 400)
         )
     } else {
-        soln.noBGS <- nleqslv(
-            x = c(log((1 - init.deltal) / init.deltal), single.norm.tstar.noBGS),
+        soln <- nleqslv(
+            x = c(log((1 - init.deltal) / init.deltal), init.tstar),
             fn = function(X) twoPoissonDiffs(
                                  X,
                                  as = as,
@@ -361,98 +539,334 @@ solveTwoEffect2D <- function(bt,
                                  Ne=Ne), 
             control = list(scalex = c(1, 1), maxit = 400)
         )
+         soln <- nleqslv(
+            x = c(log((1 - init.deltal) / init.deltal), init.tstar),
+            fn = function(X) twoPoissonDiffs(
+                                 X,
+                                 as = as,
+                                 al = al,
+                                 bs = bs,
+                                 h2 = NULL,
+                                 Ve = Ve,
+                                 Bval = 1,
+                                 cost=C,
+                                 Ls = Ls,
+                                 Ll=Ll,
+                                 u=u,
+                                 Ne=Ne), 
+            control = list(scalex = c(1, 1), maxit = 400)
+        )
+        norm.soln <- nleqslv(
+          x = c(log((1 - init.deltal) / init.deltal), init.tstar),
+          fn = function(X) twoNormalDiffs(
+            X,
+            as = as,
+            al = al,
+            bs = bs,
+            h2 = NULL,
+            Ve = Ve,
+            Bval = 1,
+            cost=C,
+            Ls = Ls,
+            Ll=Ll,
+            u=u,
+            Ne=Ne),
+          control = list(scalex = c(1, 1), maxit = 400)
+        )
     }
+    
         
-    trans.deltal.noBGS <- soln.noBGS$x[1]
-    deltal.noBGS <- 1 / (2*Ne*C) + 1 / (1 + exp(trans.deltal.noBGS))
-    tstar.noBGS <- soln.noBGS$x[2]
-    ys <- log((1 + bs) / (1 - bs))
-    del.ws = 2*L*gs*u*bs*ys
-    raw.ft.noBGS <- 1 / (4*Ne*C) * ys
-    mean.nl.noBGS <- 2 * Ll * u / (deltal.noBGS*C)
-    raw.Val.noBGS <- al^2 * mean.nl.noBGS
-    raw.Vas.noBGS <- 8 * Ne * u * Ls * as ^ 2 * bs / ys
-    raw.Va.noBGS <- raw.Vas.noBGS + raw.Val.noBGS
+    trans.deltal <- as.vector(soln$x[1])
+    deltal <- 1 / (2*Ne*C) + 1 / (1 + exp(trans.deltal))
+    tstar <- as.vector(soln$x[2])
+    
+    ys <- 0.5*log((1 + bs) / (1 - bs))
+    ## del.ws = 2*L*gs*u*bs*ys
+    raw.ft <- 1 / (2*Ne*C) * ys
+    mean.nl <- 2 * Ll * u / (deltal*C)
+    raw.Val <- al^2 * mean.nl
+    
+    raw.Vas <- 4 * Ne * u * Ls * as ^ 2 * bs / ys
+    raw.Vos <- raw.Vas*raw.ft^2
+    raw.Vol <- deltal^2 * mean.nl
+    raw.Vo <- raw.Vos + raw.Vol
+    raw.Va <- raw.Vas + raw.Val
     if(is.null(Ve)){
-        raw.Ve.noBGS <- raw.Va.noBGS * (1-h2) / h2
+        raw.Ve <- raw.Va * (1-h2) / h2
     } else {
-        raw.Ve.noBGS <- Ve
+        raw.Ve <- Ve
     }
-    raw.Vt.noBGS <- raw.Va.noBGS + raw.Ve.noBGS
-    std.ft.noBGS <- raw.ft.noBGS * sqrt( raw.Vt.noBGS )
-    std.al.noBGS <- al / sqrt( raw.Vt.noBGS )
-    norm.sd.noBGS <- 1 - raw.Val.noBGS / raw.Vt.noBGS
-    ## std.al.noBGS <- al / sqrt(norm.sd.noBGS)
-    pgal.noBGS <- raw.Val.noBGS / raw.Va.noBGS
-    h2s.noBGS <- raw.Vas.noBGS / raw.Vt.noBGS
-    prev.noBGS <- pPoisConv(
-      tstar.noBGS,
-      mean.nl.noBGS,
-      norm.sd.noBGS,
-      alphal = std.al.noBGS,
+    
+    raw.Vt <- raw.Va + raw.Ve
+    std.ft <- raw.ft * sqrt( raw.Vt )
+    std.al <- al / sqrt( raw.Vt )
+    norm.sd <- 1 - raw.Val / raw.Vt
+    ## std.al <- al / sqrt(norm.sd)
+    pgal <- raw.Val / raw.Va
+    pgol <- raw.Vol / raw.Vo
+    h2s <- raw.Vas / raw.Vt
+    h2 <- raw.Va / raw.Vt
+    
+    prev <- pPoisConv(
+      tstar,
+      mean.nl,
+      norm.sd,
+      alphal = std.al,
       risk.allele = FALSE
     )
-    raw.Vas.obs.noBGS <- raw.Vas.noBGS * std.ft.noBGS^2
-    raw.Val.obs.noBGS <- deltal.noBGS^2 * mean.nl.noBGS
-    yl.noBGS <- 4*Ne*deltal.noBGS*C
-    raw.Va.obs.noBGS <- raw.Vas.obs.noBGS + raw.Val.obs.noBGS
-    pgal.obs.noBGS <- raw.Val.obs.noBGS / raw.Va.obs.noBGS
-    naive.norm.prev.noBGS <- 1-pnorm(dnorminv(raw.ft.noBGS * sqrt(raw.Vt.noBGS)))
-    
-
-    soln.wBGS <- nleqslv(
-        x = c(log((1 - init.deltal) / init.deltal), single.norm.tstar.wBGS),
-        fn = function(X) twoPoissonDiffs(
-                             X,
-                             as = as,
-                             al = al,
-                             bs = bs,
-                             h2 = NULL,
-                             Ve = raw.Ve.noBGS,
-                             Bval = Bval,
-                             cost=C,
-                             Ls = Ls,
-                             Ll=Ll,
-                             u=u,
-                             Ne=Ne), 
-        control = list(scalex = c(1, 1), maxit = 400)
-    )
-    trans.deltal.wBGS <- soln.wBGS$x[1]
-    deltal.wBGS <- 1 / (2*Ne*C) + 1 / (1 + exp(trans.deltal.wBGS))
-    tstar.wBGS <- soln.wBGS$x[2]
-    mean.nl.wBGS <- 2 * Ll * u / (deltal.wBGS*C)
-    raw.Val.wBGS <- al^2 * mean.nl.wBGS
-    raw.Vas.wBGS <- 8 * Ne * Bval * u * Ls * as ^ 2 * bs / ys
-    raw.Va.wBGS <- raw.Vas.wBGS + raw.Val.wBGS
-    raw.Ve.wBGS <- raw.Ve.noBGS
-    raw.Vt.wBGS <- raw.Va.wBGS + raw.Ve.wBGS
-    norm.sd.wBGS <- 1 - raw.Val.wBGS / raw.Vt.wBGS
-    std.al.wBGS <- al / sqrt(norm.sd.wBGS)
-    pgal.wBGS <- raw.Val.wBGS / raw.Va.wBGS
-    prev.wBGS <- pPoisConv(
-      tstar.wBGS,
-      mean.nl.wBGS,
-      norm.sd.wBGS,
-      alphal = std.al.wBGS,
+    thr <- dPoisConv(
+      tstar,
+      mean.nl,
+      norm.sd,
+      alphal = std.al,
       risk.allele = FALSE
     )
+    raw.Vas.obs <- raw.Vas * std.ft^2
+    raw.Val.obs <- deltal^2 * mean.nl
+    yl <- 2*Ne*deltal*C
+    raw.Va.obs <- raw.Vas.obs + raw.Val.obs
+    pgal.obs <- raw.Val.obs / raw.Va.obs
     
-
-    large.effect.reduction <- deltal.noBGS / deltal.wBGS
     
+    
+    ## normal stuff
+    
+    norm.trans.deltal <- as.vector(norm.soln$x[1])
+    norm.deltal <- 1 / (2*Ne*C) + 1 / (1 + exp(norm.trans.deltal))
+    norm.tstar <- as.vector(norm.soln$x[2])
+    
+    raw.norm.Val <- 2 * al^2 * Ll * u / (norm.deltal*C)
+    raw.norm.Vol <- deltal^2 * mean.nl
+    raw.norm.Va <- raw.Vas + raw.norm.Val
+    raw.norm.Vt <- raw.norm.Va + raw.Ve
+    norm.h2s <- raw.Vas / raw.norm.Vt
+    norm.h2 <- raw.norm.Va / raw.norm.Vt
+    norm.prev <- 1-pnorm(norm.tstar)
+    naive.norm.tstar <- dnorminv(raw.ft * sqrt(raw.norm.Vt))
+    naive.norm.prev <- 1-pnorm(naive.norm.tstar)
+    
+    ## large.effect.reduction <- deltal / deltal.wBGS
+    ## recover()
     return(
         c(
-            large.effect.reduction = large.effect.reduction,
-            pgal.noBGS = pgal.noBGS,
-            deltal.noBGS = deltal.noBGS,
-            prev.noBGS = prev.noBGS,
-            pgal.obs.noBGS = pgal.obs.noBGS,
-            yl.noBGS = yl.noBGS,
-            h2s.noBGS = h2s.noBGS,
-            naive.norm.prev.noBGS = naive.norm.prev.noBGS
+            pgal = pgal,
+            deltal = deltal,
+            al = al,
+            tstar = tstar,
+            prev = prev,
+            pgal.obs = pgal.obs,
+            yl = yl,
+            h2s = h2s,
+            raw.Vos = raw.Vos,
+            raw.Vol = raw.Vol,
+            pgol = pgol,
+            norm.deltal = norm.deltal,
+            norm.tstar = norm.tstar,
+            norm.prev = norm.prev,
+            naive.norm.prev = naive.norm.prev
         )
     )
 }
+
+solveTwoEffect2DFixedDeltal <- function(bt,
+                             bs = bt,
+                             Ne,
+                             as,
+                             deltal,
+                             L,
+                             gs,
+                             h2 = NULL,
+                             Ve = NULL,
+                             u,
+                             C,
+                             Bval=1,
+                             init.al=NULL,
+                             init.tstar=NULL,
+                             norm.al=NULL,
+                             norm.init.tstar=NULL
+) {
+  ## bs:  asymmetry for small effects
+  ## Ne:  pop size
+  ## L:  number of sites
+  ## gs: fraction of sites that have small effects
+  ## as:  small effect size
+  ## al:  large effect size
+  ## r2n: ratio of Ve to Vas (small effect variance)
+  ## u:   mutation rate
+  ## T:   threshold position
+  ## C:   cost
+  ## h2l: ratio of large effect variance to total genetic variance (not currently used)
+  
+  ## recover()
+  
+  ## transformed params
+  Ls <- L * gs
+  Ll <- L * (1 - gs)
+  
+  
+  if (is.null(init.al) | is.null(init.tstar)) {
+    ## single effect solution
+    single.norm.y <- 0.5 * log((1 + bt) / (1 - bt))
+    single.norm.ft <- 1 / (2 * Ne * C) * single.norm.y
+    single.norm.Vg <- 4 * Ne * L * u * bt / single.norm.y
+    if (is.null(Ve)) {
+      single.norm.Ve <- single.norm.Vg * (1 - h2) / h2
+    } else {
+      single.norm.Ve <- Ve
+    }
+    norm.Vt <- single.norm.Vg + single.norm.Ve
+    h2 <- single.norm.Vg / norm.Vt
+    std.dev.tot <- sqrt (norm.Vt)
+    single.norm.as.std <- 1 / std.dev.tot
+    single.norm.dens <-
+      single.norm.ft * std.dev.tot## 2 * L * u * bt * single.norm.as.std / (h2 * C)
+    single.norm.tstar <- dnorminv(single.norm.dens)
+    single.norm.prev <- 1 - pnorm(single.norm.tstar)
+    init.al.std <-
+      uniroot(
+        function(A)
+          pnorm(single.norm.tstar) - pnorm(single.norm.tstar - A) - deltal,
+        lower = 1e-8,
+        upper = 10
+      )$root
+    init.al <- init.al.std * sqrt ( std.dev.tot )
+    init.tstar <- norm.init.tstar <- single.norm.tstar
+  }
+  
+  
+  if(recover.flag) recover()
+  ## get 2d solution
+  soln <- nleqslv(
+    x = c(log(init.al), init.tstar),
+    fn = function(X)
+      twoPoissonDiffsFixedDeltal(
+        X,
+        as = as,
+        deltal = deltal,
+        bs = bs,
+        h2 = NULL,
+        Ve = Ve,
+        Bval = 1,
+        cost = C,
+        Ls = Ls,
+        Ll = Ll,
+        u = u,
+        Ne = Ne
+      ),
+    control = list(scalex = c(1, 1), maxit = 400)
+  )
+  trans.al <- as.vector(soln$x[1])
+  al <- exp(trans.al)
+  tstar <- as.vector(soln$x[2])
+  
+  ys <- 0.5*log((1 + bs) / (1 - bs))
+  ## del.ws = 2*L*gs*u*bs*ys
+  raw.ft <- 1 / (2*Ne*C) * ys
+  mean.nl <- 2 * Ll * u / (deltal*C)
+  raw.Val <- al^2 * mean.nl
+  
+  raw.Vas <- 4 * Ne * u * Ls * as ^ 2 * bs / ys
+  raw.Vos <- raw.Vas*raw.ft^2
+  raw.Vol <- deltal^2 * mean.nl
+  raw.Vo <- raw.Vos + raw.Vol
+  raw.Va <- raw.Vas + raw.Val
+  if(is.null(Ve)){
+    raw.Ve <- raw.Va * (1-h2) / h2
+  } else {
+    raw.Ve <- Ve
+  }
+  
+  raw.Vt <- raw.Va + raw.Ve
+  std.ft <- raw.ft * sqrt( raw.Vt )
+  std.al <- al / sqrt( raw.Vt )
+  norm.sd <- 1 - raw.Val / raw.Vt
+  ## std.al <- al / sqrt(norm.sd)
+  pgal <- raw.Val / raw.Va
+  pgol <- raw.Vol / raw.Vo
+  h2s <- raw.Vas / raw.Vt
+  h2 <- raw.Va / raw.Vt
+  
+  prev <- pPoisConv(
+    tstar,
+    mean.nl,
+    norm.sd,
+    alphal = std.al,
+    risk.allele = FALSE
+  )
+  std.dens <- dPoisConv(
+    tstar,
+    mean.nl,
+    norm.sd,
+    alphal = std.al,
+    risk.allele = FALSE
+  )
+  raw.Vas.obs <- raw.Vas * std.ft^2
+  raw.Val.obs <- deltal^2 * mean.nl
+  yl <- 2*Ne*deltal*C
+  raw.Va.obs <- raw.Vas.obs + raw.Val.obs
+  pgal.obs <- raw.Val.obs / raw.Va.obs
+  
+  
+  
+  
+  
+  
+  ## normal stuff
+  norm.soln <- nleqslv(
+    x = c(log(init.al), init.tstar),
+    fn = function(X)
+      twoNormalDiffsFixedDeltal(
+        X,
+        as = as,
+        deltal = deltal,
+        bs = bs,
+        h2 = NULL,
+        Ve = Ve,
+        Bval = 1,
+        cost = C,
+        Ls = Ls,
+        Ll = Ll,
+        u = u,
+        Ne = Ne
+      ),
+    control = list(scalex = c(1, 1), maxit = 400)
+  )
+  norm.al <- exp(as.vector(norm.soln$x[1]))
+  norm.tstar <- as.vector(norm.soln$x[2])
+  
+  raw.norm.Val <- 2 * norm.al^2 * Ll * u / (deltal*C)
+  raw.norm.Vol <- 2 * deltal^2 * Ll * u / (deltal*C)
+  raw.norm.Va <- raw.Vas + raw.norm.Val
+  raw.norm.Vt <- raw.norm.Va + raw.Ve
+  norm.h2s <- raw.Vas / raw.norm.Vt
+  norm.h2 <- raw.norm.Va / raw.norm.Vt
+  norm.prev <- 1-pnorm(norm.tstar)
+  naive.norm.tstar <- dnorminv(raw.ft * sqrt(raw.norm.Vt))
+  naive.norm.prev <- 1-pnorm(naive.norm.tstar)
+  
+  ## large.effect.reduction <- deltal / deltal.wBGS
+  ## recover()
+  return(
+    c(
+      pgal = pgal,
+      deltal = deltal,
+      al=al,
+      norm.al=norm.al,
+      tstar = tstar,
+      prev = prev,
+      pgal.obs = pgal.obs,
+      yl = yl,
+      h2s = h2s,
+      raw.Vos = raw.Vos,
+      raw.Vol = raw.Vol,
+      pgol = pgol,
+      norm.tstar = norm.tstar,
+      norm.prev = norm.prev,
+      naive.norm.prev = naive.norm.prev
+    )
+  )
+}
+
 
 solveTwoEffect <-
   function(bt,

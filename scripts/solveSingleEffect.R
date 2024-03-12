@@ -80,6 +80,7 @@ pPoisConv <- function(t,lambda,norm.sd,alphal=1,risk.allele=FALSE){
     gen.dist%*%prevs
 }
 dPoisConv <- function(t,lambda,norm.sd,alphal=1,risk.allele=FALSE){
+    ## recover()
     ## t = threshold position
     ## lambda = genetic mean
     ## norm.sd = standard deviation of normal component

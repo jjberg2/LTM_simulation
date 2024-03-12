@@ -457,16 +457,25 @@ dev.off()
 ### Figure 6 mean scaled coefficient ###
 ########################################
 {
-  balpha = function(a)
-    ifelse(a < 100, (exp(2 * a) - 1) / (exp(2 * a) + 1), 1)
+  balpha = function(a,f=1)
+    ifelse(a < 100, (exp(2 * a * f) - 1) / (exp(2 * a * f) + 1), 1)
   bt.diff2 = function(my.mean, my.cv, my.bt,my.q=1e-5) {
+    my.shape = 1 / my.cv ^ 2
+    my.rate = 1 / (my.cv ^ 2 * my.mean)
+    my.lower = qgamma(my.q, my.shape, my.rate)
+    my.upper = qgamma(1 - my.q, my.shape, my.rate)
+    myFunc <- function(a)
+      dgamma(a, my.shape, my.rate) * a * balpha(a)
+    my.bt - (1 / my.mean) * integrate(myFunc, lower = my.lower, upper = my.upper)$value
+  }
+  bt.diff3 = function(f,my.mean=1, my.cv, my.bt,my.q=1e-5) {
     my.shape = 1 / my.cv ^ 2
     my.rate = 1 / (my.cv ^ 2 * my.mean)
     my.lower = qgamma(my.q, my.shape, my.rate)
     my.upper = qgamma(1 - my.q, my.shape, my.rate)
     ## balpha(my.mean)
     myFunc <- function(a)
-      dgamma(a, my.shape, my.rate) * a * balpha(a)
+      dgamma(a, my.shape, my.rate) * a * balpha(a,f)
     my.bt - (1 / my.mean) * integrate(myFunc, lower = my.lower, upper = my.upper)$value
   }
   se.bts = seq(1e-3, 0.99999, length.out = 1000)
@@ -474,28 +483,40 @@ dev.off()
   my.cvs = sqrt(c(0.1, 1, 3, 10))
   se.plot.gammas = 0.5 * log((1 + se.bts) / (1 - se.bts))
   se.gammas = 0.5 * log((1 + my.bts) / (1 - my.bts))
+  se.vars <- 1^2 * se.bts / se.gammas
   Ne = 1e4
   U = 0.2
   h2 = 1 / 2
   cost = 1 / 2
   tmp = list()
   my.gammas = list()
+  my.vars = list()
+  my.var.ratio = list()
   for (j in 1:length(my.cvs)) {
     tmp[[j]] = list()
     my.gammas[[j]] = rep(NA, length(my.bts))
+    my.vars[[j]] = rep(NA, length(my.bts))
+    my.var.ratio[[j]] = rep(NA, length(my.bts))
     for (i in 1:length(my.bts)) {
       my.lower = 0.01 * se.gammas[i]
       my.upper =  2000 * se.gammas[i]
       tmp[[j]][[i]] = uniroot(
         function(X)
           bt.diff2(X, my.cv = my.cvs[j], my.bts[i]),
+        #bt.diff3(X, my.mean = 1, my.cv = my.cvs[j], my.bts[i]),
         lower = my.lower,
         upper = my.upper
       )
       if (tmp[[j]][[i]]$root < 0.002)
         next
       my.gammas[[j]][i] = tmp[[j]][[i]]$root
+      my.vars[[j]][i] = integrate(
+        function(X)
+        (X / my.gammas[[j]][i])^2 * balpha(my.gammas[[j]][i]) / my.gammas[[j]][i] ,
+        lower = my.lower ,
+        upper = my.upper)$value
     }
+    my.var.ratio[[j]] <- se.vars / my.vars[[j]]
   }
   
   {
