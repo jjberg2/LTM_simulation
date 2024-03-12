@@ -574,7 +574,7 @@ dev.off()
       cex = cex.lab,
       line = 2.4
     )
-    # my.cols <- wes_palette('GrandBudapest1', length(my.gammas))
+    my.cols <- wes_palette('GrandBudapest1', length(my.gammas))
     # for (j in 1:length(my.gammas)) {
     #   plot.these = !is.na(my.gammas[[j]]) & my.gammas[[j]] < 10
     #   lines(
