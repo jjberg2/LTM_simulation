@@ -469,15 +469,15 @@ legend(
 mtext(
   text = 'Liability effect size',
   side = 1,
-  line = 2,
+  line = 2.5,
   cex = my.cex
 )
-mtext(
-  text = '(Population scaled fitness units)',
-  side = 1, 
-  line = 3,
-  cex = my.cex
-)
+## mtext(
+##   text = '(Population scaled fitness units)',
+##   side = 1, 
+##   line = 3,
+##   cex = my.cex
+## )
 curve(
   sigmaaSmall2,
   from = 0 , 
@@ -511,15 +511,15 @@ matplot(
 mtext(
   text = 'Liability effect size',
   side = 1,
-  line = 2,
+  line = 2.5,
   cex = my.cex
 )
-mtext(
-  text = '(Population scaled fitness units)',
-  side = 1, 
-  line = 3,
-  cex = my.cex
-)
+## mtext(
+##   text = '(Population scaled fitness units)',
+##   side = 1, 
+##   line = 3,
+##   cex = my.cex
+## )
 curve(
   sigmaaSmall2,
   from = 0 , 
@@ -552,12 +552,12 @@ dev.off()
 
 
 ########################################
-### Figure 4 mean scaled coefficient ###
+### Figure 6 mean scaled coefficient ###
 ########################################
 {
   balpha = function(a)
     ifelse(a < 100, (exp(2 * a) - 1) / (exp(2 * a) + 1), 1)
-  bt.diff2 = function(my.mean, my.cv, my.bt) {
+  bt.diff2 = function(my.mean, my.cv, my.bt,my.q=1e-8) {
     my.shape = 1 / my.cv ^ 2
     my.rate = 1 / (my.cv ^ 2 * my.mean)
     my.lower = qgamma(my.q, my.shape, my.rate)
@@ -643,28 +643,29 @@ dev.off()
       line = 2.4
     )
     my.cols <- wes_palette('GrandBudapest1', length(my.gammas))
-    for (j in 1:length(my.gammas)) {
-      plot.these = !is.na(my.gammas[[j]]) & my.gammas[[j]] < 10
-      lines(
-        x = my.bts[plot.these],
-        y = my.gammas[[j]][plot.these],
-        lty = 2,
-        lwd = 2,
-        col = my.cols[j]
-      )
-    }
-    legend(
-      'topleft',
-      legend = c(0, my.cvs ^ 2),
-      col = c('black', my.cols),
-      lty = c(1, rep(2, length(my.cvs))),
-      lwd = c(2, rep(2, length(my.cvs))),
-      bty = 'n',
-      title = expression(CV[alpha] ^ 2),
-      ##'Effect dist\'n coef. of var.',
-      cex = 1
-    )
-    abline(v = bt.inflect, lty = 2 , lwd = 2)
+
+    # for (j in 1:length(my.gammas)) {
+    #   plot.these = !is.na(my.gammas[[j]]) & my.gammas[[j]] < 10
+    #   lines(
+    #     x = my.bts[plot.these],
+    #     y = my.gammas[[j]][plot.these],
+    #     lty = 2,
+    #     lwd = 2,
+    #     col = my.cols[j]
+    #   )
+    # }
+    # legend(
+    #   'topleft',
+    #   legend = c(0, my.cvs ^ 2),
+    #   col = c('black', my.cols),
+    #   lty = c(1, rep(2, length(my.cvs))),
+    #   lwd = c(2, rep(2, length(my.cvs))),
+    #   bty = 'n',
+    #   title = expression(CV[alpha] ^ 2),
+    #   ##'Effect dist\'n coef. of var.',
+    #   cex = 1
+    # )
+    ##abline(v = bt.inflect, lty = 2 , lwd = 2)
     par(op)
     
     
