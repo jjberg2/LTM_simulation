@@ -552,6 +552,121 @@ dev.off()
 
 
 
+###########################
+### Figure 5 var dist ###
+###########################
+{
+  library('wesanderson')
+  n <- 10000
+  my.x <- 1:(n-1)/n
+  my.gamma <- c(0.3,1,3,10)
+  ##my.var.specs <- sapply(my.gamma, function(G) 2*G*(exp(2*G) + 1) /  exp(2*G)* exp(-2*G*my.x))
+  my.var.specs <- sapply(my.gamma, function(G) (1-exp(-2*G*my.x)) / (1-exp(-2*G)) )
+  my.der.probs <- sapply(my.gamma, function(G) ( exp(2*G) - exp(2*G*my.x) ) / (exp(2*G) - 1 ) )
+  cex.lab = 1.3
+  cex.axis = 1.2
+  png(
+    'figures/paperFiguresForRealThisTime/SegAsymmetryFigure4.png',
+    height = 10 ,
+    width = 22,
+    units = 'cm',
+    res = 500
+  )
+  par(mfrow = c(1, 2))
+  op3 <- par(mar = c(3.3, 3.3, 2, 0.4) + 0.1)
+  my.cols <- wes_palette('GrandBudapest1', length(my.gamma))
+  plot(
+    NA,
+    xlim = c(0, 1),
+    ylim = c(0, 1),
+    bty = 'n',
+    ylab = '',
+    xlab = ''
+  )
+  mtext(
+    text = 'Proportion of Variance',
+    side = 2,
+    line = 2.1,
+    cex = cex.lab
+  )
+  mtext(
+    text = 'Frequency of Risk Increasing Allele',
+    side = 1,
+    line = 2.1,
+    cex = cex.lab
+  )
+  abline(a = 0 , b = 1 , lty = 2 )
+  matplot(
+    my.x,
+    my.var.specs,
+    type = 'l',
+    lty = 1 ,
+    lwd = 2 ,
+    add = TRUE,
+    col = my.cols
+  )
+  legend(
+    'bottomright',
+    legend = c(0,my.gamma) ,
+    col = c('black',my.cols),
+    lty = c(2,rep(1,times=length(my.cols)) ),
+    lwd = c(1,rep(2,times=length(my.cols)) ) ,
+    bty = 'n',
+    title = 'Scaled selection coefficient' ,
+    cex = 0.8
+  )
+  par(op3)
+  
+  op4 <- par(mar = c(3.3, 4.3, 2, 0.4) + 0.1)
+  plot(NA,
+       xlim = c(0, 1),
+       ylim = c(0, 1),
+       bty = 'n',
+       xlab = '',
+       ylab = '')
+  abline(a = 1 , b = -1 , lty = 2 )
+  matplot(
+    my.x,
+    my.der.probs,
+    type = 'l',
+    lty = 1 ,
+    lwd = 2 ,
+    add = TRUE,
+    col = my.cols
+  )
+  ## matplot(
+  ##   my.x,
+  ##   1-my.var.specs,
+  ##   type = 'l',
+  ##   lty = 2 ,
+  ##   lwd = 1 ,
+  ##   add = TRUE,
+  ##   col = my.cols
+  ## )
+  mtext(
+    text = 'Probability risk increasing',
+    side = 2,
+    line = 3.1,
+    cex = cex.lab
+  )
+  mtext(
+    text = 'allele is derived',
+    side = 2,
+    line = 2.1,
+    cex = cex.lab
+  )
+  
+  mtext(
+    text = 'Frequency of risk increasing allele',
+    side = 1,
+    line = 2.1,
+    cex = cex.lab
+  )
+  par(op4)
+  dev.off()
+}
+
+
 
 
 
