@@ -663,7 +663,8 @@ solveTwoEffect2D <- function(bt,
             norm.deltal = norm.deltal,
             norm.tstar = norm.tstar,
             norm.prev = norm.prev,
-            naive.norm.prev = naive.norm.prev
+            naive.norm.prev = naive.norm.prev,
+            code = soln$termcd
         )
     )
 }
@@ -736,25 +737,43 @@ solveTwoEffect2DFixedDeltal <- function(bt,
   
   if(recover.flag) recover()
   ## get 2d solution
-  soln <- nleqslv(
-    x = c(log(init.al), init.tstar),
-    fn = function(X)
-      twoPoissonDiffsFixedDeltal(
-        X,
-        as = as,
-        deltal = deltal,
-        bs = bs,
-        h2 = NULL,
-        Ve = Ve,
-        Bval = 1,
-        cost = C,
-        Ls = Ls,
-        Ll = Ll,
-        u = u,
-        Ne = Ne
-      ),
-    control = list(scalex = c(1, 1), maxit = 400)
-  )
+    soln <- nleqslv(
+        x = c(log(init.al), init.tstar),
+        fn = function(X)
+            twoPoissonDiffsFixedDeltal(
+                X,
+                as = as,
+                deltal = deltal,
+                bs = bs,
+                h2 = NULL,
+                Ve = Ve,
+                Bval = 1,
+                cost = C,
+                Ls = Ls,
+                Ll = Ll,
+                u = u,
+                Ne = Ne
+            ),
+        control = list(scalex = c(1000, 1000), maxit = 600)
+    )
+    ## soln <- BBsolve(
+    ##     par = c(log(init.al), init.tstar),
+    ##     fn = function(X)
+    ##         twoPoissonDiffsFixedDeltal(
+    ##             X,
+    ##             as = as,
+    ##             deltal = deltal,
+    ##             bs = bs,
+    ##             h2 = NULL,
+    ##             Ve = Ve,
+    ##             Bval = 1,
+    ##             cost = C,
+    ##             Ls = Ls,
+    ##             Ll = Ll,
+    ##             u = u,
+    ##             Ne = Ne
+    ##         )
+    ## )
   trans.al <- as.vector(soln$x[1])
   al <- exp(trans.al)
   tstar <- as.vector(soln$x[2])
@@ -829,7 +848,7 @@ solveTwoEffect2DFixedDeltal <- function(bt,
         u = u,
         Ne = Ne
       ),
-    control = list(scalex = c(1, 1), maxit = 400)
+    control = list(scalex = c(1, 1), maxit = 600)
   )
   norm.al <- exp(as.vector(norm.soln$x[1]))
   norm.tstar <- as.vector(norm.soln$x[2])
@@ -862,7 +881,11 @@ solveTwoEffect2DFixedDeltal <- function(bt,
       pgol = pgol,
       norm.tstar = norm.tstar,
       norm.prev = norm.prev,
-      naive.norm.prev = naive.norm.prev
+      naive.norm.prev = naive.norm.prev,
+      gs = gs,
+      bs = bs,
+      Ve = Ve,
+      code = soln$termcd
     )
   )
 }

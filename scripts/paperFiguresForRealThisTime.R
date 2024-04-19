@@ -379,6 +379,7 @@ rm(list = ls())
 library("MetBrewer")
 library('numDeriv')
 source('scripts/simpleVarFuncs.R')
+dnorminv<-function(y) sqrt(-2*log(sqrt(2*pi)*y))
 prevs = c(0.03, 0.01, 0.003, 0.001)
 my.cols = met.brewer('Hiroshige', length(prevs))
 thr = sapply(prevs, function(PREV)
@@ -397,10 +398,17 @@ Ne = 10000
 L = 1e7
 u = 1e-8
 U = 2*L*u
-h2 = 1/2
 aybt <- 1
 thetaU = 4*Ne*U
-this.cost <- 1/2
+
+this.cost <- 1/10
+h2 = 1/10
+
+tmp <- numeric()
+for(i in 1:length(prevs)){
+    tmp[i] <- 1/uniroot(function(X) prevs[i] - pnorm(dnorminv(sqrt(2*L*u*aybt / (2*Ne*(1/X)))/(1/X)),lower.tail = FALSE), lower = 1,upper=20)$root
+}
+
 ## my.ay <- lapply(my.a,function(A) A*sqrt(thetaU / h2))
 my.ay <- mapply(function(A,PHIT) 2*Ne*this.cost*PHIT*A,
                 A = my.a,
@@ -424,6 +432,7 @@ small.approx.vars = sigmaaSmall2(small.ay.seq)
 plot.a <- do.call (cbind, my.a)
 plot.ay <- do.call (cbind, my.ay)
 my.cex <- 1.5
+
 png(
     'figures/paperFiguresForRealThisTime/effectSizeVarianceRelationshipFigure4.png',
     units = 'in',
@@ -469,7 +478,7 @@ legend(
 mtext(
   text = 'Liability effect size',
   side = 1,
-  line = 2.5,
+  line = 3,
   cex = my.cex
 )
 ## mtext(
@@ -511,7 +520,7 @@ matplot(
 mtext(
   text = 'Liability effect size',
   side = 1,
-  line = 2.5,
+  line = 3,
   cex = my.cex
 )
 ## mtext(
@@ -555,6 +564,7 @@ dev.off()
 ### Figure 6 mean scaled coefficient ###
 ########################################
 {
+    library(wesanderson)
   balpha = function(a)
     ifelse(a < 100, (exp(2 * a) - 1) / (exp(2 * a) + 1), 1)
   bt.diff2 = function(my.mean, my.cv, my.bt,my.q=1e-8) {
@@ -874,3 +884,31 @@ dev.off()
   }
   dev.off()
 }
+
+
+
+
+######################################
+### Two Effect Prevalence Figure 8 ###
+######################################
+
+
+source('scripts/twoEffectSameAsEnv.FixedDeltalR.R')
+source('scripts/plotTwoDist.R')
+
+
+##################################################
+### Large Effect Size Sensitivity Supp Figures ###
+##################################################
+
+source('scripts/largeEffectPopSizeSensitivity.R')
+
+
+
+
+
+
+
+
+
+
