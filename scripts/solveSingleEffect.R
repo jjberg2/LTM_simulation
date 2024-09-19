@@ -76,7 +76,7 @@ pPoisConv <- function(t,lambda,norm.sd,alphal=1,risk.allele=FALSE){
     ## risk.allele = T/F risk or protective allele
     my.range <- seq(qpois(0,lambda),qpois(1-1e-8,lambda))
     gen.dist <- dpois(my.range,lambda=lambda)
-    prevs <- pnorm(t,alphal*(my.range+risk.allele),norm.sd,lower.tail=FALSE)
+    prevs <- pnorm(t,alphal*(my.range+risk.allele-lambda),norm.sd,lower.tail=FALSE)
     gen.dist%*%prevs
 }
 dPoisConv <- function(t,lambda,norm.sd,alphal=1,risk.allele=FALSE){
@@ -88,7 +88,7 @@ dPoisConv <- function(t,lambda,norm.sd,alphal=1,risk.allele=FALSE){
     ## risk.allele = T/F risk or protective allele
     my.range <- seq(qpois(0,lambda),qpois(1-1e-8,lambda))
     gen.dist <- dpois(my.range,lambda=lambda)
-    dens <- dnorm(t,alphal*(my.range+risk.allele),norm.sd)
+    dens <- dnorm(t,alphal*(my.range+risk.allele-lambda),norm.sd)
     gen.dist%*%dens
 }
 PoissonRiskDiff <- function(t,mean,env.sd,alphal=1,this.pi){

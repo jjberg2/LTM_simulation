@@ -1031,12 +1031,390 @@ source('scripts/plotTwoDist.R')
 
 source('scripts/largeEffectPopSizeSensitivity.R')
 
+#################################
+### Small Effect Bound Figure ###
+#################################
+{
+  rm(list = ls())
+  prevs <- 10 ^ seq(-5, -1, length.out = 1000)
+  tstar <- qnorm(1 - prevs)
+  bound <- 2 * tstar / (3 * tstar ^ 2 - 2)
+  
+  png(
+    'figures/paperFiguresForRealThisTime/SmallEffectBoundSFigure.png',
+    height = 5 * 1.6 ,
+    width = 11 * 1.6,
+    units = 'cm',
+    res = 500
+  )
+  op <- par(mar = c(3.4, 3.4, 1, 0.4))
+  plot(
+    prevs,
+    bound,
+    type = 'l',
+    lty = 1 ,
+    log = 'x',
+    ylim = c(0, max(bound)) ,
+    xlab = '',
+    ylab = '',
+    bty = 'n'
+  )
+  mtext(side = 1 , line = 2.4 , text = 'Prevalence')
+  mtext(side = 2 , line = 2.4 , text = 'Bound')
+  par(op)
+  dev.off()
+}
 
 
 
 
 
+#################################
+### Small Effect Bound Figure ###
+#################################
+{
+  rm(list = ls())
+  prevs <- 10 ^ seq(log(5e-5), log(0.05,10), length.out = 1000)
+  tstar <- qnorm(1 - prevs)
+  bound <- (1 / dnorm(tstar)) * (tstar^3 - 3*tstar) / (tstar^2 - 2)
+  easierBound <- exp(tstar^2/2)*sqrt(pi/2)*tstar
+  
+  
+  png(
+    'figures/paperFiguresForRealThisTime/AllAdditiveBoundSFigure.png',
+    height = 5 * 1.6 ,
+    width = 11 * 1.6,
+    units = 'cm',
+    res = 500
+  )
+  op <- par(mar = c(3.4, 3.4, 1, 0.4))
+  plot(
+    prevs,
+    bound,
+    type = 'l',
+    lty = 1 ,
+    log = 'xy',
+    xlim=c(5e-5,5e-2),
+    ylim = c(10, 10000) ,
+    xlab = '',
+    ylab = '',
+    bty = 'n',
+    xaxt = 'n',
+    yaxt = 'n'
+  )
+  lines(
+    prevs,
+    easierBound,
+    lty=2
+  )
+  mtext(side = 1 , line = 2.4 , text = 'Prevalence')
+  mtext(side = 2 , line = 2.4 , text = 'Lower Bound')
+  axis(side=2, at = 10^seq(1,4,by=1))
+  axis(side=1, at = 10^seq(log(5e-5,10),log(5e-2,10),by=1))
+  par(op)
+  dev.off()
+  
+  png(
+    'figures/paperFiguresForRealThisTime/AllAdditiveBoundSFigure2.png',
+    height = 5 * 1.6 ,
+    width = 11 * 1.6,
+    units = 'cm',
+    res = 500
+  )
+  op <- par(mar = c(3.4, 3.4, 1, 0.4))
+  plot(
+    prevs,
+    bound,
+    type = 'l',
+    lty = 1 ,
+    log = 'x',
+    xlim=c(5e-3,1e-1),
+    ylim = c(-10, 100) ,
+    xlab = '',
+    ylab = '',
+    bty = 'n'
+  )
+  lines(
+    prevs,
+    easierBound,
+    lty=2
+  )
+  mtext(side = 1 , line = 2.4 , text = 'Prevalence')
+  mtext(side = 2 , line = 2.4 , text = 'Lower Bound')
+  #axis(side=2, at = 10^seq(1,4,by=1))
+  #axis(side=1, at = 10^seq(log(5e-5,10),log(5e-2,10),by=1))
+  abline(h=0,lty = 3)
+  par(op)
+  dev.off()
+  
+  
+}
 
 
+#############################
+### Berry-Esseen figure 1 ###
+#############################
 
+{
+  rm(list = ls())
+  b <- function(y)
+    ifelse(y > 100, 1, (exp(2 * y) - 1) / (exp(2 * y) + 1))
+  sig <- function(y)
+    sqrt(2 * b(y) * y)
+  rhosig <- function(y)
+    (2*b(y) + y*(sig(y)^2-2)) / (sig(y)^3)
+  
+  Ne <- 20000
+  Ne2 <- 200000
+  L <- c(1e4, 1e5, 1e6, 1e7, 1e8)
+  u <- 1e-8
+  theta <- 2 * Ne * L * u
+  theta2 <- 2 * Ne2 * L * u
+  my.gamma <- 10 ^ seq(-2, 3, length.out = 1000)
+  my.rhosig <- rhosig(my.gamma)
+  my.bound <-
+    lapply(theta, function(TH)
+      0.56 / sqrt(TH) * my.rhosig)
+  my.bound2 <-
+    lapply(theta2, function(TH)
+      0.56 / sqrt(TH) * my.rhosig)
+  my.cols <- wes_palette('FantasticFox1', length(my.bound))
+  
+  
+  png(
+    'figures/paperFiguresForRealThisTime/BerryEsseenMaxAbsError.png',
+    height = 7 * 1.6 ,
+    width = 11 * 1.6,
+    units = 'cm',
+    res = 500
+  )
+  op <- par(mar = c(3.4, 3.4, 1, 0.4))
+  plot(
+    NA,
+    type = 'l',
+    bty = 'n' ,
+    log = 'xy' ,
+    ylim = c(1e-4, 1e1) ,
+    xlim = c(1e-2,1e3),
+    ylab = '' ,
+    xlab = ''
+  )
+  mtext(text = expression(paste( 'Maximum absolute error, ', K / sqrt(theta) %.% rho / sigma ^ 3)),
+        side = 2,
+        line = 2)
+  mtext(text = expression(paste(
+    'Population scaled selection coefficient, ', gamma
+  )),
+  side = 1,
+  line = 2.5)
+  for (i in 1:length(my.bound)) {
+    lines(my.gamma,
+          my.bound[[i]],
+          col = my.cols[i],
+          lty = 1,
+          lwd = 2)
+  }
+  for (i in 1:length(my.bound)) {
+    lines(my.gamma,
+          my.bound2[[i]],
+          col = my.cols[i],
+          lty = 2,
+          lwd = 2)
+  }
+  for (i in seq(-4, 1, 1)) {
+    abline(h = 10 ^ i , lty = 2 , lwd = 0.2)
+  }
+  legend(
+    'topleft',
+    legend = L,
+    col = my.cols ,
+    lty = 1,
+    lwd = 2 ,
+    bty = 'n',
+    title = 'L'
+  )
+  legend(
+    x=1.5e-1,
+    y=15,
+    legend = c('20,000','200,000'),
+    col = 'black' ,
+    lty = c(1,2),
+    lwd = 2 ,
+    bty = 'n',
+    title = 'N'
+  )
+  par(op)
+  dev.off()
+  
+  
+  
+  #############################
+  ### Berry-Esseen figure 2 ###
+  #############################
+  
+  dnorminv <- function(y)
+    sqrt(-2 * log(sqrt(2 * pi) * y))
+  cost <- 1 / 2
+  ## h2 <- 1 / 2
+  U <- L * u
+  phit <-
+    lapply(U, function(U)
+      cost^(-1) * sqrt (2 * U * b(my.gamma) * my.gamma / (2 * Ne )))
+  phit2 <-
+    lapply(U, function(U)
+      cost^(-1) * sqrt (2 * U * b(my.gamma) * my.gamma / (2 * Ne2)))
+  
+  tstar <-
+    lapply(phit, function(PHIT)
+      ifelse(PHIT > dnorm(qnorm(0.7)), NA, dnorminv(PHIT)))
+  tstar2 <-
+    lapply(phit2, function(PHIT)
+      ifelse(PHIT > dnorm(qnorm(0.7)), NA, dnorminv(PHIT)))
+  prevs <- lapply(tstar, function(TSTAR)
+    1 - pnorm(TSTAR))
+  prevs2 <- lapply(tstar2, function(TSTAR)
+    1 - pnorm(TSTAR))
+  
+  max.rel.error <-
+    mapply(function(X, Y)
+      X / Y , X = my.bound, Y = prevs)
+  max.rel.error2 <-
+    mapply(function(X, Y)
+      X / Y , X = my.bound2, Y = prevs2)
+  png(
+    'figures/paperFiguresForRealThisTime/BerryEsseenMaxRelError.png',
+    height = 7 * 1.6 ,
+    width = 11 * 1.6,
+    units = 'cm',
+    res = 500
+  )
+  op <- par(mar = c(3.4, 3.4, 1, 0.4))
+  plot(
+    NA,
+    type = 'l',
+    bty = 'n' ,
+    log = 'xy' ,
+    ylim = c(1e-1, 2e6) ,
+    xlim = c(1e-2,1e3),
+    ylab = '' ,
+    xlab = ''
+  )
+  # mtext(text = expression(paste(C, h ^ 3 / sqrt(theta) %.% rho / sigma ^ 3)),
+  #       side = 2,
+  #       line = 2)
+  mtext(text = 'Maximum relative error',
+        side = 2,
+        line = 2)
+  mtext(text = expression(paste(
+    'Population scaled selection coefficient, ', gamma
+  )),
+  side = 1,
+  line = 2.5)
+  for (i in 1:ncol(max.rel.error)) {
+    lines(my.gamma,
+          max.rel.error[,i],
+          col = my.cols[i],
+          lty = 1,
+          lwd = 2)
+  }
+  for (i in 1:ncol(max.rel.error)) {
+    lines(my.gamma,
+          max.rel.error2[,i],
+          col = my.cols[i],
+          lty = 2,
+          lwd = 2)
+  }
+  for (i in seq(-1, 6, 1)) {
+    abline(h = 10 ^ i , lty = 2 , lwd = 0.2)
+  }
+  legend(
+    x=1e1,
+    y=1.5e6,
+    legend = c('20,000','200,000'),
+    col = 'black' ,
+    lty = c(1,2),
+    lwd = 2 ,
+    bty = 'n',
+    title = 'N'
+  )
+  legend(
+    'topright',
+    legend = L,
+    col = my.cols ,
+    lty = 1,
+    lwd = 2 ,
+    bty = 'n',
+    title = 'L'
+  )
+  par(op)
+  dev.off()
+
+  
+  png(
+    'figures/paperFiguresForRealThisTime/BerryEsseenPrevVsError.png',
+    height = 7 * 1.6 ,
+    width = 11 * 1.6,
+    units = 'cm',
+    res = 500
+  )
+  op <- par(mar = c(3.4, 3.4, 1, 0.4))
+  plot(
+    NA,
+    type = 'l',
+    bty = 'n' ,
+    log = 'xy' ,
+    ylim = c(1e-1, 1e6) ,
+    xlim = c(1e-7,3e-1),
+    ylab = '' ,
+    xlab = ''
+  )
+  # mtext(text = expression(paste(C, h ^ 3 / sqrt(theta) %.% rho / sigma ^ 3)),
+  #       side = 2,
+  #       line = 2)
+  mtext(text = 'Maximum relative error',
+        side = 2,
+        line = 2)
+  mtext(text = 'Prevalence',
+  side = 1,
+  line = 2.5)
+  for (i in 1:ncol(max.rel.error)) {
+    lines(prevs[[i]],
+          max.rel.error[,i],
+          col = my.cols[i],
+          lty = 1,
+          lwd = 2)
+  }
+  for (i in 1:ncol(max.rel.error)) {
+    lines(prevs2[[i]],
+          max.rel.error2[,i],
+          col = my.cols[i],
+          lty = 2,
+          lwd = 2)
+  }
+  for (i in seq(-1, 6, 1)) {
+    abline(h = 10 ^ i , lty = 2 , lwd = 0.2)
+  }
+  legend(
+    'topright',
+    legend = L,
+    col = my.cols ,
+    lty = 1,
+    lwd = 2 ,
+    bty = 'n',
+    title = 'L'
+  )
+  legend(
+    x=1e-3,
+    y=1.5e6,
+    legend = c('20,000','200,000'),
+    col = 'black' ,
+    lty = c(1,2),
+    lwd = 2 ,
+    bty = 'n',
+    title = 'N'
+  )
+  par(op)
+  dev.off()
+  
+}
 

@@ -1,3 +1,4 @@
+dnorminv<-function(y) sqrt(-2*log(sqrt(2*pi)*y))
 makeEmptyFrame <-
   function(h2 = 0.5,
            my.mean = 0,
@@ -26,7 +27,7 @@ makeEmptyFrame <-
         xaxt = 'n',
         yaxt = 'n'
       )
-      axis(2, labels = FALSE)
+      ## axis(2, labels = FALSE)
       if (plot.x.axis)
         axis(1)
     }
@@ -61,28 +62,39 @@ makeGenLi <-
            w.thr = FALSE,
            prev = 0.01,
            shade = TRUE,
-           plot.y.axis = TRUE) {
+           plot.y.axis = TRUE,
+           add = FALSE,
+           y.modifier = 1) {
     my.x <- seq(from = xlim[1],
                 to = xlim[2],
                 length.out = n.points)
+    my.y <- dnorm(my.x, my.mean, sd = sqrt(h2)) * y.modifier
     plot.x <- c(xlim[1], my.x, xlim[2])
-    plot.y <- c(0, dnorm(my.x, my.mean, sd = sqrt(h2)), 0)
+    plot.y <- c(0, my.y, 0)
     if (is.null(y.max))
       y.max <- max(plot.y) * y.max.factor
-    plot(
-      NA,
-      xlim = xlim,
-      ylim = c(0, y.max),
-      ylab = '',
-      xlab = '',
-      bty = 'n',
-      xaxt = 'n',
-      yaxt = 'n'
-    )
+        if(add == FALSE) {
+        plot(
+          NA,
+          xlim = xlim,
+          ylim = c(0, y.max),
+          ylab = '',
+          xlab = '',
+          bty = 'n',
+          xaxt = 'n',
+          yaxt = 'n'
+        )
+      }
     if (plot.y.axis)
       axis(2, labels = FALSE)
     if (plot.x.axis)
       axis(1, cex.axis = axis.cex, labels = FALSE)
+    
+    lines(
+      x = my.x ,
+      y = my.y ,
+      col = 'forestgreen'
+    )
     polygon(
       x = plot.x,
       y = plot.y,
@@ -289,24 +301,27 @@ makePhenLi <-
            plot.x.axis = TRUE,
            axis.cex = 1,
            t.pos = NULL,
+           w.thr = TRUE ,
            shade = c('both', 'healthy', 'disease')) {
     if (is.null(t.pos))
       t.pos <- qnorm(1 - prev, mean = my.mean, sd = sqrt(phen.var))
-    
+    ## recover()
     healthy.x <- seq(from = xlim[1],
                      to = t.pos,
                      length.out = n.points)
+    healthy.y <- dnorm(healthy.x, my.mean, sd = sqrt(phen.var))
     disease.x <- seq(from = t.pos,
                      to = xlim[2],
                      length.out = n.points)
+    disease.y <- dnorm(disease.x, my.mean, sd = sqrt(phen.var))
     
     plot.healthy.x <- c(xlim[1], healthy.x, t.pos)
     plot.disease.x <- c(t.pos, disease.x, xlim[2])
     
     plot.healthy.y <-
-      c(0, dnorm(healthy.x, my.mean, sd = sqrt(phen.var)), 0)
+      c(0, healthy.y, 0)
     plot.disease.y <-
-      c(0, dnorm(disease.x, my.mean, sd = sqrt(phen.var)), 0)
+      c(0, disease.y, 0)
     
     if (is.null(y.max))
       y.max <- max(c(plot.healthy.y, plot.disease.y)) * y.max.factor
@@ -324,17 +339,27 @@ makePhenLi <-
     if (plot.x.axis)
       axis(1, cex.axis = axis.cex, labels = FALSE)
     
+    lines(
+      x = healthy.x ,
+      y = healthy.y ,
+      col = 'dodgerblue4' 
+    )
+    lines(
+      x = disease.x ,
+      y = disease.y ,
+      col = 'dodgerblue4' 
+    )
     polygon(
       x = plot.healthy.x,
       y = plot.healthy.y,
-      col = adjustcolor('blue', alpha.f = 0.05),
+      col = adjustcolor('dodgerblue4', alpha.f = 0.03),
       border = NA
     )
     if ('healthy' %in% shade | 'both' %in% shade) {
       polygon(
         x = plot.healthy.x,
         y = plot.healthy.y,
-        col = adjustcolor('blue', alpha.f = 0.4),
+        col = adjustcolor('dodgerblue4', alpha.f = 0.4),
         border = NA,
         density = 120,
         angle = 315
@@ -343,32 +368,35 @@ makePhenLi <-
     polygon(
       x = plot.disease.x,
       y = plot.disease.y,
-      col = adjustcolor('red', alpha.f = 0.05),
+      col = adjustcolor('firebrick4', alpha.f = 0.05),
       border = NA
     )
     if ('disease' %in% shade | 'both' %in% shade) {
       polygon(
         x = plot.disease.x,
         y = plot.disease.y,
-        col = adjustcolor('red', alpha.f = 0.4),
+        col = adjustcolor('firebrick4', alpha.f = 0.6),
         border = NA,
         density = 120,
         angle = 315
       )
     }
-    abline(v = t.pos, lwd = 2)
-    
+    if (w.thr) {
+      thr <- qnorm(1 - prev)
+      abline(v = thr, lty = 1, lwd = 2)
+    }
   }
 
 makePhenWEffect <-
   function(phen.var = 1,
            prev = 0.01,
            risk.effect = 1 / (40000 * 0.5),
-           alpha = NULL,
+           alphaS = NULL,
            t.pos = NULL,
            my.mean = 0,
            xlim = c(-3, 4),
            n.points = 1000,
+           v.offset = 0.005 ,
            y.max = NULL,
            y.max.factor = 1.1,
            return.stuff = FALSE,
@@ -383,15 +411,9 @@ makePhenWEffect <-
     if (is.null(t.pos))
       t.pos <- qnorm(1 - prev, mean = my.mean, sd = sqrt(phen.var))
     
-    if (is.null(alpha)) {
-      effect.pos <-
-        qnorm(1 - (prev + risk.effect),
-              mean = my.mean,
-              sd = sqrt(phen.var))
-      alpha <- t.pos - effect.pos
-    } else {
-      effect.pos <- t.pos - alpha
-    }
+    
+    effect.pos <- t.pos - alphaS
+    
     
     healthy.x <- seq(from = xlim[1],
                      to = effect.pos,
@@ -403,16 +425,26 @@ makePhenWEffect <-
                      to = xlim[2],
                      length.out = n.points)
     
+    
+    healthy.y <- dnorm(healthy.x, my.mean, sd = sqrt(phen.var)) + v.offset
+    effect.y <- dnorm(effect.x, my.mean, sd = sqrt(phen.var)) + v.offset
+    disease.y <- dnorm(disease.x, my.mean, sd = sqrt(phen.var)) + v.offset
     plot.healthy.x <- c(xlim[1], healthy.x, effect.pos)
     plot.effect.x <- c(effect.pos, effect.x, t.pos)
     plot.disease.x <- c(t.pos, disease.x, xlim[2])
-    
     plot.healthy.y <-
-      c(0, dnorm(healthy.x, my.mean, sd = sqrt(phen.var)), 0)
+      c(v.offset, healthy.y , v.offset)
     plot.effect.y <-
-      c(0, dnorm(effect.x, my.mean, sd = sqrt(phen.var)), 0)
+      c(v.offset, effect.y , v.offset)
     plot.disease.y <-
-      c(0, dnorm(disease.x, my.mean, sd = sqrt(phen.var)), 0)
+      c(v.offset, disease.y , v.offset)
+    
+    # mixed.healthy.x <- seq(from = xlim[1],
+    #                                     to = t.pos,
+    #                                     length.out = n.points)
+    # mixed.disease.x <- seq(from = effect.pos,
+    #                                     to = t.pos,
+    #                                     length.out = n.points)
     
     
     if (is.null(y.max))
@@ -429,70 +461,302 @@ makePhenWEffect <-
         yaxt = yaxt,
         xaxt = xaxt
       )
-      polygon(
-        x = plot.healthy.x,
-        y = plot.healthy.y,
-        col = adjustcolor('blue', alpha.f = 0.05),
-        border = NA
-      )
-      polygon(
-        x = plot.healthy.x,
-        y = plot.healthy.y,
-        col = adjustcolor('blue', alpha.f = 0.4),
-        border = NA,
-        density = 120,
-        angle = 315
-      )
       
-      polygon(
-        x = plot.effect.x,
-        y = plot.effect.y,
-        col = rgb(1, 0, 1, 0.05),
-        border = NA
-      )
-      polygon(
-        x = plot.effect.x,
-        y = plot.effect.y,
-        col = rgb(1, 0, 1, 0.4),
-        border = NA,
-        density = 120,
-        angle = 0
-      )
+      ## title
+      mtext(side = 3,
+            text = 'The mapping between liability and risk effects' ,
+            at = t.pos - 5*alphaS ,
+            cex = 1.5 ,
+            line = -0.8
+            )
       
-      polygon(
-        x = plot.disease.x,
-        y = plot.disease.y,
-        col = rgb(1, 0, 0, 0.05),
-        border = NA
-      )
-      polygon(
-        x = plot.disease.x,
-        y = plot.disease.y,
-        col = rgb(1, 0, 0, 0.4),
-        border = NA,
-        density = 120,
-        angle = 90
-      )
-      polygon(
-          x = c(t.pos - alpha , t.pos - alpha , t.pos , t.pos) ,
-          y = c(0 , dnorm(t.pos), dnorm(t.pos), 0),
-          col = rgb(1, 0, 1, 0.8),
-          border = NA
-      )
-      if (draw.thresholds) {
-        abline(v = t.pos, lwd = lwd)
-        abline(v = effect.pos, lty = 2, lwd = lwd)
+      ## plot lines and polygons
+      {
+        ## plot healthy
+        {
+          polygon(
+            x = plot.healthy.x,
+            y = plot.healthy.y,
+            col = adjustcolor('dodgerblue4', alpha.f = 0.05),
+            border = NA
+          )
+          polygon(
+            x = plot.healthy.x,
+            y = plot.healthy.y,
+            col = adjustcolor('dodgerblue4', alpha.f = 0.6),
+            border = NA ,
+            density = 80 ,
+            angle = 315
+          )
+          lines(x = healthy.x,
+                y = healthy.y,
+                col = 'dodgerblue4' ,
+                lwd = 1.5)
+          lines(
+            x =  c(t.pos - alphaS, xlim[1]) ,
+            y = rep(dnorm(t.pos), 2) + v.offset,
+            col = 'dodgerblue4' ,
+            lwd = 1.5
+          )
+          lines(
+            x =  rep(t.pos - alphaS, 2) - 0.001 ,
+            y = c(0,dnorm(t.pos - alphaS)) + v.offset ,
+            col = 'dodgerblue4' ,
+            lwd = 1.5
+          )
+          lines(
+            x =  rep(xlim[1], 2) - 0.001 ,
+            y = c(0,dnorm(xlim[1])) + v.offset ,
+            col = 'dodgerblue4' ,
+            lwd = 1.5
+          )
+          # polygon(
+          #   x = plot.healthy.x,
+          #   y = plot.healthy.y,
+          #   col = adjustcolor('dodgerblue4', alpha.f = 1),
+          #   border = NA,
+          #   density = 120,
+          #   angle = 315
+          # )
+        }
+        
+        ## plot effect
+        {
+          polygon(
+            x = plot.effect.x,
+            y = plot.effect.y,
+            col = adjustcolor('darkorchid4' , alpha.f = 0.05 ),
+            border = NA
+          )
+          polygon(
+            x = plot.effect.x,
+            y = plot.effect.y,
+            col = adjustcolor('darkorchid4' , alpha.f = 0.6),
+            border = NA,
+            density = 80,
+            angle = 315
+          )
+          polygon(
+            x = plot.effect.x,
+            y = plot.effect.y,
+            col = adjustcolor('darkorchid4' , alpha.f = 0.6),
+            border = NA,
+            density = 80,
+            angle = 45
+          )
+          lines(x = effect.x ,
+                y = effect.y ,
+                col = 'darkorchid4' ,
+                lwd = 1.5)
+          lines(
+            x = t.pos - c(alphaS, 0) ,
+            y = rep(dnorm(t.pos), 2) + v.offset ,
+            col = 'darkorchid4' ,
+            lwd = 1.5
+          )
+          lines(
+            x =  rep(t.pos - alphaS, 2) + 0.001 ,
+            y = c(0,dnorm(t.pos - alphaS)) + v.offset ,
+            col = 'darkorchid4' ,
+            lwd = 1.5
+          )
+          # polygon(
+          #   x = c(t.pos - alphaS , t.pos - alphaS , t.pos , t.pos) ,
+          #   y = c(0 , dnorm(t.pos), dnorm(t.pos), 0),
+          #   col = rgb(1, 0, 1, 0.8),
+          #   border = NA
+          # )
+        }
+        
+        ## plot disease
+        {
+          polygon(
+            x = plot.disease.x,
+            y = plot.disease.y,
+            col = adjustcolor('firebrick4', alpha.f = 0.05),
+            border = NA
+          )
+          polygon(
+            x = plot.disease.x,
+            y = plot.disease.y,
+            col = adjustcolor('firebrick4', alpha.f = 0.85 ) ,
+            border = NA,
+            density = 80,
+            angle = 45
+          )
+          lines(x = disease.x,
+                y = disease.y,
+                col = 'firebrick4' ,
+                lwd = 1.5)
+        }
+        
+        lines(
+          x = rep(t.pos, 2) ,
+          y = c(v.offset, y.max) ,
+          lwd = lwd ,
+          col = 'firebrick4' ,
+          lty = 2
+        )
+        lines(
+          x = rep(t.pos, 2) ,
+          y = c(v.offset, v.offset + dnorm(t.pos)) ,
+          lwd = lwd ,
+          col = 'firebrick4' ,
+          lty = 1
+        )
+        
       }
+      
+      ## add text to plot
+      {
+        text(
+          x = t.pos + 0.095 ,
+          y = y.max * 0.8 ,
+          col = 'firebrick4' ,
+          labels = 'threshold' ,
+          cex = 1.7
+        )
+        text(
+          x = t.pos + 0.04 ,
+          y = y.max * 0.13 ,
+          col = 'firebrick4' ,
+          labels = 'f(T)' ,
+          cex = 1.7
+        )
+        text(
+          labels = expression(paste('small effect on liability (', a[S] , '):' , sep = '')) ,
+          x = t.pos - alphaS - 0.12 ,
+          y = dnorm(t.pos - alphaS) + v.offset + 0.035 ,
+          col = 'darkorchid4'
+        )
+        text(
+          labels = expression(paste(delta[R](a[S]) %~~%  F(T - a[S]) - F(T) %~~% a[S] , sep = '')) ,
+          x = t.pos - alphaS - 0.12 ,
+          y = dnorm(t.pos - alphaS) + v.offset + 0.03 ,
+          col = 'darkorchid4'
+        )
+        text(
+          labels = expression(f(T)),
+          x = t.pos - alphaS + 0.06 ,
+          y = dnorm(t.pos - alphaS) + v.offset + 0.03 ,
+          col = 'firebrick4'
+        )
+        arrows(
+          x0 = t.pos - alphaS/2 - 0.008 ,
+          x1 = t.pos - alphaS/2 - 0.008 ,
+          y0 = dnorm(t.pos - alphaS/2) + v.offset + 0.03 ,
+          y1 = dnorm(t.pos - alphaS/2) + v.offset - 0.01 ,
+          col = 'darkorchid4'
+        )
+        
+        text(
+          labels = expression(paste('large effect on liability (', a[L] , '):' , sep = '')) ,
+          x = t.pos - alphaS - 0.4 ,
+          y = dnorm(t.pos - alphaS) + v.offset + 0.075 ,
+          col = 'dodgerblue4'
+        )
+        text(
+          labels = expression(paste(delta[R](a[L]) %~~%  F(T - a[L]) - F(T) %~~% a[L] , sep = '')) ,
+          x = t.pos - alphaS - 0.4 ,
+          y = dnorm(t.pos - alphaS) + v.offset + 0.07 ,
+          col = 'dodgerblue4'
+        )
+        text(
+          labels = '/',
+          x = t.pos - alphaS - 0.282 ,
+          y = dnorm(t.pos - alphaS) + v.offset + 0.0698 ,
+          col = 'dodgerblue4'
+        )
+        text(
+          labels = expression(f(T)),
+          x = t.pos - alphaS - 0.22 ,
+          y = dnorm(t.pos - alphaS) + v.offset + 0.07 ,
+          col = 'firebrick4'
+        )
+        
+        arrows(
+          x0 = t.pos - alphaS - 0.4 ,
+          x1 = t.pos - alphaS - 0.5 ,
+          y0 = dnorm(t.pos - alphaS) + v.offset + 0.065 ,
+          y1 = dnorm(t.pos - alphaS) + v.offset + 0.04 ,
+          col = 'dodgerblue4'
+        )
+      }
+      
+      ## axes
+      {
+        axis(
+          side = 1 ,
+          labels = FALSE,
+          line = -2.4 ,
+          at = my.xlim
+        )
+        axis(
+          side = 2 ,
+          labels = FALSE,
+          line = -1.3 ,
+          at = c(v.offset, y.max)
+        )
+        arrows(
+          x0 = xlim[1],
+          x1 = t.pos,
+          y0 = 0.0035,
+          y1 = 0.0035,
+          code = 3,
+          length = 0.14,
+          angle = 22 ,
+          col = 'dodgerblue4' ,
+          lwd = 1.5
+        )
+        arrows(
+          x0 = t.pos - alphaS ,
+          x1 = t.pos ,
+          y0 = 0.0006 ,
+          y1 = 0.0006 ,
+          code = 3,
+          length = 0.14,
+          angle = 22 ,
+          col = 'darkorchid4' ,
+          lwd = 1.5
+        )
+        mtext(
+          text = expression(a[S]),
+          side = 1,
+          line = -1 ,
+          at = t.pos - alphaS/2 + 0.003 ,
+          col = 'darkorchid4' ,
+          cex = 1.2
+        )
+        mtext(
+          text = expression(a[L]),
+          side = 1,
+          line = -1.5 ,
+          at = t.pos - (t.pos - xlim[1])/2 + 0.003 ,
+          col = 'dodgerblue4' ,
+          cex = 1.2
+        )
+        mtext(
+          text = 'Liability' ,
+          side = 1 ,
+          cex = 1.5
+        )
+        mtext(
+          text = 'Density' ,
+          side = 2 ,
+          cex = 1.5
+        )
+      }
+      
+      
+      if (return.stuff)
+        list(
+          alphaS = alphaS,
+          y.max = y.max,
+          plot.effect.x = plot.effect.x,
+          plot.effect.y = plot.effect.y
+        )
+      
     }
-    
-    if (return.stuff)
-      list(
-        alpha = alpha,
-        y.max = y.max,
-        plot.effect.x = plot.effect.x,
-        plot.effect.y = plot.effect.y
-      )
-    
   }
 
 makePhenWDiploEffect <-
@@ -507,7 +771,7 @@ makePhenWDiploEffect <-
            y.max = NULL,
            y.max.factor = 1.1,
            make.plot = TRUE) {
-    ## recover()
+    
     
     if (is.null(t.pos))
       t.pos <- qnorm(1 - prev, mean = my.mean, sd = sqrt(phen.var))
@@ -557,13 +821,13 @@ makePhenWDiploEffect <-
       polygon(
         x = plot.healthy.x,
         y = plot.healthy.y,
-        col = adjustcolor('blue', alpha.f = 0.05),
+        col = adjustcolor('dodgerblue4', alpha.f = 0.05),
         border = NA
       )
       polygon(
         x = plot.healthy.x,
         y = plot.healthy.y,
-        col = adjustcolor('blue', alpha.f = 0.4),
+        col = adjustcolor('dodgerblue4', alpha.f = 0.4),
         border = NA,
         density = 120,
         angle = 315
@@ -602,13 +866,13 @@ makePhenWDiploEffect <-
       polygon(
         x = plot.disease.x,
         y = plot.disease.y,
-        col = rgb(1, 0, 0, 0.05),
+        col = coloradjust( 'firebrick4', 0.05),
         border = NA
       )
       polygon(
         x = plot.disease.x,
         y = plot.disease.y,
-        col = rgb(1, 0, 0, 0.4),
+        col = coloradjust( 'firebrick4', 0.4),
         border = NA,
         density = 120,
         angle = 45
