@@ -7,8 +7,8 @@ import pandas as pd
 
 
 ## global parameter ( doesn't change)
-smallCyc = 1600
-largeCyc = 1600
+smallCyc = 500
+largeCyc = 500
 mu=1e-6
 sampleInt = 50
 toyRun=0
@@ -17,7 +17,7 @@ if(toyRun==1):
 
 
 rep_large = list(np.arange(0,5))
-rep_small = list(np.arange(0,8))
+rep_small = list(np.arange(0,12))
 
 
 
@@ -86,7 +86,7 @@ rule makeAllParamTables:
 ##################################################
 
 ## read small parameter tables
-input_table_filename_small = "smallEffectInsensitivityN1000ParamTable.txt"
+input_table_filename_small = "smallEffectInsensitivityParamTable.txt"
 output_table_filename_small = "smallEffectInsensitivityResultsTable.Rdata"
 params_table_small = pd.read_csv(input_table_filename_small, delim_whitespace=True)
 

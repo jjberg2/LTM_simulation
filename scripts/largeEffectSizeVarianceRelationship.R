@@ -296,28 +296,6 @@ dev.off()
 
 
 
-mtext('C', side = 3 , at = 0, cex = 3)
-matplot(
-  x = plot.a ,
-  y = li.vars,
-  xlim = c(0, max(unlist(my.a))),
-  ylim = c(0, max(li.vars)),
-  type = 'l',
-  lty = 1 ,
-  lwd = 3 ,
-  col = my.cols,
-  xlab = 'Standardized liability scale effect size' ,
-  ylab = 'Liability scale variance',
-  cex.lab = my.cex,
-  cex.axis = my.cex
-)
-mtext('D', side = 3 , at = 0, cex = 3)
-dev.off()
-
-
-
-
-
 
 
 

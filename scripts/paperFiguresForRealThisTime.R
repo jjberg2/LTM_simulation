@@ -566,7 +566,7 @@ dev.off()
   cex.lab = 1.3
   cex.axis = 1.2
   png(
-    'figures/paperFiguresForRealThisTime/SegAsymmetryFigure4.png',
+    'figures/paperFiguresForRealThisTime/SegAsymmetryFigure5.png',
     height = 10 ,
     width = 22,
     units = 'cm',
@@ -582,6 +582,13 @@ dev.off()
     bty = 'n',
     ylab = '',
     xlab = ''
+  )
+  mtext(
+    text = 'A',
+    side = 3,
+    line = 0.5,
+    at = 0,
+    cex = cex.lab
   )
   mtext(
     text = 'Proportion of Variance',
@@ -616,7 +623,6 @@ dev.off()
     cex = 0.8
   )
   par(op3)
-  
   op4 <- par(mar = c(3.3, 4.3, 2, 0.4) + 0.1)
   plot(NA,
        xlim = c(0, 1),
@@ -634,15 +640,13 @@ dev.off()
     add = TRUE,
     col = my.cols
   )
-  ## matplot(
-  ##   my.x,
-  ##   1-my.var.specs,
-  ##   type = 'l',
-  ##   lty = 2 ,
-  ##   lwd = 1 ,
-  ##   add = TRUE,
-  ##   col = my.cols
-  ## )
+  mtext(
+    text = 'B',
+    side = 3,
+    line = 0.5,
+    at = 0,
+    cex = cex.lab
+  )
   mtext(
     text = 'Probability risk increasing',
     side = 2,
@@ -655,7 +659,6 @@ dev.off()
     line = 2.1,
     cex = cex.lab
   )
-  
   mtext(
     text = 'Frequency of risk increasing allele',
     side = 1,
@@ -692,7 +695,7 @@ dev.off()
       dgamma(a, my.shape, my.rate) * a * balpha(a)
     my.bt - (1 / my.mean) * integrate(myFunc, lower = my.lower, upper = my.upper)$value
   }
-  my.bts = seq(1e-3, 0.999, length.out = 1000)
+  my.bts = seq(1e-3, 0.99999, length.out = 1000)
   my.cvs = sqrt(c(0.1, 1, 3, 10))
   se.gammas = 0.5 * log((1 + my.bts) / (1 - my.bts))
   Ne = 1e4
@@ -718,12 +721,11 @@ dev.off()
       my.gammas[[j]][i] = tmp[[j]][[i]]$root
     }
   }
-  
   {
     cex.lab = 1.3
     cex.axis = 1.2
     png(
-      'figures/paperFiguresForRealThisTime/MeanCoefficientFigure4.png',
+      'figures/paperFiguresForRealThisTime/MeanCoefficientFigure6.png',
       height = 10 ,
       width = 22,
       units = 'cm',
@@ -740,11 +742,18 @@ dev.off()
       ylab = '',
       cex.axis = cex.axis,
       cex.lab = cex.lab,
-      ylim = c(0, 10),
+      ylim = c(0, 6),
       lwd = 2,
       lty = 1,
       bty = 'n'
     )
+      mtext(
+    text = 'A',
+    side = 3,
+    line = 0,
+    at = 0,
+    cex = cex.lab
+  )
     mtext(
       side = 2,
       text = 'Mean population scaled',
@@ -768,7 +777,6 @@ dev.off()
       line = 2.4
     )
     my.cols <- wes_palette('GrandBudapest1', length(my.gammas))
-
     # for (j in 1:length(my.gammas)) {
     #   plot.these = !is.na(my.gammas[[j]]) & my.gammas[[j]] < 10
     #   lines(
@@ -779,21 +787,8 @@ dev.off()
     #     col = my.cols[j]
     #   )
     # }
-    # legend(
-    #   'topleft',
-    #   legend = c(0, my.cvs ^ 2),
-    #   col = c('black', my.cols),
-    #   lty = c(1, rep(2, length(my.cvs))),
-    #   lwd = c(2, rep(2, length(my.cvs))),
-    #   bty = 'n',
-    #   title = expression(CV[alpha] ^ 2),
-    #   ##'Effect dist\'n coef. of var.',
-    #   cex = 1
-    # )
     ##abline(v = bt.inflect, lty = 2 , lwd = 2)
     par(op)
-    
-    
     op = par(mar = c(3.6, 4.6, 1, 0.5) + 0.1)
     plot(
       NA,
@@ -802,7 +797,7 @@ dev.off()
       cex.axis = cex.axis,
       cex.lab = cex.lab,
       xlim = c(0, 1),
-      ylim = c(0, 1.2),
+      ylim = c(0, 1.5),
       lwd = 2,
       lty = 1,
       bty = 'n'
@@ -815,6 +810,13 @@ dev.off()
       cex = cex.lab,
       line = 3.3
     )
+      mtext(
+    text = 'B',
+    side = 3,
+    line = 0,
+    at = 0,
+    cex = cex.lab
+  )
     mtext(
       side = 2,
       text = 'to single effect model',
@@ -849,6 +851,17 @@ dev.off()
         col = my.cols[j]
       )
     }
+    legend(
+      'topleft',
+      legend = c(0, my.cvs ^ 2),
+      col = c('black', my.cols),
+      lty = c(1, rep(2, length(my.cvs))),
+      lwd = c(2, rep(2, length(my.cvs))),
+      bty = 'n',
+      title = expression(CV[alpha] ^ 2),
+      ##'Effect dist\'n coef. of var.',
+      cex = 0.75
+    )
     par(op)
     dev.off()
   }
