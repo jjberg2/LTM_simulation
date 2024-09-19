@@ -16,7 +16,7 @@ solns <- get(load(file='tmp.fixed.deltal.solns.Robj'))
 ##j <- length(solns[[i]])
 
 j <- which.max(sapply(solns[[1]],function(X) X['prev']))
-## j <- length(solns[[1]])
+#j <- length(solns[[1]])
 j <- 8000
 my.soln <- unlist(solns[[i]][[j]])
 Ne <- 5000

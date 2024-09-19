@@ -9,7 +9,7 @@ cost <- 1 / 2
 as <- 1
 my.als <- exp(seq(log(10), log(300), length.out = 1000))
 theta <- 4 * Ne * u
-my.deltal <- 0.05
+my.deltal <- 0.01
 ## param.table <- read.table("bgsStuff/BGS_twoEffectPrevInsensitivityParamsTable.txt",header=TRUE)##[c(1,20),]
 out <- numeric()
 
@@ -181,3 +181,4 @@ if(FALSE){
     )
 
 }
+
