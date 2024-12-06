@@ -69,7 +69,8 @@ rep_small = list(np.arange(0,4))
 ###### small effect cost insensitivity sims ######
 ##################################################
 
-path = '/Users/jjberg/Documents/academics/liability-model/LTM_simulation/'
+path = '/project2/jjberg/jjberg/LTM_simulation/'
+## path = '/Users/jjberg/Documents/academics/liability-model/LTM_simulation/'
 paramTable = "singleEffectPrevalence"
 ## read small parameter tables
 input_table_filename_small = 'paramFiles/' + paramTable + "ParamTable.txt"
