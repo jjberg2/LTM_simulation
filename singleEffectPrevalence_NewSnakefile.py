@@ -161,7 +161,7 @@ rule slim_simulate_small:
     path=path,
     name=paramTable
   log:
-    "logs/{params.path}/{params.name}/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.log"
+    "logs"+path+paramTable+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.log"
   output:
     fixed=path+paramTable+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.fixed",
     mean=path+paramTable+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.mean",
