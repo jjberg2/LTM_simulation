@@ -72,8 +72,10 @@ rep_small = list(np.arange(0,4))
 path = '/project2/jjberg/jjberg/LTM_simulation/'
 ## path = '/Users/jjberg/Documents/academics/liability-model/LTM_simulation/'
 paramTable = "singleEffectPrevalence"
+popSize = 'N1000'
 ## read small parameter tables
-input_table_filename_small = 'paramFiles/' + paramTable + "ParamTable.txt"
+#input_table_filename_small = 'paramFiles/' + paramTable + "ParamTable.txt"
+input_table_filename_small = 'paramFiles/' + paramTable + "ParamTable"+popSize+".txt"
 output_table_filename_small = 'resultsFiles/' + paramTable + "ResultsTable.Rdata"
 derProbsOutput_table_filename_small = 'resultsFiles/' + paramTable + "DerProbs.Rdata"
 params_table_small = pd.read_csv(input_table_filename_small, delim_whitespace=True)
