@@ -157,10 +157,11 @@ rule slim_simulate_small:
     sampleInt = sampleInt,
     toyRun = toyRun,
     time="36:00:00",
-    partition="broadwl",
-    mem="5Gb",
+    partition="caslake",
     path=path,
     name=paramTable
+  resources:
+    mem_mb=4000
   log:
     "logs"+path+paramTable+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.log"
   output:
