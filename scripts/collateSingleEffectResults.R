@@ -94,13 +94,13 @@ merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.
 
 options(scipen=400)
 if(interactive()){
-    my.path <- "smallEffectInsensitivityN1000/all"
+    my.path <- "singleEffectPrevalence"
     my.args <- c(
-        "smallEffectInsensitivityN1000ParamTable.txt",
-        'smallEffectInsensitivityN1000/all/filenames.txt',
+        "smallEffectPrevalenceN1000ParamTable.txt",
+        'smallEffectPrevalence/all/filenames.txt',
         my.path,
-        "smallEffectInsensitivityN1000ResultsTable.Rdata",
-        "smallEffectInsensitivityN1000DerProbs.Rdata"
+        "smallEffectPrevalenceResultsTable.Rdata",
+        "smallEffectPrevalenceDerProbs.Rdata"
     )
 } else {
     ## read in command line arguments
