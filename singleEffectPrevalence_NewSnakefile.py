@@ -72,7 +72,7 @@ rep_small = list(np.arange(0,4))
 path = '/project2/jjberg/jjberg/LTM_simulation/'
 ## path = '/Users/jjberg/Documents/academics/liability-model/LTM_simulation/'
 paramTable = "singleEffectPrevalence"
-popSize = 'N1000'
+popSize = 'N2500'
 ## read small parameter tables
 #input_table_filename_small = 'paramFiles/' + paramTable + "ParamTable.txt"
 input_table_filename_small = 'paramFiles/' + paramTable + "ParamTable"+popSize+".txt"
@@ -163,7 +163,7 @@ rule slim_simulate_small:
     path=path,
     name=paramTable
   resources:
-    mem_mb=4000
+    mem_mb="12000"
   log:
     "logs"+path+paramTable+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.log"
   output:

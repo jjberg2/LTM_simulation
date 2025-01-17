@@ -126,6 +126,8 @@ exts <-  unique(sapply(sim.filenames,function(X) strsplit(X,'_all.')[[1]][2]))
 site.exts <- exts[grepl('Freq',exts) | grepl('siteVar',exts) ]
 sim.exts  <- exts[!(exts %in% site.exts)]
 
+print(param.table)
+print(files)
 out <- merge_into_paramtable(param.table,files,sim.exts,site.exts,my.path)
 results.table <- out[[1]]
 der.probs <- out[[2]]
