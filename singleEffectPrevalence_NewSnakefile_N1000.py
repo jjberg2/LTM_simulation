@@ -17,7 +17,7 @@ if(toyRun==1):
 
 
 ##rep_large = list(np.arange(0,5))
-rep_small = list(np.arange(0,1))
+rep_small = list(np.arange(0,2))
 
 
 
@@ -71,12 +71,12 @@ rep_small = list(np.arange(0,1))
 
 path = '/Users/jjberg/Documents/academics/liability-model/LTM_simulation/'
 paramTable = "singleEffectPrevalence"
-popSize = 'N1200'
+popSize = 'N1000'
 ## read small parameter tables
 #input_table_filename_small = 'paramFiles/' + paramTable + "ParamTable.txt"
 input_table_filename_small = 'paramFiles/' + paramTable + "ParamTable"+popSize+".txt"
-output_table_filename_small = 'resultsFiles/' + paramTable + "ResultsTable.Rdata"
-derProbsOutput_table_filename_small = 'resultsFiles/' + paramTable + "DerProbs.Rdata"
+output_table_filename_small = 'resultsFiles/' + paramTable + "ResultsTable"+popSize+".Rdata"
+derProbsOutput_table_filename_small = 'resultsFiles/' + paramTable + "DerProbs"+popSize+".Rdata"
 params_table_small = pd.read_csv(input_table_filename_small, delim_whitespace=True)
 
 
@@ -99,16 +99,16 @@ print(liaSizesSmall)
 
 rule writeSingleEffectFilenames:
   input:
-    expand(path+paramTable+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.fixed",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
-    expand(path+paramTable+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.mean",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
-    expand(path+paramTable+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.h2",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),    
-    expand(path+paramTable+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.prev",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
-    expand(path+paramTable+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.genVar",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
-    expand(path+paramTable+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.nSeg",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
-    expand(path+paramTable+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.deltaR",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
-    expand(path+paramTable+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.riskFreq",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
-    expand(path+paramTable+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.derFreq",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
-    expand(path+paramTable+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.siteVar",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall)
+    expand(path+paramTable+popSize+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.fixed",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
+    expand(path+paramTable+popSize+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.mean",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
+    expand(path+paramTable+popSize+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.h2",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),    
+    expand(path+paramTable+popSize+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.prev",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
+    expand(path+paramTable+popSize+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.genVar",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
+    expand(path+paramTable+popSize+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.nSeg",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
+    expand(path+paramTable+popSize+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.deltaR",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
+    expand(path+paramTable+popSize+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.riskFreq",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
+    expand(path+paramTable+popSize+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.derFreq",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
+    expand(path+paramTable+popSize+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.siteVar",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall)
   params:
      time="36:00:00",
      partition="broadwl",
@@ -117,7 +117,7 @@ rule writeSingleEffectFilenames:
      path=path
      #path="singleEffect{suffix}/all"
   output:
-    paramTable+'/all/filenames.txt'
+    paramTable+popSize+'/all/filenames.txt'
   shell:
     """
     for file in {input}; do
@@ -130,7 +130,7 @@ rule writeSingleEffectFilenames:
 rule allSingleEffect:
   input:
     input_table_filename_small,
-    paramTable+'/all/filenames.txt'
+    paramTable+popSize+'/all/filenames.txt'
   params:
      time="36:00:00",
      partition="broadwl",
@@ -141,7 +141,7 @@ rule allSingleEffect:
      output_table_filename_small,
      derProbsOutput_table_filename_small
   shell:
-    """Rscript scripts/collateSingleEffectResults.R {input} {params.path}"""+paramTable+"""/all"""+""" {output}"""
+    """Rscript scripts/collateSingleEffectResults.R {input} {params.path}"""+paramTable+popSize+"""/all"""+""" {output}"""
 
 
 
@@ -150,8 +150,8 @@ rule allSingleEffect:
     
 rule slim_simulate_small:
   input:
-    slim_script=path+"scripts/LTM_prev_nucleotide.slim",
-    paramTable="paramFiles/"+paramTable+"ParamTable.txt"
+    slim_script=path+"scripts/LTM_prev_nucleotide.slim" ##,
+    ## paramTable="paramFiles/"+paramTable+"ParamTable"+popSize+".txt"
   params:
     mu=mu,
     cyc=smallCyc,
@@ -163,19 +163,19 @@ rule slim_simulate_small:
     path=path,
     name=paramTable
   log:
-    "logs"+path+paramTable+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.log"
+    path+paramTable+popSize+"/logs/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.log"
   output:
-    fixed=path+paramTable+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.fixed",
-    mean=path+paramTable+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.mean",
-    h2=path+paramTable+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.h2",
-    prev=path+paramTable+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.prev",
-    genVar=path+paramTable+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.genVar",
-    nSeg=path+paramTable+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.nSeg",
-    deltaR=path+paramTable+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.deltaR",
-    riskFreq=path+paramTable+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.riskFreq",
-    derFreq=path+paramTable+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.derFreq",
-    siteVar=path+paramTable+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.siteVar",
-    tmp=path+paramTable+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.tmp"
+    fixed=path+paramTable+popSize+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.fixed",
+    mean=path+paramTable+popSize+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.mean",
+    h2=path+paramTable+popSize+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.h2",
+    prev=path+paramTable+popSize+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.prev",
+    genVar=path+paramTable+popSize+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.genVar",
+    nSeg=path+paramTable+popSize+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.nSeg",
+    deltaR=path+paramTable+popSize+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.deltaR",
+    riskFreq=path+paramTable+popSize+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.riskFreq",
+    derFreq=path+paramTable+popSize+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.derFreq",
+    siteVar=path+paramTable+popSize+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.siteVar",
+    tmp=path+paramTable+popSize+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.tmp"
   group:
     "sim_small"
   shell:
@@ -186,7 +186,7 @@ rule slim_simulate_small:
     
 rule result_combined_single_small:
   input:
-    expand(path+paramTable+"/PopSize{{N}}_LiaSize{{liaSizes}}_thr{{thr}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.{{ext}}", rep=rep_small)
+    expand(path+paramTable+popSize+"/PopSize{{N}}_LiaSize{{liaSizes}}_thr{{thr}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.{{ext}}", rep=rep_small)
   params:
      time="36:00:00",
      partition="broadwl",
@@ -194,9 +194,9 @@ rule result_combined_single_small:
      name=paramTable,
      path=path
   log:
-     path+paramTable+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all_{ext}.log"
+     path+paramTable+popSize+"/logs/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all_{ext}.log"
   output:
-    path+paramTable+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.{ext}"
+    path+paramTable+popSize+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.{ext}"
   group:
     "small_combine"
   shell:
@@ -218,17 +218,17 @@ rule result_combined_single_small:
     
 
    
-rule singleEffectBackup:
-  input:
-    "singleEffect{suffix}ResultsTable.Rdata"
-  params:
-    time="36:00:00",
-    partition="broadwl",
-    mem="2Gb"
-  output:
-    protected("singleEffect{suffix}ResultsTableBackup.Rdata")
-  shell:
-    """cp {input} {output}"""
+# rule singleEffectBackup:
+#   input:
+#     "singleEffect{suffix}ResultsTable.Rdata"
+#   params:
+#     time="36:00:00",
+#     partition="broadwl",
+#     mem="2Gb"
+#   output:
+#     protected("singleEffect{suffix}ResultsTableBackup.Rdata")
+#   shell:
+#     """cp {input} {output}"""
 
 
 
