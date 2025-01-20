@@ -1,4 +1,5 @@
 rm(list = ls())
+setwd('/Users/jeremyberg/Documents/academics/LTM_simulation/')
 library('wesanderson')
 
 dnorminv = function(y)
