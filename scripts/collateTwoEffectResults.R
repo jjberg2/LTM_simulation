@@ -1,6 +1,6 @@
 ## functions
 merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.path){
-##    recover()
+    recover()
     param.rows <- nrow(params.table)
     n.sims <- length(file.roots)
     if(param.rows!=n.sims)
@@ -20,12 +20,12 @@ merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.
         mythr <- format(round(params.table[i,'thr'],2),nsmall=1)
         mycost  <- format(round(params.table[i,'C'],2),nsmall=2)
         myenvSD  <- format(round(sqrt(params.table[i,'Ve']),3),nsmall=3)
-        temp_prefix = paste(my.path,"/PopSize", myNe, "_al", myaL, "_Ll", myLl,  "_thr", mythr, "_envSD", myenvSD,  "_cost", mycost, "_all", sep="")
+        temp_prefix = paste(my.path,"/PopSize", myNe, "_al", myaL, "_thr", mythr, "_envSD", myenvSD,  "_cost", mycost, "_all", sep="")
         sim.files <- sapply(sim.exts,function(X) paste(temp_prefix,X,sep="."))
         sim.results[i,] <- sapply(sim.files,function(X) mean(as.numeric(read.table(X)[[1]]),na.rm=TRUE))
         ## was causing memory issues on cluster so temporarilily deleted
         site.files <- sapply(site.exts,function(X) paste(temp_prefix,X,sep="."))
-        print(i)
+        ## print(i)
         for(j in 1:length(site.files)){
             my.file <- file(site.files[j],'r')
             lines <- list()
@@ -63,12 +63,13 @@ merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.
 
 options(scipen=400)
 if(interactive()){
-    my.path <- "twoEffectSimsForReal/all"
+    my.path <- "Users/jeremyberg/Documents/academics/LTM_simulation/twoEffectPrevN1000/all"
     my.args <- c(
-        "twoEffectSimsForRealParamsTable.txt",
-        sapply(dir(my.path),function(X) paste(my.path,X,sep="/")),
+        "paramFiles/twoEffectPrevParamTableN1000.txt",
+        "twoEffectPrevN1000/all/filenames.txt",
         my.path,
-        "twoEffectSimsForRealResultsTable.Rdata"
+        "resultsFiles/twoEffectPrevResultsTableN1000.Rdata",
+        "resultsFiles/twoEffectPrevDerProbsN1000.Rdata"
     )
 } else {
     ## read in command line arguments
@@ -77,9 +78,13 @@ if(interactive()){
 
 
 input.table.filename <- head(my.args,1)
-output.table.filename <- tail(my.args,1)
-my.path <- head(tail(my.args,2),1)
+output.table.filename1 <- tail(my.args,2)[1]
+output.table.filename2 <- tail(my.args,2)[2]
+my.path <- head(tail(my.args,3),1)
 sim.filenames <- tail(head(my.args,-2),-1)
+
+filenames.file <- tail(head(my.args,-3),-1)
+sim.filenames <- readLines(filenames.file)
 
 ## load the parameter table
 param.table <- read.table(input.table.filename,header=T)
