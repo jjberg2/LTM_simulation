@@ -13,7 +13,7 @@ def trim_trailingzero(x):
 cyc = 200
 sampleInt = 50
 nreps = 1
-toyRun = 1
+toyRun = 0
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
 reps = list(np.arange(0,nreps))
