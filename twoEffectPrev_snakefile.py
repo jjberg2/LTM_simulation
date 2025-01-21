@@ -12,7 +12,7 @@ def trim_trailingzero(x):
 ## global parameter ( doesn't change) 
 cyc = 200
 sampleInt = 50
-nreps = 1
+nreps = 3
 toyRun = 0
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
