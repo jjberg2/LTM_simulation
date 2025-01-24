@@ -69,9 +69,14 @@ rep_small = list(np.arange(0,1))
 ###### small effect cost insensitivity sims ######
 ##################################################
 
-path = '/Users/jjberg/Documents/academics/liability-model/LTM_simulation/'
+path = '/project2/jjberg/jjberg/LTM_simulation/'
+## path = '/Users/jjberg/Documents/academics/liability-model/LTM_simulation/'
 paramTable = "singleEffectPrevalence"
+<<<<<<< HEAD
+popSize = 'N2500'
+=======
 popSize = 'N1200'
+>>>>>>> a7c26b03377cac9a72fd798241c8eb1ca4c3e4f7
 ## read small parameter tables
 #input_table_filename_small = 'paramFiles/' + paramTable + "ParamTable.txt"
 input_table_filename_small = 'paramFiles/' + paramTable + "ParamTable"+popSize+".txt"
@@ -158,10 +163,11 @@ rule slim_simulate_small:
     sampleInt = sampleInt,
     toyRun = toyRun,
     time="36:00:00",
-    partition="broadwl",
-    mem="5Gb",
+    partition="caslake",
     path=path,
     name=paramTable
+  resources:
+    mem_mb="12000"
   log:
     "logs"+path+paramTable+"/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_rep{rep}.log"
   output:

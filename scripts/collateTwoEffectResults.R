@@ -1,6 +1,6 @@
 ## functions
 merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.path){
-##    recover()
+    ## recover()
     param.rows <- nrow(params.table)
     n.sims <- length(file.roots)
     if(param.rows!=n.sims)
@@ -20,12 +20,21 @@ merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.
         mythr <- format(round(params.table[i,'thr'],2),nsmall=1)
         mycost  <- format(round(params.table[i,'C'],2),nsmall=2)
         myenvSD  <- format(round(sqrt(params.table[i,'Ve']),3),nsmall=3)
-        temp_prefix = paste(my.path,"/PopSize", myNe, "_al", myaL, "_Ll", myLl,  "_thr", mythr, "_envSD", myenvSD,  "_cost", mycost, "_all", sep="")
+        temp_prefix = paste(my.path,"/PopSize", myNe, "_aL", myaL, "_thr", mythr, "_envSD", myenvSD,  "_cost", mycost, "_all", sep="")
         sim.files <- sapply(sim.exts,function(X) paste(temp_prefix,X,sep="."))
-        sim.results[i,] <- sapply(sim.files,function(X) mean(as.numeric(read.table(X)[[1]]),na.rm=TRUE))
+        sim.results[i,] <- sapply(
+            sim.files,
+            function(X) {
+                my.file <- file(X,'r')
+                data <- read.table(X)
+                close(my.file)
+                mean(as.numeric(data[[1]]),na.rm=TRUE)
+            }
+        )
+	## sapply(sim.files,function(X) close(file(X)))
         ## was causing memory issues on cluster so temporarilily deleted
         site.files <- sapply(site.exts,function(X) paste(temp_prefix,X,sep="."))
-        print(i)
+        ## print(i)
         for(j in 1:length(site.files)){
             my.file <- file(site.files[j],'r')
             lines <- list()
@@ -63,12 +72,13 @@ merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.
 
 options(scipen=400)
 if(interactive()){
-    my.path <- "twoEffectSimsForReal/all"
+    my.path <- "Users/jeremyberg/Documents/academics/LTM_simulation/twoEffectPrevN1000/all"
     my.args <- c(
-        "twoEffectSimsForRealParamsTable.txt",
-        sapply(dir(my.path),function(X) paste(my.path,X,sep="/")),
+        "paramFiles/twoEffectPrevParamTableN1000.txt",
+        "twoEffectPrevN1000/all/filenames.txt",
         my.path,
-        "twoEffectSimsForRealResultsTable.Rdata"
+        "resultsFiles/twoEffectPrevResultsTableN1000.Rdata"##,
+##        "resultsFiles/twoEffectPrevDerProbsN1000.Rdata"
     )
 } else {
     ## read in command line arguments
@@ -76,10 +86,13 @@ if(interactive()){
 }
 
 
-input.table.filename <- head(my.args,1)
-output.table.filename <- tail(my.args,1)
-my.path <- head(tail(my.args,2),1)
-sim.filenames <- tail(head(my.args,-2),-1)
+input.table.filename <- my.args[1]
+filenames.file <- my.args[2]
+my.path <- my.args[3]
+output.table.filename <- my.args[4]
+
+
+sim.filenames <- readLines(filenames.file)
 
 ## load the parameter table
 param.table <- read.table(input.table.filename,header=T)
@@ -91,7 +104,8 @@ exts <-  unique(sapply(sim.filenames,function(X) strsplit(X,'_all.')[[1]][2]))
 site.exts <- exts[grepl('Freq',exts) | grepl('siteVar',exts) ]
 sim.exts  <- exts[!(exts %in% site.exts)]
 
-results.table <- merge_into_paramtable(param.table,files,sim.exts,site.exts,my.path)
-save(results.table,file=output.table.filename)
+results <- merge_into_paramtable(param.table,files,sim.exts,site.exts,my.path)
+##sim.results <- results[[2]]
+save(results,file=output.table.filename)
 
 

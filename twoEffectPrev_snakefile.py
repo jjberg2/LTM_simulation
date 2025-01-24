@@ -12,14 +12,14 @@ def trim_trailingzero(x):
 ## global parameter ( doesn't change) 
 cyc = 200
 sampleInt = 50
-nreps = 1
+nreps = 3
 toyRun = 0
 if(toyRun==1):
     print("Warning: the toyRun flag is on!")
 reps = list(np.arange(0,nreps))
 
 ## files
-path = 'Users/jeremyberg/Documents/academics/LTM_simulation/'
+path = '/project2/jjberg/jjberg/LTM_simulation/'
 paramTable = "twoEffectPrev"
 popSize = 'N1000'
 input_table_filename = 'paramFiles/' + paramTable + "ParamTable"+popSize+".txt"
@@ -98,8 +98,8 @@ rule allTwoEffect:
      name=paramTable,
      path=path
   output:
-     output_table_filename,
-     derProbsOutput_table_filename
+     output_table_filename##,
+##     derProbsOutput_table_filename
   shell:
     """Rscript scripts/collateTwoEffectResults.R {input} {params.path}"""+paramTable+popSize+"""/all"""+""" {output}"""
 
