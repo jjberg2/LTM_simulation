@@ -68,7 +68,7 @@ initialize() {
 	L = Ls + Ll;
 	maxG = 2 * (Ls * betaS + Ll * betaL);
 	threshold = asFloat(thr);
-	offset = envSD;
+	offset = 4*envSD;
 	startingPoint = 2 * Ls * rhoS - offset ;
 	
 	// A and C are protective states for small effect and large effect, respectively
