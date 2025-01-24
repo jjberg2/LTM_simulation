@@ -22,8 +22,16 @@ merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.
         myenvSD  <- format(round(sqrt(params.table[i,'Ve']),3),nsmall=3)
         temp_prefix = paste(my.path,"/PopSize", myNe, "_aL", myaL, "_thr", mythr, "_envSD", myenvSD,  "_cost", mycost, "_all", sep="")
         sim.files <- sapply(sim.exts,function(X) paste(temp_prefix,X,sep="."))
-        sim.results[i,] <- sapply(sim.files,function(X) mean(as.numeric(read.table(X)[[1]]),na.rm=TRUE))
-	sapply(sim.files,function(X) close(file(X)))
+        sim.results[i,] <- sapply(
+            sim.files,
+            function(X) {
+                my.file <- file(X,'r')
+                data <- read.table(X)
+                close(my.file)
+                mean(as.numeric(data[[1]]),na.rm=TRUE)
+            }
+        )
+	## sapply(sim.files,function(X) close(file(X)))
         ## was causing memory issues on cluster so temporarilily deleted
         site.files <- sapply(site.exts,function(X) paste(temp_prefix,X,sep="."))
         ## print(i)
@@ -97,7 +105,7 @@ site.exts <- exts[grepl('Freq',exts) | grepl('siteVar',exts) ]
 sim.exts  <- exts[!(exts %in% site.exts)]
 
 results <- merge_into_paramtable(param.table,files,sim.exts,site.exts,my.path)
-sim.results <- results[[2]]
-save(sim.results,file=output.table.filename)
+##sim.results <- results[[2]]
+save(results,file=output.table.filename)
 
 
