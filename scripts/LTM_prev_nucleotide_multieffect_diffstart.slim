@@ -1,20 +1,20 @@
 initialize() {
 	initializeSLiMOptions(nucleotideBased=T);
 	if(exists('slimgui')){
-		defineConstant('Ls', asInteger(9517019));   // input liaSmall
-		defineConstant('Ll', asInteger(11795));   // input liaLarge
+		defineConstant('Ls', asInteger(1498576));   // input liaSmall
+		defineConstant('Ll', asInteger(1424));   // input liaLarge
 		defineConstant('betaS', 1);  //input aS
-		defineConstant('betaL',  40.94882);  //input aL
-		defineConstant('rhoS', floor(0.3152248 * Ls)/Ls);
+		defineConstant('betaL',  22.360);  //input aL
+		defineConstant('rhoS', floor(0.2553092* Ls)/Ls);
 		
 		// set parameters
-		perSiteMutRate = 10^-8;  // input mu 
+		perSiteMutRate = 10^-6;  // input mu 
 		perSiteRecRate = 100 * perSiteMutRate; // set the perSiteRecRate equal to 30 * perSiteMutRate 
-		popSize = 500;   // input p 
+		popSize = 1000;   // input p 
 		
-		thr = 6000001.0;
-		envSD =   13.80363;   // input e 
-		fitnessCost = 0.1;    // input f
+		thr = 765200.816;
+		envSD =   5675.53840;   // input e 
+		fitnessCost = 0.447213;    // input f
 		sampleInt = 50;
 		cyc = 200;
 		rep = 1;
@@ -229,6 +229,13 @@ fitness(NULL){
 	liabilities = genLi + rnorm(N, 0.0, ENV_SIGMA);
 	inds.tagF = liabilities;
 	
+	
+	if(exists('slimgui')){
+			prev=sum(inds.tagF>THR)/length(inds.tagF);
+			print(prev);
+			print(mean(inds.tagF));
+			print(THR);
+	}
 	if (
 		!(exists('slimgui')) &
 		(

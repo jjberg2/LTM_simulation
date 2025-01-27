@@ -12,7 +12,7 @@ theory.al <- 100
 
 theory.cost <- 0.1
 bt <- 0.5
-pt <- (1 - bt)/2
+pt <-  bt/2
 h2 <- 1/2
 as <- 1 
 
@@ -34,38 +34,53 @@ my.gs <- get(load(file = 'paramFiles/twoEffect.gs.Robj'))
 setwd('~/Dropbox/msdbPaper')
 
 gs.params <- unlist(my.gs)
+L.params.list <- mapply(
+  function (GS,MYL) 
+    rep(MYL,times=length(GS)) , 
+  GS = my.gs , 
+  MYL = L )
 L.params <- unlist(
-  mapply(
-    function (GS,MYL) 
-      rep(MYL,times=length(GS)) , 
-    GS = my.gs , 
-    MYL = L )
-  )
-thr.params <- unlist(
-  mapply(
-    function (GS,MYL) 
-      rep(MYL*pt,times=length(GS)) , 
-    GS = my.gs , 
-    MYL = L )
+  L.params.list
 )
+Ls.params.list <- mapply(
+  function (GS,MYL) 
+    MYL*GS , 
+  GS = my.gs , 
+  MYL = L )
 Ls.params <- unlist(
-  mapply(
-    function (GS,MYL) 
-      MYL*GS , 
-    GS = my.gs , 
-    MYL = L )
+  Ls.params.list
 )
+Ll.params.list <- mapply(
+  function (GS,MYL) 
+    MYL*(1-GS) , 
+  GS = my.gs , 
+  MYL = L )
 Ll.params <- unlist(
-  mapply(
-    function (GS,MYL) 
-      MYL*(1-GS) , 
-    GS = my.gs , 
-    MYL = L )
+  Ll.params.list
 )
 
-a.mean <- (Ls.params * as + Ll.params * al) / L.params
+a.mean.list <- mapply(
+  function(LS,LL,L){
+    (LS * as + LL * al) / L
+  } ,
+  LS = Ls.params.list ,
+  LL = Ll.params.list ,
+  L = L.params.list
+)
+a.mean <- unlist(a.mean.list)
 bs <- (a.mean * bt - (1-gs.params)*al) / ( gs.params * as )
-rhos.params <- (1 - bs) / 2
+rhos.params <- bs / 2
+
+thr.params <- unlist(
+  mapply(
+    function (GS,MYL,AMEAN) 
+      2*MYL*pt*AMEAN , 
+    GS = my.gs , 
+    MYL = L ,
+    AMEAN = a.mean.list
+  )
+)
+
 
 
 soln <- list()
@@ -118,6 +133,8 @@ my.params <- data.frame(
   'Ll' = ceiling(Ll.params) ,
   'u' = u
   )
+
+2*my.params$Ls * my.params$rhos
 
 
 setwd('~/Documents/academics/LTM_simulation')
