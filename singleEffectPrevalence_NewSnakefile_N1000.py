@@ -110,9 +110,6 @@ rule writeSingleEffectFilenames:
     expand(path+paramTable+popSize+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.derFreq",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall),
     expand(path+paramTable+popSize+"/all/PopSize{N}_LiaSize{liaSizes}_thr{thr}_cost{cost}_envsd{envsd}_all.siteVar",zip, N=NSmall, liaSizes=liaSizesSmall, thr=thrSmall, cost=costSmall, envsd=envsdSmall)
   params:
-     time="36:00:00",
-     partition="broadwl",
-     mem="4Gb",
      name=paramTable,
      path=path
      #path="singleEffect{suffix}/all"
@@ -132,9 +129,6 @@ rule allSingleEffect:
     input_table_filename_small,
     paramTable+popSize+'/all/filenames.txt'
   params:
-     time="36:00:00",
-     partition="broadwl",
-     mem="4Gb",
      name=paramTable,
      path=path
   output:
@@ -157,9 +151,6 @@ rule slim_simulate_small:
     cyc=smallCyc,
     sampleInt = sampleInt,
     toyRun = toyRun,
-    time="36:00:00",
-    partition="broadwl",
-    mem="5Gb",
     path=path,
     name=paramTable
   log:
@@ -188,9 +179,6 @@ rule result_combined_single_small:
   input:
     expand(path+paramTable+popSize+"/PopSize{{N}}_LiaSize{{liaSizes}}_thr{{thr}}_cost{{cost}}_envsd{{envsd}}_rep{rep}.{{ext}}", rep=rep_small)
   params:
-     time="36:00:00",
-     partition="broadwl",
-     mem="2Gb",
      name=paramTable,
      path=path
   log:
