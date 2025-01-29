@@ -151,8 +151,9 @@ rule slim_simulate_withsegregating:
     sampleInt = sampleInt,
     toyRun=toyRun,
     time="36:00:00",
-    partition="broadwl",
-    mem="6000"
+    partition="broadwl"
+  resources:
+    mem_mb='2Gb'
   log:
     path+paramTable+popSize+"/logs/PopSize{N}_aL{alphaLarge}_thr{thr}_envSD{envSD}_cost{cost}_rep{rep}.log"
   group:

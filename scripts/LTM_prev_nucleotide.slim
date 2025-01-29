@@ -1,23 +1,38 @@
 initialize() {
 	
 	initializeSLiMOptions(nucleotideBased=T);
-	liabilitySize = liaSize;
-	defineConstant('L', liabilitySize);
-	threshold = thr_input;
+	if(exists('slimgui')){
+		liabilitySize = 1500000;
+		threshold = 75000;
+		perSiteMutRate = 1e-6;		
+		popSize = 1000;
+		envSD = 55.78;
+		fitnessCost = 0.4472;
+		zeroStart = F;
+		sampleInt=50;
+		cyc=50;
+		rep=1;
+		toyRun=0;
+	} else{
+	// set parameters
+		liabilitySize = liaSize;
+		threshold = thr_input;
+		perSiteMutRate = mu;
+		popSize = p;
+		envSD = e;
+		fitnessCost = f;
+	}
+	perSiteRecRate = 100 * perSiteMutRate; // set the perSiteRecRate equal to 100 *	
+
+	// transformed parameters
+	maxG = 2 * liabilitySize;
+
+	defineConstant('L', liabilitySize);	
+	defineConstant('ENV_SIGMA',envSD);
 	defineConstant('THR',threshold);
 	defineConstant('RHO',THR/(2*L));
 	
-	// set parameters
-	perSiteMutRate = mu;
-	perSiteRecRate = 100 * perSiteMutRate; // set the perSiteRecRate equal to 100 * perSiteMutRate 
-	popSize = p;
-	envSD = e;
-	fitnessCost = f;
-	defineConstant('ENV_SIGMA',envSD);
 	
-	
-	// transformed parameters
-	maxG = 2 * liabilitySize;
 	
 	
 	
@@ -31,7 +46,7 @@ initialize() {
 	}
 	else {
 		// if not, start at threshold point - THR_MINUS, set corresponding number of alleles to be protective and liability increasing 
-		defineConstant('THR_MINUS', 1.5*ENV_SIGMA);
+		defineConstant('THR_MINUS', 5*ENV_SIGMA);
 		defineConstant('A_INIT',min(asInteger(L - THR/2 + THR_MINUS),L));
 		defineConstant('G_INIT',L - A_INIT);
 		sequence_tmp = sample(c(rep('A',A_INIT),rep('G',G_INIT)),L,replace=F);
@@ -55,18 +70,19 @@ initialize() {
 	defineConstant('REP',rep);
 	defineConstant('TOYRUN',toyRun);
 	
+	if(!exists('slimgui')){
 	// output files
-	defineConstant('FIXEDOUT',fixedOut);
-	defineConstant('MEANOUT',meanOut);
-	defineConstant('H2OUT',h2Out);
-	defineConstant('PREVOUT',prevOut);
-	defineConstant('GENVAROUT',genVarOut);
-	defineConstant('NSEGOUT',nSegOut);
-	defineConstant('DELTAROUT',deltaROut);
-	defineConstant('RISKFREQOUT',riskFreqOut);
-	defineConstant('DERFREQOUT',derFreqOut);
-	defineConstant('SITEVAROUT',siteVarOut);
-	
+		defineConstant('FIXEDOUT',fixedOut);
+		defineConstant('MEANOUT',meanOut);
+		defineConstant('H2OUT',h2Out);
+		defineConstant('PREVOUT',prevOut);
+		defineConstant('GENVAROUT',genVarOut);
+		defineConstant('NSEGOUT',nSegOut);
+		defineConstant('DELTAROUT',deltaROut);
+		defineConstant('RISKFREQOUT',riskFreqOut);
+		defineConstant('DERFREQOUT',derFreqOut);
+		defineConstant('SITEVAROUT',siteVarOut);
+	}
 	
 	
 	// liability mutations
