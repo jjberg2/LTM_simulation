@@ -143,9 +143,7 @@ rule slim_simulate_withsegregating:
     thr = lambda wildcards:find_index(wildcards, col="thr"), 
     cyc=cyc,
     sampleInt = sampleInt,
-    toyRun=toyRun,
-    time="36:00:00",
-    partition="broadwl"
+    toyRun=toyRun
   resources:
     mem_mb='4000'
   log:
@@ -160,9 +158,6 @@ rule slim_simulate_withsegregating:
 rule result_combined_two_small:
   input:
     expand(path+paramTable+popSize+"/PopSize{{N}}_aL{{liaSizes}}_thr{{thr}}_envSD{{envsd}}_cost{{cost}}_rep{rep}.{{ext}}", rep=reps)
-  params:
-     time="36:00:00",
-     partition="broadwl",
   log:
     path+paramTable+popSize+"/PopSize{N}_aL{liaSizes}_thr{thr}_envSD{envsd}_cost{cost}_all_{ext}.log"
   output:

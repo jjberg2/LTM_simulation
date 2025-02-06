@@ -17,7 +17,7 @@ merge_into_paramtable <- function(params.table,file.roots,sim.exts,site.exts,my.
         myNe <- format(round(params.table[i,'Ne'],3),nsmall=0)
         myaL <- format(round(params.table[i,'al'],3),nsmall=3)
         myLl <- format(round(params.table[i,'Ll'],3),nsmall=3)
-        mythr <- format(round(params.table[i,'thr'],2),nsmall=1)
+        mythr <- format(round(params.table[i,'thr'],1),nsmall=1)
         mycost  <- format(round(params.table[i,'C'],2),nsmall=2)
         myenvSD  <- format(round(sqrt(params.table[i,'Ve']),3),nsmall=3)
         temp_prefix = paste(my.path,"/PopSize", myNe, "_aL", myaL, "_thr", mythr, "_envSD", myenvSD,  "_cost", mycost, "_all", sep="")
